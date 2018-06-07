@@ -10,12 +10,12 @@ int main()
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
 	{
-		std::cout << "Open GL init error"<<std::endl;
+		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
 	bool running = true;
 	DrawingPanel drawingPanel;
-	drawingPanel.init(1.5f, 1.5f);
+	drawingPanel.init(0.8f, 0.8f);
 	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\goli.png", "poke", false);
 	drawingPanel.setTextureID(texId);
 	ShaderProgram shader;
@@ -31,10 +31,16 @@ int main()
 			case sf::Event::Closed:
 				running = false;
 				break;
+			case sf::Event::Resized:
+				float aspectRatio = 1;
+				float width = window.getSize().x;
+				float height = window.getSize().y;
+				glViewport(0, 0, width, height);
+				break;
 			}
 		}
 		glClearColor(0.3f, 0.6f, 0.9f, 1.0f);
-		glClear( GL_COLOR_BUFFER_BIT );
+		glClear(GL_COLOR_BUFFER_BIT);
 		shader.use();
 		drawingPanel.draw();
 		window.display();

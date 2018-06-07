@@ -17,6 +17,8 @@ DrawingPanel::~DrawingPanel()
 
 void DrawingPanel::init(float width, float height)
 {
+	width *= 2;
+	height *= 2;
 	this->width = width;
 	this->height = height;
 	if (vaoID == 0)
