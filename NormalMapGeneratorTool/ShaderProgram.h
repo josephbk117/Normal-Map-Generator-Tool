@@ -13,6 +13,8 @@ public:
 	void unuse();
 	int getUniformLocation(const std::string& uniformName)const;
 	static void applyShaderUniformMatrix(int uniformId, const glm::mat4& matrixValue);
+	static void applyShaderFloat(int uniformId, float value);
+	static void applyShaderInt(int uniformId, int value);
 private:
 	unsigned int programID, vertexShaderID, fragmentShaderID;
 	void compileShader(const std::string& filePath, unsigned int ID);

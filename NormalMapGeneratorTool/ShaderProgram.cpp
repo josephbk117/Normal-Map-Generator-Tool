@@ -92,6 +92,16 @@ void ShaderProgram::applyShaderUniformMatrix(int uniformId, const glm::mat4& mat
 	glUniformMatrix4fv(uniformId, 1, GL_FALSE, &matrixValue[0][0]);
 }
 
+void ShaderProgram::applyShaderFloat(int uniformId, float value)
+{
+	glUniform1f(uniformId, value);
+}
+
+void ShaderProgram::applyShaderInt(int uniformId, int value)
+{
+	glUniform1i(uniformId, value);
+}
+
 void ShaderProgram::compileShader(const std::string & filePath, unsigned int ID)
 {
 	std::ifstream shaderFile(filePath);
