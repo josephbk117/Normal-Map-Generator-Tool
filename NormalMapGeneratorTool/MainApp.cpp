@@ -19,7 +19,7 @@ int main()
 	bool running = true;
 	DrawingPanel drawingPanel;
 	drawingPanel.init(0.8f, 0.8f);
-	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\goli.png", "poke", false);
+	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\test2.png", "poke", false);
 	drawingPanel.setTextureID(texId);
 	ShaderProgram shader;
 	shader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
@@ -27,6 +27,7 @@ int main()
 	int strengthValue = shader.getUniformLocation("_HeightmapStrength");
 	int normalMapModeOnUniform = shader.getUniformLocation("_normalMapModeOn");
 	float strValue = 4.0f;
+	float contrastStrength = 1.0f;
 	int normalMapMode = 1;
 	while (running)
 	{
@@ -59,7 +60,7 @@ int main()
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
-				if (saveScreenshot("scr.tga", 512, 512))
+				if (saveScreenshot("C:\\scr.tga", 512, 512))
 					std::cout << "Saved";
 			}
 		}
