@@ -31,7 +31,7 @@ vec4 getSobel(in vec2 uv)
 }*/
 void main()
 {
-    if(_normalMapModeOn == 1)
+    if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
         float _HeightmapDimX = 512;
         float _HeightmapDimY = 512;
@@ -44,8 +44,8 @@ void main()
 
         vec3 norm = normal;
         vec3 temp = norm;
-        if(norm.x==1) temp.y+=0.5;
-        else temp.x+=0.5;
+        if(norm.x==1) temp.y += 0.5;
+        else temp.x += 0.5;
         //form a basis with norm being one of the axes:
         vec3 perp1 = normalize(cross(norm,temp));
         vec3 perp2 = normalize(cross(norm,perp1));
@@ -53,7 +53,11 @@ void main()
         vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
         norm += normalOffset;
         norm = normalize(norm);
-        color = vec4(norm,1.0);
+        float light = dot(norm, normalize(vec3(0.5,0.7,0.2)) + 0.5) * 0.5;
+        if(_normalMapModeOn == 2)
+            color = vec4(light,light,light,1.0);
+        else
+            color = vec4(norm,1.0);
     }
     else
     {

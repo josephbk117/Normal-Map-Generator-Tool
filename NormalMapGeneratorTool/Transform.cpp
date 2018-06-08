@@ -90,6 +90,6 @@ bool Transform::operator!=(const Transform & transform)const noexcept
 void Transform::setModelMatrix()
 {
 	modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0));
-	modelMatrix = glm::rotate(modelMatrix, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+	modelMatrix = glm::rotate(modelMatrix, rotation, glm::vec3(0.8f, 0.8f, 0.7f));
 	modelMatrix = glm::scale(modelMatrix, glm::vec3(scale.x, scale.y, 0));
 }

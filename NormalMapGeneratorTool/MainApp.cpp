@@ -48,12 +48,16 @@ int main()
 				float width = window.getSize().x;
 				float height = window.getSize().y;
 				float aspectRatio = width / height;
-				if(width < height)
-					transform.setScale( glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+				if (width < height)
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
 				else
-					transform.setScale( glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
 				glViewport(0, 0, width, height);
 				break;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::G))
+			{
+				transform.setRotation(transform.getRotation() + 0.01f);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
 			{
@@ -105,7 +109,7 @@ int main()
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
 			{
-				normalMapMode *= -1;
+				normalMapMode = (normalMapMode + 1) % 3;
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
 			{
