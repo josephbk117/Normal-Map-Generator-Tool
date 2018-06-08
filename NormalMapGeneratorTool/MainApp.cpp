@@ -5,11 +5,12 @@
 #include "DrawingPanel.h"
 #include "TextureLoader.h"
 #include "ShaderProgram.h"
+#include "Transform.h"
 
 bool saveScreenshot(std::string filename, int w, int h);
 int main()
 {
-	sf::Window window(sf::VideoMode(500, 500, 32), "Normal Map Editor", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
+	sf::Window window(sf::VideoMode(1024, 1024, 32), "Normal Map Editor", sf::Style::Titlebar | sf::Style::Close | sf::Style::Resize);
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
 	{
@@ -26,9 +27,13 @@ int main()
 	shader.linkShaders();
 	int strengthValue = shader.getUniformLocation("_HeightmapStrength");
 	int normalMapModeOnUniform = shader.getUniformLocation("_normalMapModeOn");
+	int modelMatrix = shader.getUniformLocation("model");
 	float strValue = 4.0f;
 	float contrastStrength = 1.0f;
 	int normalMapMode = 1;
+	Transform transform;
+	transform.setPosition(0, 0);
+	float zoomLevel = 0.001f;
 	while (running)
 	{
 		sf::Event windowEvent;
@@ -40,11 +45,55 @@ int main()
 				running = false;
 				break;
 			case sf::Event::Resized:
-				float aspectRatio = 1;
 				float width = window.getSize().x;
 				float height = window.getSize().y;
+				float aspectRatio = width / height;
+				if(width < height)
+					transform.setScale( glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+				else
+					transform.setScale( glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
 				glViewport(0, 0, width, height);
 				break;
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+			{
+				transform.setX(transform.getPosition().x - 0.005f);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+			{
+				transform.setX(transform.getPosition().x + 0.005f);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+			{
+				transform.setY(transform.getPosition().y + 0.005f);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			{
+				transform.setY(transform.getPosition().y - 0.005f);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
+			{
+				zoomLevel += 0.00001f;
+				zoomLevel = glm::clamp(zoomLevel, 0.00001f, 0.01f);
+				float width = window.getSize().x;
+				float height = window.getSize().y;
+				float aspectRatio = width / height;
+				if (width < height)
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+				else
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::B))
+			{
+				zoomLevel -= 0.00001f;
+				zoomLevel = glm::clamp(zoomLevel, 0.00001f, 0.01f);
+				float width = window.getSize().x;
+				float height = window.getSize().y;
+				float aspectRatio = width / height;
+				if (width < height)
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
+				else
+					transform.setScale(glm::vec2(width / aspectRatio, height * aspectRatio) * zoomLevel);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 			{
@@ -58,14 +107,16 @@ int main()
 			{
 				normalMapMode *= -1;
 			}
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
 			{
 				if (saveScreenshot("D:\\scr.tga", window.getSize().x - 50, window.getSize().y - 50))
 					std::cout << "Saved";
 			}
 		}
+		transform.update();
 		glClearColor(0.3f, 0.6f, 0.9f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		shader.applyShaderUniformMatrix(modelMatrix, transform.getMatrix());
 		shader.applyShaderFloat(strengthValue, strValue);
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();

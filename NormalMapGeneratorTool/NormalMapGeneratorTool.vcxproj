@@ -125,12 +125,17 @@
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="TextureLoader.cpp" />
+    <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DrawingPanel.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="stb_rect_pack.h" />
+    <ClInclude Include="stb_textedit.h" />
+    <ClInclude Include="stb_truetype.h" />
     <ClInclude Include="TextureLoader.h" />
+    <ClInclude Include="Transform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

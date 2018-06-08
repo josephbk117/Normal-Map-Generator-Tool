@@ -2,9 +2,11 @@
 in vec2 vertexPosition;
 in vec2 texCoords;
 out vec2 textureUV;
+uniform mat4 model;
 void main()
 {
-	gl_Position.xyz =  vec3(vertexPosition.x, vertexPosition.y,0.0);
+	gl_Position =  model * vec4(vertexPosition.xy,0,1.0);
+	gl_Position.z = 0;
 	gl_Position.w = 1.0;
 	textureUV= texCoords;
 }
