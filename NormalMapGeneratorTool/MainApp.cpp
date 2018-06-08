@@ -65,11 +65,11 @@ int main()
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
 			{
-				transform.setY(transform.getPosition().y + 0.005f);
+				transform.setY(transform.getPosition().y - 0.005f);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
-				transform.setY(transform.getPosition().y - 0.005f);
+				transform.setY(transform.getPosition().y + 0.005f);
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::V))
 			{
@@ -113,6 +113,8 @@ int main()
 					std::cout << "Saved";
 			}
 		}
+		transform.setX(glm::clamp(transform.getPosition().x, -0.3f, 0.3f));
+		transform.setY(glm::clamp(transform.getPosition().y, -0.3f, 0.3f));
 		transform.update();
 		glClearColor(0.3f, 0.6f, 0.9f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
