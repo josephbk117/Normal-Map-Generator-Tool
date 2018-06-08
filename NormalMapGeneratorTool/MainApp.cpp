@@ -60,7 +60,7 @@ int main()
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 			{
-				if (saveScreenshot("C:\\scr.tga", 512, 512))
+				if (saveScreenshot("D:\\scr.tga", window.getSize().x - 50, window.getSize().y - 50))
 					std::cout << "Saved";
 			}
 		}
