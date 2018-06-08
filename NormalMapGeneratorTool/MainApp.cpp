@@ -20,7 +20,7 @@ int main()
 	bool running = true;
 	DrawingPanel drawingPanel;
 	drawingPanel.init(0.8f, 0.8f);
-	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\test2.png", "poke", false);
+	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\goli.png", "poke", false);
 	drawingPanel.setTextureID(texId);
 	ShaderProgram shader;
 	shader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");

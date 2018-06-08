@@ -1,5 +1,6 @@
 #version 140
 in vec2 textureUV;
+in vec3 worldPos;
 out vec4 color;
 uniform sampler2D textureOne;
 uniform float _HeightmapStrength;
@@ -53,9 +54,15 @@ void main()
         vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
         norm += normalOffset;
         norm = normalize(norm);
-        float light = dot(norm, normalize(vec3(0.5,0.7,0.2)) + 0.5) * 0.5;
+        vec3 lightDir = normalize(vec3(0.0,0.0,1.0));
+        float light = (dot(norm, lightDir) + 1.0) * 0.5;
+        vec3 LightReflect = normalize(reflect(lightDir, norm));
+        vec3 worldEyePos = worldPos - vec3(0,0.0, - 0.00001);
+        float SpecularFactor = dot(worldEyePos, LightReflect);
+        if(SpecularFactor > 0)
+            SpecularFactor = pow(SpecularFactor, 2);
         if(_normalMapModeOn == 2)
-            color = vec4(light,light,light,1.0);
+            color = vec4(light,light,light,1.0) + clamp(SpecularFactor,0,1);
         else
             color = vec4(norm,1.0);
     }
