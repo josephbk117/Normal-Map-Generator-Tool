@@ -121,6 +121,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\DrawingPanel.cpp" />
+    <ClCompile Include="src\imgui.cpp" />
+    <ClCompile Include="src\imgui_demo.cpp" />
+    <ClCompile Include="src\imgui_draw.cpp" />
+    <ClCompile Include="src\imgui_impl_glfw_gl3.cpp" />
     <ClCompile Include="src\MainApp.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
@@ -129,6 +133,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h" />
+    <ClInclude Include="src\imconfig.h" />
+    <ClInclude Include="src\imgui.h" />
+    <ClInclude Include="src\imgui_impl_glfw_gl3.h" />
+    <ClInclude Include="src\imgui_internal.h" />
     <ClInclude Include="src\ShaderProgram.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\stb_rect_pack.h" />
