@@ -76,11 +76,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\VS Projects\NormalMapGeneratorTool\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>D:\VS Projects\NormalMapGeneratorTool\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32.lib;glew32s.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;Opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;glew32s.lib;glfw3.lib;Opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -120,22 +120,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DrawingPanel.cpp" />
-    <ClCompile Include="MainApp.cpp" />
-    <ClCompile Include="ShaderProgram.cpp" />
-    <ClCompile Include="stb_image.cpp" />
-    <ClCompile Include="TextureLoader.cpp" />
-    <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="src\DrawingPanel.cpp" />
+    <ClCompile Include="src\MainApp.cpp" />
+    <ClCompile Include="src\ShaderProgram.cpp" />
+    <ClCompile Include="src\stb_image.cpp" />
+    <ClCompile Include="src\TextureLoader.cpp" />
+    <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DrawingPanel.h" />
-    <ClInclude Include="ShaderProgram.h" />
-    <ClInclude Include="stb_image.h" />
-    <ClInclude Include="stb_rect_pack.h" />
-    <ClInclude Include="stb_textedit.h" />
-    <ClInclude Include="stb_truetype.h" />
-    <ClInclude Include="TextureLoader.h" />
-    <ClInclude Include="Transform.h" />
+    <ClInclude Include="src\DrawingPanel.h" />
+    <ClInclude Include="src\ShaderProgram.h" />
+    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\stb_rect_pack.h" />
+    <ClInclude Include="src\stb_textedit.h" />
+    <ClInclude Include="src\stb_truetype.h" />
+    <ClInclude Include="src\TextureLoader.h" />
+    <ClInclude Include="src\Transform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
