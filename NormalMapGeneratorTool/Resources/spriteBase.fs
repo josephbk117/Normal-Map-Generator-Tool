@@ -4,6 +4,8 @@ in vec3 worldPos;
 out vec4 color;
 uniform sampler2D textureOne;
 uniform float _HeightmapStrength;
+uniform float _HeightmapDimX;
+uniform float _HeightmapDimY;
 uniform int _normalMapModeOn;
 /*void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
 {
@@ -34,8 +36,6 @@ void main()
 {
     if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
-        float _HeightmapDimX = 512;
-        float _HeightmapDimY = 512;
         vec3 normal = vec3(0.5,0.5,1.0);
         float me = texture(textureOne,textureUV).x;
         float n = texture(textureOne,vec2(textureUV.x,textureUV.y + 1.0/_HeightmapDimY)).x;

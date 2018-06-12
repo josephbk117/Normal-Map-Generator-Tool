@@ -64,9 +64,13 @@ int main(void)
 	int strengthValueUniform = shader.getUniformLocation("_HeightmapStrength");
 	int normalMapModeOnUniform = shader.getUniformLocation("_normalMapModeOn");
 	int modelMatrixUniform = shader.getUniformLocation("model");
+	int widthUniform = shader.getUniformLocation("_HeightmapDimX");
+	int heightUniform = shader.getUniformLocation("_HeightmapDimY");
 	float strValue = 0.0f;
 	float zoomLevel = 0.0005f;
 	int normalMapMode = 3;
+	float widthRes = 512;
+	float heightRes = 512;
 	glm::vec3 rotation = glm::vec3(0);
 	Transform transform;
 	transform.setPosition(0, 0);
@@ -122,6 +126,8 @@ int main(void)
 		//---- Applying Shader Uniforms---//
 		shader.applyShaderUniformMatrix(modelMatrixUniform, transform.getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
+		shader.applyShaderFloat(widthUniform, widthRes);
+		shader.applyShaderFloat(heightUniform, heightRes);
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();
 		drawingPanel.draw();
@@ -153,6 +159,8 @@ int main(void)
 		}
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
+		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
+		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
