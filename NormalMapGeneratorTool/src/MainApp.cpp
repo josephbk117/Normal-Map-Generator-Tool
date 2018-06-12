@@ -39,6 +39,8 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
 	// Setup Dear ImGui binding
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -71,6 +73,7 @@ int main(void)
 	int k = 0;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool showHeightMapInput = true;
+	bool isFullscreen = false;
 	while (!glfwWindowShouldClose(window))
 	{
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -117,13 +120,13 @@ int main(void)
 		transform.update();
 
 		//---- Applying Shader Uniforms---//
-		
+
 		shader.applyShaderUniformMatrix(modelMatrixUniform, transform.getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();
 		drawingPanel.draw();
-		
+
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -133,12 +136,20 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoResize;
 		window_flags |= ImGuiWindowFlags_NoCollapse;
 		bool *p_open = NULL;
-		
+
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
-		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.45f);
+		if (ImGui::Button("Toggle Fullscreen", ImVec2(180, 40)))
+		{
+			if(!isFullscreen)
+				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+			else
+				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
+			isFullscreen = !isFullscreen;
+		}
+		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.3f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
