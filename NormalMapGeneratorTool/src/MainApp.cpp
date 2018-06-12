@@ -115,12 +115,11 @@ int main(void)
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		transform.setScale(glm::vec2(windowWidth / aspectRatio, windowHeight * aspectRatio) * zoomLevel);
-		transform.setX(glm::clamp(transform.getPosition().x, -0.3f, 0.3f));
-		transform.setY(glm::clamp(transform.getPosition().y, -0.3f, 0.3f));
+		transform.setX(glm::clamp(transform.getPosition().x, -0.5f, 0.9f));
+		transform.setY(glm::clamp(transform.getPosition().y, -0.8f, 0.8f));
 		transform.update();
 
 		//---- Applying Shader Uniforms---//
-
 		shader.applyShaderUniformMatrix(modelMatrixUniform, transform.getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
@@ -143,19 +142,21 @@ int main(void)
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.45f);
 		if (ImGui::Button("Toggle Fullscreen", ImVec2(180, 40)))
 		{
-			if(!isFullscreen)
+			if (!isFullscreen)
+			{
 				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+				glfwSwapInterval(1);
+			}
 			else
 				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
 			isFullscreen = !isFullscreen;
 		}
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
-		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.3f")) {}
+		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
-
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
