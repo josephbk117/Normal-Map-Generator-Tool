@@ -7,6 +7,7 @@
 #include "imgui_impl_glfw_gl3.h"
 
 #include "DrawingPanel.h"
+#include "TextureData.h"
 #include "TextureLoader.h"
 #include "ShaderProgram.h"
 #include "Transform.h"
@@ -56,7 +57,12 @@ int main(void)
 
 	DrawingPanel drawingPanel;
 	drawingPanel.init(1.0f, 1.0f);
-	unsigned int texId = TextureManager::loadTextureFromFile("Resources\\goli.png", "poke", false);
+
+	TextureData texData;
+	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
+
+	std::cout << "\nComponent count = " << texData.getComponentCount();
+	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
 	drawingPanel.setTextureID(texId);
 	ShaderProgram shader;
 	shader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");

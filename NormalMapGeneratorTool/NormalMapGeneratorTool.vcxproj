@@ -130,6 +130,7 @@
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />
     <ClCompile Include="src\Transform.cpp" />
+    <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h" />
@@ -144,6 +145,7 @@
     <ClInclude Include="src\stb_truetype.h" />
     <ClInclude Include="src\TextureLoader.h" />
     <ClInclude Include="src\Transform.h" />
+    <ClInclude Include="src\TextureData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
