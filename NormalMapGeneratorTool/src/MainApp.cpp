@@ -108,16 +108,43 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_8))
 			transform.setRotation(transform.getRotation() + 0.06f);
 
-		if (isKeyPressed(GLFW_KEY_F))
+		if (isKeyPressed(GLFW_KEY_F) || isKeyPressed(GLFW_KEY_G))
 		{
+			int dir = isKeyPressed(GLFW_KEY_F) ? 1 : -1;
 			for (int i = 0; i < 512; i++)
 			{
 				for (int j = 0; j < 512; j++)
 				{
 					ColourData colData = texData.getTexelColor(i, j);
 					unsigned char rVal = colData.getColour_8_Bit().r;
-					rVal = glm::clamp((int)rVal - 1, 0, 255);
+					rVal = glm::clamp((int)rVal + dir, 0, 255);
 					texData.setTexelColor(rVal, rVal, rVal, i, j);
+				}
+			}
+			GLenum format = TextureManager::getTextureFormatFromData(4);
+			glTexImage2D(GL_TEXTURE_2D, 0, format,
+				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+		}
+
+		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+		if (state == GLFW_PRESS)
+		{
+			double xpos, ypos;
+			glfwGetCursorPos(window, &xpos, &ypos);
+			xpos = (xpos - 256) / 512.0f;
+			ypos = 1.0f - ((ypos - 256) / 512.0f);
+			for (int i = 0; i < 512; i++)
+			{
+				for (int j = 0; j < 512; j++)
+				{
+					ColourData colData = texData.getTexelColor(i, j);
+					unsigned char rVal = colData.getColour_8_Bit().r;
+					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(i / 512.0f, j / 512.0f));
+					if (distance < 0.1f)
+						distance = 10;
+					else
+						distance = 0;
+					texData.setTexelColor(rVal + distance, rVal + distance, rVal + distance, i, j);
 				}
 			}
 			GLenum format = TextureManager::getTextureFormatFromData(4);

@@ -31,9 +31,14 @@ int TextureData::getComponentCount()
 	return componentCount;
 }
 
-void TextureData::setTexelColor(unsigned char r, unsigned char g, unsigned char b, int x, int y)
+void TextureData::setTexelColor(int r, int g, int b, int x, int y)
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
+	r = glm::clamp(r, 0, 255);
+	g = glm::clamp(g, 0, 255);
+	b = glm::clamp(b, 0, 255);
+	int a = 255;
+
 	data[i] = r;
 	data[i + 1] = g;
 	data[i + 2] = b;

@@ -14,7 +14,7 @@ public:
 	int getWidth();
 	int getHeight();
 	int getComponentCount();
-	void setTexelColor(unsigned char r, unsigned char g, unsigned char b, int x, int y);
+	void setTexelColor(int r, int g, int b, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
 	ColourData getTexelColor(int x, int y);
 
