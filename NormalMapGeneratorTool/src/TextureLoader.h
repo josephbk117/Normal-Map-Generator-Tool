@@ -1,5 +1,6 @@
 #pragma once
 #include "TextureData.h"
+#include <GL\glew.h>
 #include <unordered_map>
 #include <vector>
 #include <GLM\common.hpp>
@@ -13,6 +14,8 @@ public:
 	static glm::vec2 getImageDimensions(const std::string& path);
 	static unsigned int loadTextureFromFile(const std::string& path, const std::string& referenceName, bool gamma);
 	static unsigned int loadTextureFromData(TextureData & textureData, bool gamma);
+	static GLenum getTextureFormatFromData(TextureData & textureData);
+	static GLenum getTextureFormatFromData(int componentCount);
 	static unsigned int getTextureIdFromReference(const std::string& referenceName);
 	static void unloadTexture(const std::string& referenceName);
 	static void unloadTexturesFromMemory();

@@ -39,6 +39,22 @@ void TextureData::setTexelColor(unsigned char r, unsigned char g, unsigned char 
 	data[i + 2] = b;
 }
 
+void TextureData::setTexelColor(ColourData & colourData, int x, int y)
+{
+	int i = ((float)width * (float)y + (float)x) * 4.0f;
+	data[i] = colourData.getColour_8_Bit().r;
+	data[i + 1] = colourData.getColour_8_Bit().g;
+	data[i + 2] = colourData.getColour_8_Bit().b;
+}
+
+ColourData TextureData::getTexelColor(int x, int y)
+{
+	int i = ((float)width * (float)y + (float)x) * 4.0f;
+	ColourData colData;
+	colData.setColour(data[i], data[i + 1], data[i + 2], 255);
+	return colData;
+}
+
 TextureData::~TextureData()
 {
 	delete[] data;

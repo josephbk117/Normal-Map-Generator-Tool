@@ -8,6 +8,7 @@
 
 #include "DrawingPanel.h"
 #include "TextureData.h"
+#include "ColourData.h"
 #include "TextureLoader.h"
 #include "ShaderProgram.h"
 #include "Transform.h"
@@ -106,6 +107,23 @@ int main(void)
 			transform.setY(transform.getPosition().y - 0.005f);
 		if (isKeyPressed(GLFW_KEY_8))
 			transform.setRotation(transform.getRotation() + 0.06f);
+
+		if (isKeyPressed(GLFW_KEY_F))
+		{
+			for (int i = 0; i < 512; i++)
+			{
+				for (int j = 0; j < 512; j++)
+				{
+					ColourData colData = texData.getTexelColor(i, j);
+					unsigned char rVal = colData.getColour_8_Bit().r;
+					rVal = glm::clamp((int)rVal - 1, 0, 255);
+					texData.setTexelColor(rVal, rVal, rVal, i, j);
+				}
+			}
+			GLenum format = TextureManager::getTextureFormatFromData(4);
+			glTexImage2D(GL_TEXTURE_2D, 0, format,
+				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+		}
 
 		if (isKeyPressed(GLFW_KEY_A))
 			strValue += 0.05f;

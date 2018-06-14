@@ -91,7 +91,7 @@ unsigned int TextureManager::loadTextureFromData(TextureData & textureData, bool
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	}
@@ -100,6 +100,30 @@ unsigned int TextureManager::loadTextureFromData(TextureData & textureData, bool
 		std::cout << "\nTexture failed to load with texture data "<< std::endl;
 #endif
 	return textureID;
+}
+
+GLenum TextureManager::getTextureFormatFromData(TextureData & textureData)
+{
+	GLenum format = GL_RED;
+	if (textureData.getComponentCount() == 1)
+		format = GL_RED;
+	else if (textureData.getComponentCount() == 3)
+		format = GL_RGB;
+	else if (textureData.getComponentCount() == 4)
+		format = GL_RGBA;
+	return format;
+}
+
+GLenum TextureManager::getTextureFormatFromData(int componentCount)
+{
+	GLenum format = GL_RED;
+	if (componentCount == 1)
+		format = GL_RED;
+	else if (componentCount == 3)
+		format = GL_RGB;
+	else if (componentCount == 4)
+		format = GL_RGBA;
+	return format;
 }
 
 unsigned int TextureManager::getTextureIdFromReference(const std::string& referenceString)

@@ -133,6 +133,7 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ColourData.h" />
     <ClInclude Include="src\DrawingPanel.h" />
     <ClInclude Include="src\imconfig.h" />
     <ClInclude Include="src\imgui.h" />
