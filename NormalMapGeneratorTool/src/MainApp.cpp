@@ -86,8 +86,11 @@ int main(void)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
+
+	double initTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
+		double deltaTime = glfwGetTime() - initTime;
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -99,33 +102,15 @@ int main(void)
 			normalMapMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
-			transform.setX(transform.getPosition().x - 0.005f);
+			transform.setX(transform.getPosition().x - 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_RIGHT))
-			transform.setX(transform.getPosition().x + 0.005f);
+			transform.setX(transform.getPosition().x + 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_UP))
-			transform.setY(transform.getPosition().y + 0.005f);
+			transform.setY(transform.getPosition().y + 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_DOWN))
-			transform.setY(transform.getPosition().y - 0.005f);
+			transform.setY(transform.getPosition().y - 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
-			transform.setRotation(transform.getRotation() + 0.06f);
-
-		if (isKeyPressed(GLFW_KEY_F) || isKeyPressed(GLFW_KEY_G))
-		{
-			int dir = isKeyPressed(GLFW_KEY_F) ? 1 : -1;
-			for (int i = 0; i < 512; i++)
-			{
-				for (int j = 0; j < 512; j++)
-				{
-					ColourData colData = texData.getTexelColor(i, j);
-					unsigned char rVal = colData.getColour_8_Bit().r;
-					rVal = glm::clamp((int)rVal + dir, 0, 255);
-					texData.setTexelColor(rVal, rVal, rVal, 100, i, j);
-				}
-			}
-			GLenum format = TextureManager::getTextureFormatFromData(4);
-			glTexImage2D(GL_TEXTURE_2D, 0, format,
-				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
-		}
+			transform.setRotation(transform.getRotation() + 1.0f * deltaTime);
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 		if (state == GLFW_PRESS)
@@ -148,13 +133,13 @@ int main(void)
 		}
 
 		if (isKeyPressed(GLFW_KEY_A))
-			strValue += 0.05f;
+			strValue += 2.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_D))
-			strValue -= 0.05f;
+			strValue -= 2.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_W))
-			zoomLevel += zoomLevel * 0.1f;
+			zoomLevel += zoomLevel * 1.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_S))
-			zoomLevel -= zoomLevel * 0.1f;
+			zoomLevel -= zoomLevel * 1.5f * deltaTime;
 		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
@@ -216,6 +201,8 @@ int main(void)
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+		initTime = glfwGetTime();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
