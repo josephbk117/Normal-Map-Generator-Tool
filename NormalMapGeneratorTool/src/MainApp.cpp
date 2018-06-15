@@ -22,6 +22,9 @@ bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int w, int h);
 void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset);
+void drawLine(int x0, int y0, int x1, int y1);
+void plotLineLow(int x0, int y0, int x1, int y1);
+void plotLineHigh(int x0, int y0, int x1, int y1);
 TextureData texData;
 int main(void)
 {
@@ -49,13 +52,9 @@ int main(void)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 	ImGui_ImplGlfwGL3_Init(window, true);
 
-	// Setup style
 	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	DrawingPanel drawingPanel;
@@ -89,6 +88,7 @@ int main(void)
 	float brushScale = 0.01f;
 	float brushOffset = 100.0f;
 	double initTime = glfwGetTime();
+	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -118,32 +118,47 @@ int main(void)
 		{
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
-			xpos = xpos / windowWidth;
-			ypos = 1.0f - (ypos / (windowHeight - 150));
-
-			float left = (-transform.getScale().x * 0.5f) + 0.5f;
-			float right = (transform.getScale().x * 0.5f) + 0.5f;
-			float top = (transform.getScale().y * 0.5f) + 0.5f;
-			float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
-
-			if (xpos >= left && xpos <= right && ypos >= bottom && ypos <= top)
+			glm::vec2 currentPos(xpos, ypos);
+			if (currentPos != prevMouseCoord)
 			{
-				xpos = (xpos - left) / (right - left);
-				ypos = (ypos - bottom) / (top - bottom);
-				std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset);
-				std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset);
-				std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset);
-				std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset);
+				xpos = xpos / windowWidth;
+				ypos = 1.0f - (ypos / (windowHeight - 150));
 
-				first.join();
-				second.join();
-				third.join();
-				fourth.join();
+				float left = (-transform.getScale().x * 0.5f) + 0.5f;
+				float right = (transform.getScale().x * 0.5f) + 0.5f;
+				float top = (transform.getScale().y * 0.5f) + 0.5f;
+				float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
 
-				GLenum format = TextureManager::getTextureFormatFromData(4);
-				glTexImage2D(GL_TEXTURE_2D, 0, format,
-					texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+				if (xpos >= left && xpos <= right && ypos >= bottom && ypos <= top)
+				{
+					float prevX = prevMouseCoord.x / windowWidth;
+					float prevY = 1.0f - (prevMouseCoord.y / (windowHeight - 150));
+
+					if (prevMouseCoord != glm::vec2(-10, -10))
+						drawLine(prevX * 511, prevY * 511, xpos * 511, ypos * 511);
+
+					xpos = (xpos - left) / (right - left);
+					ypos = (ypos - bottom) / (top - bottom);
+					std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset);
+					std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset);
+					std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset);
+					std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset);
+
+					first.join();
+					second.join();
+					third.join();
+					fourth.join();
+
+					GLenum format = TextureManager::getTextureFormatFromData(4);
+					glTexImage2D(GL_TEXTURE_2D, 0, format,
+						texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+				}
+				prevMouseCoord = currentPos;
 			}
+		}
+		else
+		{
+			prevMouseCoord = glm::vec2(-10, -10);
 		}
 
 		if (isKeyPressed(GLFW_KEY_A))
@@ -228,6 +243,73 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
+void drawLine(int x0, int y0, int x1, int y1)
+{
+	if (abs(y1 - y0) < abs(x1 - x0))
+	{
+		if (x0 > x1)
+			plotLineLow(x1, y1, x0, y0);
+		else
+			plotLineLow(x0, y0, x1, y1);
+	}
+	else
+	{
+		if (y0 > y1)
+			plotLineHigh(x1, y1, x0, y0);
+		else
+			plotLineHigh(x0, y0, x1, y1);
+	}
+}
+
+void plotLineLow(int x0, int y0, int x1, int y1)
+{
+	int dx = x1 - x0;
+	int	dy = y1 - y0;
+	int	yi = 1;
+	if (dy < 0)
+	{
+		yi = -1;
+		dy = -dy;
+	}
+	int D = 2 * dy - dx;
+	int y = y0;
+
+	for (int x = x0; x < x1; x++)
+	{
+		texData.setTexelColor(255, 255, 255, 255, x, y);
+		if (D > 0)
+		{
+			y = y + yi;
+			D = D - 2 * dx;
+		}
+		D = D + 2 * dy;
+	}
+}
+
+void plotLineHigh(int x0, int y0, int x1, int y1)
+{
+	int dx = x1 - x0;
+	int	dy = y1 - y0;
+	int	xi = 1;
+	if (dx < 0)
+	{
+		xi = -1;
+		dx = -dx;
+	}
+	int D = 2 * dx - dy;
+	int x = x0;
+
+	for (int y = y0; y < y1; y++)
+	{
+		texData.setTexelColor(255, 255, 255, 255, x, y);
+		if (D > 0)
+		{
+			x = x + xi;
+			D = D - 2 * dy;
+		}
+		D = D + 2 * dx;
+	}
+}
 void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset)
 {
 	for (int i = startX; i < width; i++)
@@ -238,11 +320,11 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 			unsigned char rVal = colData.getColour_8_Bit().r;
 			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2((double)i / 512.0f, (double)j / 512.0f));
 			if (distance < brushScale)
-				distance = 1.0f - (distance * brushOffset);
-			else
-				distance = 0;
-			rVal = rVal + distance * (255.0f - rVal);
-			texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
+			{
+				distance = glm::pow(1.0f - (distance * brushOffset), 10);
+				rVal = rVal + distance * (255.0f - rVal);
+				texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
+			}
 		}
 	}
 }
