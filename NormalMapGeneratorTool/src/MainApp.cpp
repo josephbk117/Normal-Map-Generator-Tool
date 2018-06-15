@@ -222,8 +222,8 @@ int main(void)
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
-		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.01f, -1.0f, 1.0f, ": %.2f")) {}
-		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, -100.0f, 100.0f, ": %.2f")) {}
+		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.01f, -1.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, -100.0f, 100.0f, "%.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -277,6 +277,9 @@ void plotLineLow(int x0, int y0, int x1, int y1)
 	for (int x = x0; x < x1; x++)
 	{
 		texData.setTexelColor(255, 255, 255, 255, x, y);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y);
+		texData.setTexelColor(255, 255, 255, 255, x, y + 1);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);
 		if (D > 0)
 		{
 			y = y + yi;
@@ -302,6 +305,9 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	for (int y = y0; y < y1; y++)
 	{
 		texData.setTexelColor(255, 255, 255, 255, x, y);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y);
+		texData.setTexelColor(255, 255, 255, 255, x, y + 1);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);
 		if (D > 0)
 		{
 			x = x + xi;
@@ -321,7 +327,7 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2((double)i / 512.0f, (double)j / 512.0f));
 			if (distance < brushScale)
 			{
-				distance = glm::pow(1.0f - (distance * brushOffset), 10);
+				distance = glm::pow(1.0f - (distance * brushOffset), 2);
 				rVal = rVal + distance * (255.0f - rVal);
 				texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
 			}
@@ -361,9 +367,6 @@ bool saveScreenshot(std::string filename, int w, int h)
 	char* dataBuffer = (char*)malloc(nSize * sizeof(char));
 
 	if (!dataBuffer) return false;
-
-	// Let's fetch them from the backbuffer	
-	// We request the pixels in GL_BGR format, thanks to Berzeger for the tip
 	glReadPixels((GLint)0, (GLint)0, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 	//Now the file creation
@@ -379,8 +382,6 @@ bool saveScreenshot(std::string filename, int w, int h)
 	// And finally our image data
 	fwrite(dataBuffer, sizeof(GLubyte), nSize, filePtr);
 	fclose(filePtr);
-
 	free(dataBuffer);
-
 	return true;
 }
