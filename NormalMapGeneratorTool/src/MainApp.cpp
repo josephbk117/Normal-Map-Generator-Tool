@@ -2,6 +2,7 @@
 #include <string>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
+#include <thread> 
 
 #include "imgui.h"
 #include "imgui_impl_glfw_gl3.h"
@@ -20,6 +21,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int w, int h);
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos);
+TextureData texData;
 int main(void)
 {
 	if (!glfwInit())
@@ -34,7 +37,6 @@ int main(void)
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
 	{
@@ -59,7 +61,6 @@ int main(void)
 	DrawingPanel drawingPanel;
 	drawingPanel.init(1.0f, 1.0f);
 
-	TextureData texData;
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 
 	std::cout << "\nComponent count = " << texData.getComponentCount();
@@ -74,7 +75,7 @@ int main(void)
 	int widthUniform = shader.getUniformLocation("_HeightmapDimX");
 	int heightUniform = shader.getUniformLocation("_HeightmapDimY");
 	float strValue = 0.0f;
-	float zoomLevel = 0.0005f;
+	float zoomLevel = 1;
 	int normalMapMode = 3;
 	float widthRes = 512;
 	float heightRes = 512;
@@ -118,7 +119,7 @@ int main(void)
 					ColourData colData = texData.getTexelColor(i, j);
 					unsigned char rVal = colData.getColour_8_Bit().r;
 					rVal = glm::clamp((int)rVal + dir, 0, 255);
-					texData.setTexelColor(rVal, rVal, rVal, i, j);
+					texData.setTexelColor(rVal, rVal, rVal, 100, i, j);
 				}
 			}
 			GLenum format = TextureManager::getTextureFormatFromData(4);
@@ -126,27 +127,21 @@ int main(void)
 				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
 		}
 
-		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 		if (state == GLFW_PRESS)
 		{
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
-			xpos = (xpos - 256) / 512.0f;
-			ypos = 1.0f - ((ypos - 256) / 512.0f);
-			for (int i = 0; i < 512; i++)
-			{
-				for (int j = 0; j < 512; j++)
-				{
-					ColourData colData = texData.getTexelColor(i, j);
-					unsigned char rVal = colData.getColour_8_Bit().r;
-					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(i / 512.0f, j / 512.0f));
-					if (distance < 0.1f)
-						distance = 10;
-					else
-						distance = 0;
-					texData.setTexelColor(rVal + distance, rVal + distance, rVal + distance, i, j);
-				}
-			}
+			xpos = (xpos) / windowWidth;
+			ypos = 1.0f - ((ypos) / windowHeight);
+			std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos);
+			std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos);
+			std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos);
+			std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos);
+			first.join();
+			second.join();
+			third.join();
+			fourth.join();
 			GLenum format = TextureManager::getTextureFormatFromData(4);
 			glTexImage2D(GL_TEXTURE_2D, 0, format,
 				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
@@ -157,10 +152,10 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_D))
 			strValue -= 0.05f;
 		if (isKeyPressed(GLFW_KEY_W))
-			zoomLevel += 0.000003f;
+			zoomLevel += zoomLevel * 0.1f;
 		if (isKeyPressed(GLFW_KEY_S))
-			zoomLevel -= 0.000003f;
-		zoomLevel = glm::clamp(zoomLevel, 0.0001f, 0.01f);
+			zoomLevel -= zoomLevel * 0.1f;
+		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			if (saveScreenshot("D:\\scr.tga", windowWidth, windowHeight))
@@ -169,7 +164,10 @@ int main(void)
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
-		transform.setScale(glm::vec2(windowWidth / aspectRatio, windowHeight * aspectRatio) * zoomLevel);
+		if (windowWidth < windowHeight)
+			transform.setScale(glm::vec2(1, aspectRatio) * zoomLevel);
+		else
+			transform.setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
 		transform.setX(glm::clamp(transform.getPosition().x, -0.5f, 0.9f));
 		transform.setY(glm::clamp(transform.getPosition().y, -0.8f, 0.8f));
 		transform.update();
@@ -202,7 +200,6 @@ int main(void)
 			if (!isFullscreen)
 			{
 				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
-				glfwSwapInterval(1);
 			}
 			else
 				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
@@ -228,6 +225,24 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos)
+{
+	for (int i = startX; i < width; i++)
+	{
+		for (int j = startY; j < height; j++)
+		{
+			ColourData colData = texData.getTexelColor(i, j);
+			unsigned char rVal = colData.getColour_8_Bit().r;
+			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(i / 512.0f, j / 512.0f));
+			if (distance < 0.1f)
+				distance = 1.0f - (distance * 10);
+			else
+				distance = 0;
+			rVal = rVal + distance * (255.0f - rVal);
+			texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
+		}
+	}
 }
 bool isKeyPressed(int key)
 {

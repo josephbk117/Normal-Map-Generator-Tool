@@ -31,17 +31,18 @@ int TextureData::getComponentCount()
 	return componentCount;
 }
 
-void TextureData::setTexelColor(int r, int g, int b, int x, int y)
+void TextureData::setTexelColor(int r, int g, int b, int a, int x, int y)
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
 	r = glm::clamp(r, 0, 255);
 	g = glm::clamp(g, 0, 255);
 	b = glm::clamp(b, 0, 255);
-	int a = 255;
+	a = glm::clamp(a, 0, 255);
 
 	data[i] = r;
 	data[i + 1] = g;
 	data[i + 2] = b;
+	data[i + 3] = a;
 }
 
 void TextureData::setTexelColor(ColourData & colourData, int x, int y)
@@ -50,13 +51,14 @@ void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 	data[i] = colourData.getColour_8_Bit().r;
 	data[i + 1] = colourData.getColour_8_Bit().g;
 	data[i + 2] = colourData.getColour_8_Bit().b;
+	data[i + 3] = colourData.getColour_8_Bit().a;
 }
 
 ColourData TextureData::getTexelColor(int x, int y)
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
 	ColourData colData;
-	colData.setColour(data[i], data[i + 1], data[i + 2], 255);
+	colData.setColour(data[i], data[i + 1], data[i + 2], data[i + 3]);
 	return colData;
 }
 
