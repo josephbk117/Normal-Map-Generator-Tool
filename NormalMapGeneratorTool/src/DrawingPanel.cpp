@@ -85,6 +85,20 @@ unsigned int DrawingPanel::getTextureID() const noexcept
 	return this->textureID;
 }
 
+bool DrawingPanel::isPointInPanel(float xpos, float ypos, Transform trans)
+{
+	//0,0 is center
+	//left most -width/2 & right most width/2
+	float left = ( -width * trans.getScale().x) + trans.getPosition().x;
+	float right = ( width * trans.getScale().x) + trans.getPosition().x;
+
+	if (xpos >= left && xpos <= right)
+	{
+		return true;
+	}
+	return false;
+}
+
 void DrawingPanel::draw()
 {
 	glBindTexture(GL_TEXTURE_2D, textureID);

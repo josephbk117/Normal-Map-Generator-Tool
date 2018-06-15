@@ -21,7 +21,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int w, int h);
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos);
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset);
 TextureData texData;
 int main(void)
 {
@@ -86,7 +86,8 @@ int main(void)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
-
+	float brushScale = 0.01f;
+	float brushOffset = 100.0f;
 	double initTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
@@ -117,19 +118,32 @@ int main(void)
 		{
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
-			xpos = (xpos) / windowWidth;
-			ypos = 1.0f - ((ypos) / windowHeight);
-			std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos);
-			std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos);
-			std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos);
-			std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos);
-			first.join();
-			second.join();
-			third.join();
-			fourth.join();
-			GLenum format = TextureManager::getTextureFormatFromData(4);
-			glTexImage2D(GL_TEXTURE_2D, 0, format,
-				texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+			xpos = xpos / windowWidth;
+			ypos = 1.0f - (ypos / (windowHeight - 150));
+
+			float left = (-transform.getScale().x * 0.5f) + 0.5f;
+			float right = (transform.getScale().x * 0.5f) + 0.5f;
+			float top = (transform.getScale().y * 0.5f) + 0.5f;
+			float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
+
+			if (xpos >= left && xpos <= right && ypos >= bottom && ypos <= top)
+			{
+				xpos = (xpos - left) / (right - left);
+				ypos = (ypos - bottom) / (top - bottom);
+				std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset);
+				std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset);
+				std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset);
+				std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset);
+
+				first.join();
+				second.join();
+				third.join();
+				fourth.join();
+
+				GLenum format = TextureManager::getTextureFormatFromData(4);
+				glTexImage2D(GL_TEXTURE_2D, 0, format,
+					texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+			}
 		}
 
 		if (isKeyPressed(GLFW_KEY_A))
@@ -146,7 +160,6 @@ int main(void)
 			if (saveScreenshot("D:\\scr.tga", windowWidth, windowHeight))
 				std::cout << "Saved";
 		}
-
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
@@ -193,7 +206,9 @@ int main(void)
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
-		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
+		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
+		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.01f, -1.0f, 1.0f, ": %.2f")) {}
+		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, -100.0f, 100.0f, ": %.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -213,7 +228,7 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos)
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset)
 {
 	for (int i = startX; i < width; i++)
 	{
@@ -221,9 +236,9 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 		{
 			ColourData colData = texData.getTexelColor(i, j);
 			unsigned char rVal = colData.getColour_8_Bit().r;
-			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(i / 512.0f, j / 512.0f));
-			if (distance < 0.1f)
-				distance = 1.0f - (distance * 10);
+			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2((double)i / 512.0f, (double)j / 512.0f));
+			if (distance < brushScale)
+				distance = 1.0f - (distance * brushOffset);
 			else
 				distance = 0;
 			rVal = rVal + distance * (255.0f - rVal);
