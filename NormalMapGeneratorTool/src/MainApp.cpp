@@ -170,11 +170,7 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_S))
 			zoomLevel -= zoomLevel * 1.5f * deltaTime;
 		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
-		if (isKeyPressed(GLFW_KEY_F10))
-		{
-			if (saveScreenshot("D:\\scr.tga", windowWidth, windowHeight))
-				std::cout << "Saved";
-		}
+		
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
@@ -193,6 +189,12 @@ int main(void)
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();
 		drawingPanel.draw();
+
+		if (isKeyPressed(GLFW_KEY_F10))
+		{
+			if (saveScreenshot("D:\\scr.tga", windowWidth, windowHeight - 150))
+				std::cout << "Saved";
+		}
 
 		ImGui_ImplGlfwGL3_NewFrame();
 
@@ -360,7 +362,7 @@ bool saveScreenshot(std::string filename, int w, int h)
 {
 	//This prevents the images getting padded 
 	// when the width multiplied by 3 is not a multiple of 4
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	int nSize = w * h * 3;
 	// First let's create our buffer, 3 channels per Pixel
@@ -368,6 +370,7 @@ bool saveScreenshot(std::string filename, int w, int h)
 
 	if (!dataBuffer) return false;
 	glReadPixels((GLint)0, (GLint)0, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
+	//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 	//Now the file creation
 #pragma warning(suppress : 4996)
