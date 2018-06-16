@@ -147,8 +147,7 @@ int main(void)
 					fourth.join();
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
-					glTexImage2D(GL_TEXTURE_2D, 0, format,
-						texData.getWidth(), texData.getHeight(), 0, format, GL_UNSIGNED_BYTE, texData.getTextureData());
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 512, 512, format, GL_UNSIGNED_BYTE, texData.getTextureData());
 				}
 				prevMouseCoord = currentPos;
 			}
