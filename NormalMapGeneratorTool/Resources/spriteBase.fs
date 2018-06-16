@@ -6,6 +6,8 @@ uniform sampler2D textureOne;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
+uniform float _Specularity;
+uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 /*void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
 {
@@ -54,11 +56,11 @@ void main()
         vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
         norm += normalOffset;
         norm = normalize(norm);
-        vec3 lightDir = normalize(vec3(0.0,0.0,1.0));
-        float light = (dot(norm, lightDir) + 1.0) * 0.5;
+        vec3 lightDir = normalize(vec3(1.0,1.0,1.0));
+        float light = (dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity;
         vec3 LightReflect = normalize(reflect(lightDir, norm));
-        vec3 worldEyePos = worldPos - vec3(0,0.0, - 0.00001);
-        float SpecularFactor = dot(worldEyePos, LightReflect);
+        vec3 worldEyePos = worldPos - vec3(0,0.0,1.0);
+        float SpecularFactor = (dot(worldEyePos, LightReflect) + 1.0)*0.5 * _Specularity;
         if(SpecularFactor > 0)
             SpecularFactor = pow(SpecularFactor, 2);
         if(_normalMapModeOn == 2)
@@ -68,6 +70,6 @@ void main()
     }
     else
     {
-        color = texture(textureOne,textureUV);        
+        color = texture(textureOne,textureUV);
     }
 }

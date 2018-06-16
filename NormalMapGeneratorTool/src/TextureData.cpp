@@ -49,6 +49,8 @@ void TextureData::setTexelColor(int r, int g, int b, int a, int x, int y)
 
 void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 {
+	x = glm::clamp(x, 0, width);
+	y = glm::clamp(y, 0, height);
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
 	data[i] = colourData.getColour_8_Bit().r;
 	data[i + 1] = colourData.getColour_8_Bit().g;
@@ -60,7 +62,7 @@ ColourData TextureData::getTexelColor(int x, int y)
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
 	ColourData colData;
-	colData.setColour(data[i], data[i + 1], data[i + 2], data[i + 3]);
+	colData.setColour_8_Bit(data[i], data[i + 1], data[i + 2], data[i + 3]);
 	return colData;
 }
 

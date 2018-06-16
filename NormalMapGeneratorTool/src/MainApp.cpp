@@ -21,7 +21,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int w, int h);
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset);
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -73,11 +73,16 @@ int main(void)
 	int modelMatrixUniform = shader.getUniformLocation("model");
 	int widthUniform = shader.getUniformLocation("_HeightmapDimX");
 	int heightUniform = shader.getUniformLocation("_HeightmapDimY");
+	int specularityUniform = shader.getUniformLocation("_Specularity");
+	int lightIntensityUniform = shader.getUniformLocation("_LightIntensity");
 	float strValue = 0.0f;
+	float specularity = 0;
+	float lightIntensity = 1;
 	float zoomLevel = 1;
 	int normalMapMode = 3;
 	float widthRes = 512;
 	float heightRes = 512;
+	bool heightMapPositiveDir = false;
 	glm::vec3 rotation = glm::vec3(0);
 	Transform transform;
 	transform.setPosition(0, 0);
@@ -139,10 +144,10 @@ int main(void)
 
 					xpos = (xpos - left) / (right - left);
 					ypos = (ypos - bottom) / (top - bottom);
-					std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset);
-					std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset);
-					std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset);
-					std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset);
+					std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
+					std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
+					std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
+					std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 
 					first.join();
 					second.join();
@@ -184,6 +189,8 @@ int main(void)
 		//---- Applying Shader Uniforms---//
 		shader.applyShaderUniformMatrix(modelMatrixUniform, transform.getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
+		shader.applyShaderFloat(specularityUniform, specularity);
+		shader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		shader.applyShaderFloat(widthUniform, widthRes);
 		shader.applyShaderFloat(heightUniform, heightRes);
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
@@ -220,8 +227,14 @@ int main(void)
 				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
 			isFullscreen = !isFullscreen;
 		}
+		if (ImGui::Button("Toggle Height Map Draw", ImVec2(180, 40)))
+		{
+			heightMapPositiveDir = !heightMapPositiveDir;
+		}
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
-		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
+		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
 		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
@@ -278,10 +291,10 @@ void plotLineLow(int x0, int y0, int x1, int y1)
 
 	for (int x = x0; x < x1; x++)
 	{
-		texData.setTexelColor(255, 255, 255, 255, x, y);
+		/*texData.setTexelColor(255, 255, 255, 255, x, y);
 		texData.setTexelColor(255, 255, 255, 255, x + 1, y);
 		texData.setTexelColor(255, 255, 255, 255, x, y + 1);
-		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);*/
 		if (D > 0)
 		{
 			y = y + yi;
@@ -306,10 +319,10 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 
 	for (int y = y0; y < y1; y++)
 	{
-		texData.setTexelColor(255, 255, 255, 255, x, y);
+		/*texData.setTexelColor(255, 255, 255, 255, x, y);
 		texData.setTexelColor(255, 255, 255, 255, x + 1, y);
 		texData.setTexelColor(255, 255, 255, 255, x, y + 1);
-		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);
+		texData.setTexelColor(255, 255, 255, 255, x + 1, y + 1);*/
 		if (D > 0)
 		{
 			x = x + xi;
@@ -318,10 +331,11 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 		D = D + 2 * dx;
 	}
 }
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset)
+
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir)
 {
 	ColourData colData;
-	unsigned char rVal;
+	float rVal;
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);
 	float px_width = texData.getWidth();
@@ -331,17 +345,19 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 		for (int j = startY; j < height; j++)
 		{
 			colData = texData.getTexelColor(i, j);
-			rVal = colData.getColour_8_Bit().r;
-			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+			rVal = colData.getColourIn_0_1_Range().r;
+			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));			
 			if (distance < brushScale)
 			{
 				distance = glm::clamp((1.0f - (distance / brushScale)) * brushOffset, 0.0f, 1.0f);
-				rVal = rVal + distance * (255.0f - rVal);
-				texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
+				rVal = rVal + distance * ((heightMapPositiveDir ? 1.0f : 0.0f) - rVal);
+				ColourData col(rVal, rVal, rVal, 1.0f);
+				texData.setTexelColor(col, i, j);
 			}
 		}
 	}
 }
+
 bool isKeyPressed(int key)
 {
 	int state = glfwGetKey(window, key);
@@ -349,6 +365,7 @@ bool isKeyPressed(int key)
 		return true;
 	return false;
 }
+
 bool isKeyReleased(int key)
 {
 	int state = glfwGetKey(window, key);
