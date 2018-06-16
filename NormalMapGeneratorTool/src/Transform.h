@@ -11,9 +11,11 @@ public:
 	virtual void update();
 	void setPosition(const glm::vec2& position);
 	void setPosition(float xCoord, float yCoord);
+	void translate(float x, float y);
 	void setX(float xValue);
 	void setY(float yValue);
 	void setRotation(float rotation);
+	void rotate(float rotation);
 	void setScale(const glm::vec2& scale);
 	const glm::vec2& getPosition()const noexcept;
 	float getRotation()const noexcept;

@@ -47,6 +47,11 @@ void Transform::setPosition(float xCoord, float yCoord)
 	position = glm::vec2(xCoord, yCoord);
 }
 
+void Transform::translate(float x, float y)
+{
+	this->position = glm::vec2(position.x + x, position.y + y);
+}
+
 void Transform::setX(float xValue)
 {
 	setPosition(glm::vec2(xValue, position.y));
@@ -59,6 +64,10 @@ void Transform::setRotation(float rotation)
 {
 	needsUpdate = true;
 	this->rotation = rotation;
+}
+void Transform::rotate(float rotation)
+{
+	this->rotation += rotation;
 }
 void Transform::setScale(const glm::vec2& scale)
 {

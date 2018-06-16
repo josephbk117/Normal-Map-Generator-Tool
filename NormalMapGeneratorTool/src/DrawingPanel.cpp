@@ -75,6 +75,11 @@ void DrawingPanel::init(float width, float height)
 	glBindVertexArray(0);
 }
 
+Transform * DrawingPanel::getTransform()
+{
+	return &transform;
+}
+
 void DrawingPanel::setTextureID(unsigned int textureID)
 {
 	this->textureID = textureID;
@@ -85,18 +90,21 @@ unsigned int DrawingPanel::getTextureID() const noexcept
 	return this->textureID;
 }
 
-bool DrawingPanel::isPointInPanel(float xpos, float ypos, Transform trans)
+bool DrawingPanel::isPointInPanel(float xpos, float ypos)
 {
-	//0,0 is center
-	//left most -width/2 & right most width/2
-	float left = ( -width * trans.getScale().x) + trans.getPosition().x;
-	float right = ( width * trans.getScale().x) + trans.getPosition().x;
-
-	if (xpos >= left && xpos <= right)
-	{
+	glm::vec4 dimensions = getPanelWorldDimension();
+	if (xpos >= dimensions.x && xpos <= dimensions.y && ypos >= dimensions.w && ypos <= dimensions.z)
 		return true;
-	}
 	return false;
+}
+
+glm::vec4 DrawingPanel::getPanelWorldDimension()
+{
+	float left = (-transform.getScale().x * 0.5f) + 0.5f;
+	float right = (transform.getScale().x * 0.5f) + 0.5f;
+	float top = (transform.getScale().y * 0.5f) + 0.5f;
+	float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
+	return glm::vec4(left, right, top, bottom);
 }
 
 void DrawingPanel::draw()

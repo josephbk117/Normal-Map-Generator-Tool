@@ -80,12 +80,10 @@ int main(void)
 	float lightIntensity = 1;
 	float zoomLevel = 1;
 	int normalMapMode = 3;
-	float widthRes = 512;
-	float heightRes = 512;
+	float widthRes = texData.getWidth();
+	float heightRes = texData.getHeight();
 	bool heightMapPositiveDir = false;
 	glm::vec3 rotation = glm::vec3(0);
-	Transform transform;
-	transform.setPosition(0, 0);
 	int k = 0;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool showHeightMapInput = true;
@@ -108,15 +106,15 @@ int main(void)
 			normalMapMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
-			transform.setX(transform.getPosition().x - 1 * deltaTime);
+			drawingPanel.getTransform()->translate(-1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_RIGHT))
-			transform.setX(transform.getPosition().x + 1 * deltaTime);
+			drawingPanel.getTransform()->translate(1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_UP))
-			transform.setY(transform.getPosition().y + 1 * deltaTime);
+			drawingPanel.getTransform()->translate(0, 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_DOWN))
-			transform.setY(transform.getPosition().y - 1 * deltaTime);
+			drawingPanel.getTransform()->translate(0, -1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
-			transform.setRotation(transform.getRotation() + 1.0f * deltaTime);
+			drawingPanel.getTransform()->rotate(1.0f * deltaTime);
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 		if (state == GLFW_PRESS)
@@ -128,22 +126,16 @@ int main(void)
 			{
 				xpos = xpos / windowWidth;
 				ypos = 1.0f - (ypos / (windowHeight - 150));
-
-				float left = (-transform.getScale().x * 0.5f) + 0.5f;
-				float right = (transform.getScale().x * 0.5f) + 0.5f;
-				float top = (transform.getScale().y * 0.5f) + 0.5f;
-				float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
-
-				if (xpos >= left && xpos <= right && ypos >= bottom && ypos <= top)
+				if (drawingPanel.isPointInPanel(xpos, ypos))
 				{
 					float prevX = prevMouseCoord.x / windowWidth;
 					float prevY = 1.0f - (prevMouseCoord.y / (windowHeight - 150));
 
 					if (prevMouseCoord != glm::vec2(-10, -10))
 						drawLine(prevX * 511, prevY * 511, xpos * 511, ypos * 511);
-
-					xpos = (xpos - left) / (right - left);
-					ypos = (ypos - bottom) / (top - bottom);
+					glm::vec4 worldDimensions = drawingPanel.getPanelWorldDimension();
+					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
+					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
 					std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 					std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 					std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
@@ -179,15 +171,14 @@ int main(void)
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
-			transform.setScale(glm::vec2(1, aspectRatio) * zoomLevel);
+			drawingPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
 		else
-			transform.setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
-		transform.setX(glm::clamp(transform.getPosition().x, -0.5f, 0.9f));
-		transform.setY(glm::clamp(transform.getPosition().y, -0.8f, 0.8f));
-		transform.update();
-
+			drawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
+		drawingPanel.getTransform()->setX(glm::clamp(drawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
+		drawingPanel.getTransform()->setY(glm::clamp(drawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
+		drawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
-		shader.applyShaderUniformMatrix(modelMatrixUniform, transform.getMatrix());
+		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
 		shader.applyShaderFloat(specularityUniform, specularity);
 		shader.applyShaderFloat(lightIntensityUniform, lightIntensity);
@@ -235,8 +226,6 @@ int main(void)
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
-		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
 		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
 		ImGui::PopItemWidth();
@@ -346,7 +335,7 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 		{
 			colData = texData.getTexelColor(i, j);
 			rVal = colData.getColourIn_0_1_Range().r;
-			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));			
+			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < brushScale)
 			{
 				distance = glm::clamp((1.0f - (distance / brushScale)) * brushOffset, 0.0f, 1.0f);
