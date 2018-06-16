@@ -170,7 +170,7 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_S))
 			zoomLevel -= zoomLevel * 1.5f * deltaTime;
 		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
-		
+
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
@@ -224,7 +224,7 @@ int main(void)
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
-		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.01f, -1.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, -100.0f, 100.0f, "%.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
@@ -320,16 +320,22 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 }
 void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset)
 {
+	ColourData colData;
+	unsigned char rVal;
+	float distance;
+	glm::vec2 pixelPos(xpos, ypos);
+	float px_width = texData.getWidth();
+	float px_height = texData.getHeight();
 	for (int i = startX; i < width; i++)
 	{
 		for (int j = startY; j < height; j++)
 		{
-			ColourData colData = texData.getTexelColor(i, j);
-			unsigned char rVal = colData.getColour_8_Bit().r;
-			float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2((double)i / 512.0f, (double)j / 512.0f));
+			colData = texData.getTexelColor(i, j);
+			rVal = colData.getColour_8_Bit().r;
+			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < brushScale)
 			{
-				distance = glm::pow(1.0f - (distance * brushOffset), 2);
+				distance = glm::clamp((1.0f - (distance / brushScale)) * brushOffset, 0.0f, 1.0f);
 				rVal = rVal + distance * (255.0f - rVal);
 				texData.setTexelColor(rVal, rVal, rVal, 255, i, j);
 			}
