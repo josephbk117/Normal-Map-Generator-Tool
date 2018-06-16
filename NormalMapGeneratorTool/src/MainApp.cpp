@@ -86,7 +86,7 @@ int main(void)
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
 	float brushScale = 0.01f;
-	float brushOffset = 100.0f;
+	float brushOffset = 1.0f;
 	double initTime = glfwGetTime();
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	while (!glfwWindowShouldClose(window))
@@ -95,11 +95,11 @@ int main(void)
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (isKeyPressed(GLFW_KEY_1))
+		if (isKeyPressed(GLFW_KEY_J))
 			normalMapMode = 1;
-		if (isKeyPressed(GLFW_KEY_2))
+		if (isKeyPressed(GLFW_KEY_K))
 			normalMapMode = 2;
-		if (isKeyPressed(GLFW_KEY_3))
+		if (isKeyPressed(GLFW_KEY_L))
 			normalMapMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
@@ -225,7 +225,7 @@ int main(void)
 		if (ImGui::DragFloat("Horizontal Blur", &widthRes, 0.1f, -4028.0f, 4028.0f, "X: %.2f")) {}
 		if (ImGui::DragFloat("Vertical Blur", &heightRes, 0.1f, -4028.0f, 4028.0f, "Y: %.2f")) {}
 		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
-		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, -100.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
