@@ -5,6 +5,9 @@ DrawingPanel::DrawingPanel()
 {
 	vboID = 0;
 	vaoID = 0;
+	width = 0;
+	height = 0;
+	textureID = 0;
 }
 
 DrawingPanel::~DrawingPanel()

@@ -4,8 +4,6 @@
 #include <GL\glew.h>
 #include <iostream>
 
-std::unordered_map<std::string, unsigned int> TextureManager::textureIdMap;
-
 void TextureManager::getRawImageDataFromFile(const std::string & path, std::vector<unsigned char>& data, int &width, int &height, bool flipImage)
 {
 	int nrComponents;
@@ -67,7 +65,6 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path, const
 		std::cout << "\nTexture failed to load at path: " << path.c_str() << std::endl;
 #endif
 	stbi_image_free(data);
-	textureIdMap[referenceString] = textureID;
 	return textureID;
 }
 
@@ -124,20 +121,4 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	else if (componentCount == 4)
 		format = GL_RGBA;
 	return format;
-}
-
-unsigned int TextureManager::getTextureIdFromReference(const std::string& referenceString)
-{
-	return textureIdMap[referenceString];
-}
-
-void TextureManager::unloadTexture(const std::string & referenceName)
-{
-	glDeleteTextures(1, &textureIdMap[referenceName]);
-	textureIdMap.erase(referenceName);
-}
-
-void TextureManager::unloadTexturesFromMemory()
-{
-	textureIdMap.erase(textureIdMap.begin(), textureIdMap.end());
 }

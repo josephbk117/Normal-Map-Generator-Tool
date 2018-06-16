@@ -16,9 +16,4 @@ public:
 	static unsigned int loadTextureFromData(TextureData & textureData, bool gamma);
 	static GLenum getTextureFormatFromData(TextureData & textureData);
 	static GLenum getTextureFormatFromData(int componentCount);
-	static unsigned int getTextureIdFromReference(const std::string& referenceName);
-	static void unloadTexture(const std::string& referenceName);
-	static void unloadTexturesFromMemory();
-private:
-	static std::unordered_map<std::string, unsigned int> textureIdMap;
 };

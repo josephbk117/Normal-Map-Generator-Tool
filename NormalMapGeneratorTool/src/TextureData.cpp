@@ -1,6 +1,10 @@
 #include "TextureData.h"
 TextureData::TextureData()
 {
+	data = nullptr;
+	width = 0;
+	height = 0;
+	componentCount = 0;
 }
 
 void TextureData::setTextureData(unsigned char * data, int width, int height, int componentCount)
