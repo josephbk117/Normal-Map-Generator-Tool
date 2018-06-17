@@ -21,7 +21,7 @@ GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
-bool saveScreenshot(std::string filename, int w, int h);
+bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
@@ -160,7 +160,7 @@ int main(void)
 					fourth.join();
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
-					;					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
 						texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
 				}
 				prevMouseCoord = currentPos;
@@ -207,7 +207,9 @@ int main(void)
 		//frameBuffer.renderToTexture();
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
-			if (saveScreenshot("D:\\scr.tga", windowWidth, windowHeight))
+			int widthSub = windowWidth - (int)(drawingPanel.getPanelWorldDimension().y * windowWidth);
+			int heightSub = windowHeight - (int)(drawingPanel.getPanelWorldDimension().z * windowHeight);
+			if (saveScreenshot("D:\\scr.tga", widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
 				std::cout << "Saved";
 		}
 		//frameDrawingPanel.draw();
@@ -392,18 +394,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-bool saveScreenshot(std::string filename, int w, int h)
+bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h)
 {
 	//This prevents the images getting padded 
 	// when the width multiplied by 3 is not a multiple of 4
-	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	int nSize = w * h * 3;
 	// First let's create our buffer, 3 channels per Pixel
 	char* dataBuffer = (char*)malloc(nSize * sizeof(char));
 
 	if (!dataBuffer) return false;
-	glReadPixels((GLint)0, (GLint)0, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
+	glReadPixels((GLint)xOff, (GLint)yOff, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 	//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 	//Now the file creation
