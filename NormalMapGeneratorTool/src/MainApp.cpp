@@ -144,20 +144,17 @@ int main(void)
 					float prevX = prevMouseCoord.x / windowWidth;
 					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
-					if (prevMouseCoord != glm::vec2(-10, -10))
-						drawLine(prevX * 511, prevY * 511, xpos * 511, ypos * 511);
 					glm::vec4 worldDimensions = drawingPanel.getPanelWorldDimension();
 					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
-					std::thread first(SetPixelValues, 0, 255, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
-					std::thread second(SetPixelValues, 255, 512, 0, 255, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
-					std::thread third(SetPixelValues, 0, 255, 255, 512, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
-					std::thread fourth(SetPixelValues, 255, 512, 255, 512, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 
+					int left = glm::clamp((int)((xpos - brushScale) * 512.0f), 0, 512);
+					int right = glm::clamp((int)((xpos + brushScale) * 512.0f), 0, 512);
+					int bottom = glm::clamp((int)((ypos - brushScale) * 512.0f), 0, 512);
+					int top = glm::clamp((int)((ypos + brushScale) * 512.0f), 0, 512);
+
+					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 					first.join();
-					second.join();
-					third.join();
-					fourth.join();
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
