@@ -20,17 +20,17 @@ unsigned char * TextureData::getTextureData()
 	return data;
 }
 
-int TextureData::getWidth()
+const int TextureData::getWidth() noexcept
 {
 	return width;
 }
 
-int TextureData::getHeight()
+const int TextureData::getHeight() noexcept
 {
 	return height;
 }
 
-int TextureData::getComponentCount()
+int TextureData::getComponentCount() noexcept
 {
 	return componentCount;
 }

@@ -78,7 +78,7 @@ void DrawingPanel::init(float width, float height)
 	glBindVertexArray(0);
 }
 
-Transform * DrawingPanel::getTransform()
+Transform * DrawingPanel::getTransform() noexcept
 {
 	return &transform;
 }
@@ -93,7 +93,7 @@ unsigned int DrawingPanel::getTextureID() const noexcept
 	return this->textureID;
 }
 
-bool DrawingPanel::isPointInPanel(float xpos, float ypos)
+bool DrawingPanel::isPointInPanel(float xpos, float ypos)noexcept
 {
 	glm::vec4 dimensions = getPanelWorldDimension();
 	if (xpos >= dimensions.x && xpos <= dimensions.y && ypos >= dimensions.w && ypos <= dimensions.z)
@@ -101,7 +101,7 @@ bool DrawingPanel::isPointInPanel(float xpos, float ypos)
 	return false;
 }
 
-glm::vec4 DrawingPanel::getPanelWorldDimension()
+glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
 {
 	float left = (-transform.getScale().x * 0.5f) + 0.5f;
 	float right = (transform.getScale().x * 0.5f) + 0.5f;
@@ -110,7 +110,7 @@ glm::vec4 DrawingPanel::getPanelWorldDimension()
 	return glm::vec4(left, right, top, bottom);
 }
 
-void DrawingPanel::draw()
+void DrawingPanel::draw()noexcept
 {
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glBindVertexArray(vaoID);

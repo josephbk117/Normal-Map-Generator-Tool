@@ -11,9 +11,9 @@ public:
 	TextureData();
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
 	unsigned char* getTextureData();
-	int getWidth();
-	int getHeight();
-	int getComponentCount();
+	const int getWidth()noexcept;
+	const int getHeight()noexcept;
+	int getComponentCount()noexcept;
 	void setTexelColor(int r, int g, int b, int a, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
 	ColourData getTexelColor(int x, int y);

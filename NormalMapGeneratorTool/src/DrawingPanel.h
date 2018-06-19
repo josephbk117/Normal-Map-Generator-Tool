@@ -7,12 +7,12 @@ public:
 	DrawingPanel();
 	~DrawingPanel();
 	void init(float width, float height);
-	Transform* getTransform();
+	Transform* getTransform() noexcept;
 	void setTextureID(unsigned int textureID);
 	unsigned int getTextureID()const noexcept;
-	bool isPointInPanel(float xpos, float ypos);
-	glm::vec4 getPanelWorldDimension();
-	void draw();
+	bool isPointInPanel(float xpos, float ypos)noexcept;
+	glm::vec4 getPanelWorldDimension()noexcept;
+	void draw()noexcept;
 private:
 	Transform transform;
 	float width, height;
