@@ -124,6 +124,8 @@ int main(void)
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
+		initTime = glfwGetTime();
+
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
@@ -264,13 +266,15 @@ int main(void)
 			heightMapPositiveDir = !heightMapPositiveDir;
 		}
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+		
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
+		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
-		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
+		
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
@@ -280,8 +284,6 @@ int main(void)
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-
-		initTime = glfwGetTime();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -480,8 +482,8 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 	colors[ImGuiCol_SliderGrab] = ACCENT_COL;
 	colors[ImGuiCol_SliderGrabActive] = ACCENT_COL;
 	colors[ImGuiCol_Button] = SECONDARY_COL;
-	colors[ImGuiCol_ButtonHovered] = SECONDARY_COL;
-	colors[ImGuiCol_ButtonActive] = SECONDARY_COL;
+	colors[ImGuiCol_ButtonHovered] = PRIMARY_COL;
+	colors[ImGuiCol_ButtonActive] = ACCENT_COL;
 	colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
 	colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
 	colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
