@@ -18,6 +18,7 @@
 int windowWidth = 1200;
 int windowHeight = 1200;
 unsigned int framebuffer;
+unsigned int textureColorbuffer;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
@@ -106,11 +107,9 @@ int main(void)
 	double initTime = glfwGetTime();
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 
-
 	glGenFramebuffers(1, &framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-	unsigned int textureColorbuffer;
 	glGenTextures(1, &textureColorbuffer);
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -413,6 +412,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	windowWidth = width;
 	windowHeight = height;
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glViewport(0, 0, width, height);
 }
 
