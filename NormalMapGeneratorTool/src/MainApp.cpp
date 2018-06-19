@@ -19,6 +19,7 @@ int windowWidth = 1200;
 int windowHeight = 1200;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h);
@@ -56,7 +57,7 @@ int main(void)
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(window, true);
 
-	ImGui::StyleColorsDark();
+	CustomColourImGuiTheme();
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	DrawingPanel drawingPanel;
@@ -67,7 +68,6 @@ int main(void)
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 
-	std::cout << "\nComponent count = " << texData.getComponentCount();
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
 	drawingPanel.setTextureID(texId);
 	ShaderProgram shader;
@@ -78,7 +78,6 @@ int main(void)
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
 
-	frameDrawingPanel.setTextureID(frameBuffer.getTexture());
 
 	int frameModelMatrixUniform = shader.getUniformLocation("model");
 	int modelMatrixUniform = shader.getUniformLocation("model");
@@ -98,7 +97,6 @@ int main(void)
 	bool heightMapPositiveDir = false;
 	glm::vec3 rotation = glm::vec3(0);
 	int k = 0;
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
 	float brushScale = 0.01f;
@@ -108,7 +106,7 @@ int main(void)
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
-		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		if (isKeyPressed(GLFW_KEY_J))
@@ -188,8 +186,7 @@ int main(void)
 		drawingPanel.getTransform()->setY(glm::clamp(drawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		drawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
-		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());
-		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, drawingPanel.getTransform()->getMatrix());
+		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());		
 		shader.applyShaderFloat(strengthValueUniform, strValue);
 		shader.applyShaderFloat(specularityUniform, specularity);
 		shader.applyShaderFloat(lightIntensityUniform, lightIntensity);
@@ -198,10 +195,7 @@ int main(void)
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();
 		drawingPanel.draw();
-		//frameDrawingPanel.setTextureID(frameBuffer.getTexture());
-
-		//frameShader.use();
-		//frameBuffer.renderToTexture();
+		
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			int widthSub = windowWidth - (int)(drawingPanel.getPanelWorldDimension().y * windowWidth);
@@ -211,9 +205,11 @@ int main(void)
 		}
 		//frameDrawingPanel.draw();
 		//shader.use();
-
-		glBindTexture(GL_TEXTURE_2D, texId);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		/*frameShader.use();
+		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, drawingPanel.getTransform()->getMatrix());
+		frameDrawingPanel.setTextureID(frameBuffer.getTexture());
+		frameBuffer.renderToTexture();*/
 
 		ImGui_ImplGlfwGL3_NewFrame();
 
@@ -420,4 +416,56 @@ bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h)
 	fclose(filePtr);
 	free(dataBuffer);
 	return true;
+}
+void CustomColourImGuiTheme(ImGuiStyle* dst)
+{
+	ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
+	ImVec4* colors = style->Colors;
+
+	const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
+	const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
+	const ImVec4 ACCENT_COL = ImVec4(243 / 255.0f, 236 / 255.0f, 200 / 255.0f, 1.1f);
+	const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
+	const ImVec4 DARK_GREY = ImVec4(20 / 255.0f, 20 / 255.0f, 20 / 255.0f, 1.1f);
+
+	colors[ImGuiCol_Text] = WHITE;
+	colors[ImGuiCol_TextDisabled] = DARK_GREY;
+	colors[ImGuiCol_WindowBg] = PRIMARY_COL;
+	colors[ImGuiCol_ChildBg] = DARK_GREY;
+	colors[ImGuiCol_PopupBg] = DARK_GREY;
+	colors[ImGuiCol_Border] = ACCENT_COL;
+	colors[ImGuiCol_BorderShadow] = DARK_GREY;
+	colors[ImGuiCol_FrameBg] = PRIMARY_COL;
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.99f, 0.98f, 0.40f);
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.66f, 0.59f, 0.98f, 0.67f);
+	colors[ImGuiCol_TitleBg] = ACCENT_COL;
+	colors[ImGuiCol_TitleBgActive] = SECONDARY_COL;
+	colors[ImGuiCol_TitleBgCollapsed] = ACCENT_COL;
+	colors[ImGuiCol_MenuBarBg] = ImVec4(0.26f, 0.0f, 0.26f, 1.00f);
+	colors[ImGuiCol_ScrollbarBg] = ACCENT_COL;
+	colors[ImGuiCol_ScrollbarGrab] = SECONDARY_COL;
+	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.59f, 0.49f, 0.49f, 0.80f);
+	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.59f, 0.59f, 0.49f, 1.00f);
+	colors[ImGuiCol_CheckMark] = SECONDARY_COL;
+	colors[ImGuiCol_SliderGrab] = ACCENT_COL;
+	colors[ImGuiCol_SliderGrabActive] = ACCENT_COL;
+	colors[ImGuiCol_Button] = SECONDARY_COL;
+	colors[ImGuiCol_ButtonHovered] = SECONDARY_COL;
+	colors[ImGuiCol_ButtonActive] = SECONDARY_COL;
+	colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	colors[ImGuiCol_Separator] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
+	colors[ImGuiCol_SeparatorActive] = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
+	colors[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
+	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.45f, 0.00f, 1.00f);
+	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.0f, 0.0f, 0.20f, 0.45f);
+	colors[ImGuiCol_DragDropTarget] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
 }
