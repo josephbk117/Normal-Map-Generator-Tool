@@ -17,6 +17,7 @@
 
 int windowWidth = 1200;
 int windowHeight = 1200;
+unsigned int framebuffer;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
@@ -61,34 +62,33 @@ int main(void)
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
-
-	DrawingPanel drawingPanel;
-	drawingPanel.init(1.0f, 1.0f);
-	FrameBuffer frameBuffer;
+	DrawingPanel normalmapPanel;
+	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
-	drawingPanel.setTextureID(texId);
-	ShaderProgram shader;
-	shader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
-	shader.linkShaders();
+	normalmapPanel.setTextureID(texId);
+
+	ShaderProgram normalmapShader;
+	normalmapShader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
+	normalmapShader.linkShaders();
 
 	ShaderProgram frameShader;
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
 
 
-	int frameModelMatrixUniform = shader.getUniformLocation("model");
-	int modelMatrixUniform = shader.getUniformLocation("model");
-	int strengthValueUniform = shader.getUniformLocation("_HeightmapStrength");
-	int normalMapModeOnUniform = shader.getUniformLocation("_normalMapModeOn");
-	int widthUniform = shader.getUniformLocation("_HeightmapDimX");
-	int heightUniform = shader.getUniformLocation("_HeightmapDimY");
-	int specularityUniform = shader.getUniformLocation("_Specularity");
-	int lightIntensityUniform = shader.getUniformLocation("_LightIntensity");
+	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
+	int modelMatrixUniform = normalmapShader.getUniformLocation("model");
+	int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
+	int normalMapModeOnUniform = normalmapShader.getUniformLocation("_normalMapModeOn");
+	int widthUniform = normalmapShader.getUniformLocation("_HeightmapDimX");
+	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
+	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
+	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
 	float strValue = 0.0f;
 	float specularity = 0;
 	float lightIntensity = 1;
@@ -105,11 +105,32 @@ int main(void)
 	float brushOffset = 1.0f;
 	double initTime = glfwGetTime();
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
+
+
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	unsigned int textureColorbuffer;
+	glGenTextures(1, &textureColorbuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glEnable(GL_DEPTH_TEST);
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glBindTexture(GL_TEXTURE_2D, texId);
+		normalmapShader.use();
 
 		if (isKeyPressed(GLFW_KEY_J))
 			normalMapMode = 1;
@@ -119,15 +140,15 @@ int main(void)
 			normalMapMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
-			drawingPanel.getTransform()->translate(-1 * deltaTime, 0);
+			normalmapPanel.getTransform()->translate(-1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_RIGHT))
-			drawingPanel.getTransform()->translate(1 * deltaTime, 0);
+			normalmapPanel.getTransform()->translate(1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_UP))
-			drawingPanel.getTransform()->translate(0, 1 * deltaTime);
+			normalmapPanel.getTransform()->translate(0, 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_DOWN))
-			drawingPanel.getTransform()->translate(0, -1 * deltaTime);
+			normalmapPanel.getTransform()->translate(0, -1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
-			drawingPanel.getTransform()->rotate(1.0f * deltaTime);
+			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 		if (state == GLFW_PRESS)
@@ -139,12 +160,12 @@ int main(void)
 			{
 				xpos = xpos / windowWidth;
 				ypos = 1.0f - (ypos / windowHeight);
-				if (drawingPanel.isPointInPanel(xpos, ypos))
+				if (normalmapPanel.isPointInPanel(xpos, ypos))
 				{
 					float prevX = prevMouseCoord.x / windowWidth;
 					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
-					glm::vec4 worldDimensions = drawingPanel.getPanelWorldDimension();
+					glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
 					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
 
@@ -181,37 +202,41 @@ int main(void)
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
-			drawingPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
+			normalmapPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
 		else
-			drawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
-		drawingPanel.getTransform()->setX(glm::clamp(drawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
-		drawingPanel.getTransform()->setY(glm::clamp(drawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
-		drawingPanel.getTransform()->update();
+			normalmapPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
+		normalmapPanel.getTransform()->setX(glm::clamp(normalmapPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
+		normalmapPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
+		normalmapPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
-		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());
-		shader.applyShaderFloat(strengthValueUniform, strValue);
-		shader.applyShaderFloat(specularityUniform, specularity);
-		shader.applyShaderFloat(lightIntensityUniform, lightIntensity);
-		shader.applyShaderFloat(widthUniform, widthRes);
-		shader.applyShaderFloat(heightUniform, heightRes);
-		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
-		shader.use();
-		drawingPanel.draw();
+		normalmapShader.applyShaderUniformMatrix(modelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+		normalmapShader.applyShaderFloat(strengthValueUniform, strValue);
+		normalmapShader.applyShaderFloat(specularityUniform, specularity);
+		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
+		normalmapShader.applyShaderFloat(widthUniform, widthRes);
+		normalmapShader.applyShaderFloat(heightUniform, heightRes);
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
+		normalmapShader.use();
+		normalmapPanel.draw();
 
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
-			int widthSub = windowWidth - (int)(drawingPanel.getPanelWorldDimension().y * windowWidth);
-			int heightSub = windowHeight - (int)(drawingPanel.getPanelWorldDimension().z * windowHeight);
+			int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
+			int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
 			if (saveScreenshot("D:\\scr.tga", widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
 				std::cout << "Saved";
 		}
-		//frameDrawingPanel.draw();
-		//shader.use();
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		/*frameShader.use();
-		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, drawingPanel.getTransform()->getMatrix());
-		frameDrawingPanel.setTextureID(frameBuffer.getTexture());
-		frameBuffer.renderToTexture();*/
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		frameShader.use();
+		frameShader.applyShaderUniformMatrix(modelMatrixUniform, glm::mat4());
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+		frameDrawingPanel.setTextureID(textureColorbuffer);
+		frameDrawingPanel.draw();
 
 		ImGui_ImplGlfwGL3_NewFrame();
 

@@ -8,6 +8,7 @@ private:
 public:
 	FrameBuffer();
 	void renderToTexture();
+	void bindFrameBuffer();
 	GLuint getTexture();
 	~FrameBuffer();
 };
