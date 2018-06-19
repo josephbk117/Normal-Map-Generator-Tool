@@ -99,4 +99,28 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Resources\arial.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\frameBuffer.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\spriteBase.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\spriteBase.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\goli.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\test2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

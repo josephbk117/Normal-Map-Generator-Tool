@@ -56,9 +56,11 @@ int main(void)
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(window, true);
-
-	CustomColourImGuiTheme();
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	CustomColourImGuiTheme();
+	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
+	IM_ASSERT(font != NULL);
+
 
 	DrawingPanel drawingPanel;
 	drawingPanel.init(1.0f, 1.0f);
@@ -186,7 +188,7 @@ int main(void)
 		drawingPanel.getTransform()->setY(glm::clamp(drawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		drawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
-		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());		
+		shader.applyShaderUniformMatrix(modelMatrixUniform, drawingPanel.getTransform()->getMatrix());
 		shader.applyShaderFloat(strengthValueUniform, strValue);
 		shader.applyShaderFloat(specularityUniform, specularity);
 		shader.applyShaderFloat(lightIntensityUniform, lightIntensity);
@@ -195,7 +197,7 @@ int main(void)
 		shader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
 		shader.use();
 		drawingPanel.draw();
-		
+
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			int widthSub = windowWidth - (int)(drawingPanel.getPanelWorldDimension().y * windowWidth);
@@ -224,27 +226,29 @@ int main(void)
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.45f);
-		if (ImGui::Button("Toggle Fullscreen", ImVec2(180, 40)))
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
+		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
 			if (!isFullscreen)
-			{
 				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
-			}
 			else
 				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
 			isFullscreen = !isFullscreen;
 		}
-		if (ImGui::Button("Toggle Height Map Draw", ImVec2(180, 40)))
+		if (ImGui::Button("Toggle Height", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
 			heightMapPositiveDir = !heightMapPositiveDir;
 		}
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -424,9 +428,9 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 
 	const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 	const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
-	const ImVec4 ACCENT_COL = ImVec4(243 / 255.0f, 236 / 255.0f, 200 / 255.0f, 1.1f);
+	const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
 	const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
-	const ImVec4 DARK_GREY = ImVec4(20 / 255.0f, 20 / 255.0f, 20 / 255.0f, 1.1f);
+	const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
 	colors[ImGuiCol_Text] = WHITE;
 	colors[ImGuiCol_TextDisabled] = DARK_GREY;
@@ -435,9 +439,9 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 	colors[ImGuiCol_PopupBg] = DARK_GREY;
 	colors[ImGuiCol_Border] = ACCENT_COL;
 	colors[ImGuiCol_BorderShadow] = DARK_GREY;
-	colors[ImGuiCol_FrameBg] = PRIMARY_COL;
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.99f, 0.98f, 0.40f);
-	colors[ImGuiCol_FrameBgActive] = ImVec4(0.66f, 0.59f, 0.98f, 0.67f);
+	colors[ImGuiCol_FrameBg] = ACCENT_COL;
+	colors[ImGuiCol_FrameBgHovered] = PRIMARY_COL;
+	colors[ImGuiCol_FrameBgActive] = SECONDARY_COL;
 	colors[ImGuiCol_TitleBg] = ACCENT_COL;
 	colors[ImGuiCol_TitleBgActive] = SECONDARY_COL;
 	colors[ImGuiCol_TitleBgCollapsed] = ACCENT_COL;

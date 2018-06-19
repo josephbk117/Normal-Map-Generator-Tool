@@ -153,6 +153,18 @@
     <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\TextureData.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Resources\arial.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\frameBuffer.fs" />
+    <None Include="Resources\spriteBase.fs" />
+    <None Include="Resources\spriteBase.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\goli.png" />
+    <Image Include="Resources\test2.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
