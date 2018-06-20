@@ -24,6 +24,7 @@ unsigned int framebuffer;
 unsigned int textureColorbuffer;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
@@ -32,18 +33,20 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
+float zoomLevel = 1;
 TextureData texData;
 int main(void)
 {
 	if (!glfwInit())
 		return -1;
 	//glfwWindowHint(GLFW_DECORATED, false);
-	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
-	
-	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
+
+	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+
 	if (!window)
 	{
 		glfwTerminate();
@@ -64,6 +67,7 @@ int main(void)
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfwGL3_Init(window, true);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	CustomColourImGuiTheme();
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
@@ -98,7 +102,7 @@ int main(void)
 	float normalMapStrength = 10.0f;
 	float specularity = 0;
 	float lightIntensity = 1;
-	float zoomLevel = 1;
+	zoomLevel = 1;
 	int mapViewMode = 1;
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
@@ -442,6 +446,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glViewport(0, 0, width, height);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	zoomLevel += zoomLevel * 0.1f * yoffset;
 }
 
 bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h)
