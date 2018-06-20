@@ -15,10 +15,11 @@
 #include "ShaderProgram.h"
 #include "Transform.h"
 
-//TODO:Mouse drag (middle mouse) for moving and scrolling for zooming, Button to switch view mode 
+//TODO : Mouse drag (middle mouse) for moving and scrolling for zooming, Button to switch view mode 
+//TODO : Custom Window Chrome
 
-int windowWidth = 1200;
-int windowHeight = 1200;
+int windowWidth = 800;
+int windowHeight = 800;
 unsigned int framebuffer;
 unsigned int textureColorbuffer;
 GLFWwindow* window;
@@ -36,7 +37,9 @@ int main(void)
 {
 	if (!glfwInit())
 		return -1;
-	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.1 alpha", NULL, NULL);
+	//glfwWindowHint(GLFW_DECORATED, false);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
+	
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -92,11 +95,11 @@ int main(void)
 	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
-	float strValue = 0.0f;
+	float normalMapStrength = 10.0f;
 	float specularity = 0;
 	float lightIntensity = 1;
 	float zoomLevel = 1;
-	int mapViewMode = 3;
+	int mapViewMode = 1;
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
 	bool heightMapPositiveDir = false;
@@ -193,9 +196,9 @@ int main(void)
 		}
 
 		if (isKeyPressed(GLFW_KEY_A))
-			strValue += 2.5f * deltaTime;
+			normalMapStrength += 2.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_D))
-			strValue -= 2.5f * deltaTime;
+			normalMapStrength -= 2.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_W))
 			zoomLevel += zoomLevel * 1.5f * deltaTime;
 		if (isKeyPressed(GLFW_KEY_S))
@@ -213,7 +216,7 @@ int main(void)
 		normalmapPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(modelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-		normalmapShader.applyShaderFloat(strengthValueUniform, strValue);
+		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
@@ -249,6 +252,7 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoResize;
 		window_flags |= ImGuiWindowFlags_NoCollapse;
+		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
 
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
@@ -286,9 +290,15 @@ int main(void)
 		ImGui::Spacing();
 		if (ImGui::DragFloat(" Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat(" Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		if (mapViewMode < 3)
+		{
+			if (ImGui::DragFloat(" Normal Strength", &normalMapStrength, 0.1f, -100.0f, 100.0f, "%.2f")) {}
+			if (mapViewMode == 2)
+			{
+				if (ImGui::DragFloat(" Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+				if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+			}
+		}
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
