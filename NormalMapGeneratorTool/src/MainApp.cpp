@@ -267,29 +267,28 @@ int main(void)
 		{
 			heightMapPositiveDir = !heightMapPositiveDir;
 		}
+		ImGui::Spacing();
+		ImGui::Text("VIEW MODE");
+		ImGui::Separator();
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
-		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40)))
-		{
-			mapViewMode = 3;
-		}
+		ImGui::Spacing();
+		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
 		ImGui::SameLine(0, 5);
-		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40)))
-		{
-			mapViewMode = 1;
-		}
+		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
 		ImGui::SameLine(0, 5);
-		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40)))
-		{
-			mapViewMode = 2;
-		}
-		
+		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+		ImGui::PopStyleVar();
+		ImGui::Text("PROPERTIES");
+		ImGui::Separator();
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
-		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
-		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
-		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		ImGui::Spacing();
+		if (ImGui::DragFloat(" Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
+		if (ImGui::DragFloat(" Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
