@@ -15,6 +15,8 @@
 #include "ShaderProgram.h"
 #include "Transform.h"
 
+//TODO:Mouse drag (middle mouse) for moving and scrolling for zooming, Button to switch view mode 
+
 int windowWidth = 1200;
 int windowHeight = 1200;
 unsigned int framebuffer;
@@ -94,7 +96,7 @@ int main(void)
 	float specularity = 0;
 	float lightIntensity = 1;
 	float zoomLevel = 1;
-	int normalMapMode = 3;
+	int mapViewMode = 3;
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
 	bool heightMapPositiveDir = false;
@@ -134,11 +136,11 @@ int main(void)
 		normalmapShader.use();
 
 		if (isKeyPressed(GLFW_KEY_J))
-			normalMapMode = 1;
+			mapViewMode = 1;
 		if (isKeyPressed(GLFW_KEY_K))
-			normalMapMode = 2;
+			mapViewMode = 2;
 		if (isKeyPressed(GLFW_KEY_L))
-			normalMapMode = 3;
+			mapViewMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
 			normalmapPanel.getTransform()->translate(-1 * deltaTime, 0);
@@ -216,7 +218,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
-		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalMapMode);
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.use();
 		normalmapPanel.draw();
 
@@ -266,15 +268,29 @@ int main(void)
 			heightMapPositiveDir = !heightMapPositiveDir;
 		}
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
+		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40)))
+		{
+			mapViewMode = 3;
+		}
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40)))
+		{
+			mapViewMode = 1;
+		}
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40)))
+		{
+			mapViewMode = 2;
+		}
 		
-		ImGui::Combo("Inputs Mode", &k, "All Inputs\0No Inputs\0RGB Input\0HSV Input\0HEX Input\0");
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		if (ImGui::DragFloat("Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat("Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Normal Strength", &strValue, 0.1f, -100.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (ImGui::DragFloat("Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		
+
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
