@@ -15,8 +15,12 @@
 #include "ShaderProgram.h"
 #include "Transform.h"
 
-//TODO : Mouse drag (middle mouse) for moving and scrolling for zooming, Button to switch view mode 
+//TODO : Mouse drag (middle mouse) for moving
+//TODO : Rotation editor values
+//TODO : Diffuse & Specular lighting colour
 //TODO : Custom Window Chrome
+//TODO : Loading from file path
+//TODO : Undo/Redo Capability
 
 int windowWidth = 800;
 int windowHeight = 800;
@@ -114,7 +118,6 @@ int main(void)
 	float brushScale = 0.01f;
 	float brushOffset = 1.0f;
 	double initTime = glfwGetTime();
-	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 
 	glGenFramebuffers(1, &framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -130,6 +133,9 @@ int main(void)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
+	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -160,7 +166,24 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_8))
 			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
 
-		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+		if (state == GLFW_PRESS)
+		{
+			double x, y;
+			glfwGetCursorPos(window, &x, &y);
+			glm::vec2 currentPos(x, y);
+			glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * 0.5f * (float)deltaTime;
+			normalmapPanel.getTransform()->translate(diff.x, -diff.y);
+			prevMiddleMouseButtonCoord = currentPos;
+		}
+		else
+		{
+			double x, y;
+			glfwGetCursorPos(window, &x, &y);
+			prevMiddleMouseButtonCoord = glm::vec2(x,y);
+		}
+
+		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
 		if (state == GLFW_PRESS)
 		{
 			double xpos, ypos;
@@ -274,6 +297,12 @@ int main(void)
 		if (ImGui::Button("Toggle Height", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
 			heightMapPositiveDir = !heightMapPositiveDir;
+		}
+		if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+		{
+			normalmapPanel.getTransform()->setPosition(0, 0);
+			normalmapPanel.getTransform()->setRotation(0);
+			zoomLevel = 1;
 		}
 		ImGui::Spacing();
 		ImGui::Text("VIEW MODE");
