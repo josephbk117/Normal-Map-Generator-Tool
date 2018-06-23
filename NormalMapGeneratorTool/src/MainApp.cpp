@@ -17,10 +17,13 @@
 
 //TODO : Mouse drag (middle mouse) for moving
 //TODO : Rotation editor values
+//TODO : Saving out notmal map in 512x512 irrespective of window size
+//TODO : Saving at custom location
 //TODO : Diffuse & Specular lighting colour
 //TODO : Custom Window Chrome
 //TODO : Loading from file path
 //TODO : Undo/Redo Capability
+//Custom Model Import To View With Normals
 
 int windowWidth = 800;
 int windowHeight = 800;
@@ -180,7 +183,7 @@ int main(void)
 		{
 			double x, y;
 			glfwGetCursorPos(window, &x, &y);
-			prevMiddleMouseButtonCoord = glm::vec2(x,y);
+			prevMiddleMouseButtonCoord = glm::vec2(x, y);
 		}
 
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
@@ -251,13 +254,17 @@ int main(void)
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.use();
 		normalmapPanel.draw();
-
+		static char saveLocation[500];
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
 			int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
-			if (saveScreenshot("D:\\scr.tga", widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
-				std::cout << "Saved";
+			std::string locationStr = std::string(saveLocation);
+			if (locationStr.length() > 4)
+			{
+				if (saveScreenshot(std::string(saveLocation), widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
+					std::cout << "Saved at " << saveLocation;
+			}
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -281,6 +288,7 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoCollapse;
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
+
 
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
@@ -333,6 +341,7 @@ int main(void)
 			}
 		}
 
+		ImGui::InputText("Save location", saveLocation, sizeof(saveLocation));
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
