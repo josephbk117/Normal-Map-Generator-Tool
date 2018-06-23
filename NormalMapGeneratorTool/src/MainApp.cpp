@@ -19,12 +19,10 @@
 //TODO : Display brush preview
 //TODO : Drawing Single Height
 //TODO : Saving out notmal map in 512x512 irrespective of window size
-//TODO : Saving at custom location
 //TODO : Diffuse & Specular lighting colour
 //TODO : Custom Window Chrome
-//TODO : Loading from file path
 //TODO : Undo/Redo Capability
-//Custom Model Import To View With Normals
+//TODO : Custom Model Import To View With Normals
 
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
@@ -45,7 +43,7 @@ void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h);
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir);
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -127,8 +125,9 @@ int main(void)
 	int k = 0;
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
-	float brushScale = 0.01f;
+	float brushScale = 0.05f;
 	float brushOffset = 1.0f;
+	float brushStrength = 1.0f;
 	double initTime = glfwGetTime();
 
 	glGenFramebuffers(1, &framebuffer);
@@ -215,13 +214,13 @@ int main(void)
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
 
 					float maxWidth = texData.getWidth();
+					float convertedBrushScale = brushScale * 0.5f;
+					int left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+					int right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
-					int left = glm::clamp((int)((xpos - brushScale) * maxWidth), 0, (int)maxWidth);
-					int right = glm::clamp((int)((xpos + brushScale) * maxWidth), 0, (int)maxWidth);
-					int bottom = glm::clamp((int)((ypos - brushScale) * maxWidth), 0, (int)maxWidth);
-					int top = glm::clamp((int)((ypos + brushScale) * maxWidth), 0, (int)maxWidth);
-
-					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
+					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, convertedBrushScale, brushOffset, heightMapPositiveDir, brushStrength);
 					first.join();
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
@@ -313,7 +312,7 @@ int main(void)
 		ImGui_ImplGlfwGL3_NewFrame();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.95f);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 		ImGuiWindowFlags window_flags = 0;
 		window_flags |= ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoResize;
@@ -345,7 +344,7 @@ int main(void)
 		}
 		ImGui::Spacing();
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()/1.45f);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 		ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
 		ImGui::PopItemWidth();
 		ImGui::SameLine(0, 5);
@@ -367,45 +366,24 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 		ImGui::Spacing();
-		if (mapViewMode == 3)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-			if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
-			ImGui::PopStyleColor();
-		}
-		else
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-			if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
-			ImGui::PopStyleColor();
-		}
+
+		if (mapViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
+		ImGui::PopStyleColor();
+
 		ImGui::SameLine(0, 5);
-		if (mapViewMode == 1)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-			if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
-			ImGui::PopStyleColor();
-		}
-		else
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-			if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
-			ImGui::PopStyleColor();
-		}		
+		if (mapViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
+		ImGui::PopStyleColor();
+
 		ImGui::SameLine(0, 5);
-		if (mapViewMode == 2)
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-			if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
-			ImGui::PopStyleColor();
-		}
-		else
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-			if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
-			ImGui::PopStyleColor();
-		}
-		
+		if (mapViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+		ImGui::PopStyleColor();
+
 		ImGui::PopStyleVar();
 		ImGui::Text("PROPERTIES");
 		ImGui::Separator();
@@ -413,7 +391,8 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::Spacing();
 		if (ImGui::DragFloat(" Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
-		if (ImGui::DragFloat(" Brush Offset", &brushOffset, 0.01f, 0.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Brush Offset", &brushOffset, 0.01f, 1.0f, 100.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Brush Strength", &brushStrength, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 		if (mapViewMode < 3)
 		{
 			if (ImGui::DragFloat(" Normal Strength", &normalMapStrength, 0.1f, -100.0f, 100.0f, "%.2f")) {}
@@ -517,7 +496,7 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir)
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength)
 {
 	ColourData colData;
 	float rVal;
@@ -534,7 +513,8 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < brushScale)
 			{
-				distance = glm::clamp((1.0f - (distance / brushScale)) * brushOffset, 0.0f, 1.0f);
+				distance = (1.0f - (distance / brushScale)) * brushOffset;
+				distance = glm::clamp(distance, 0.0f, 1.0f) * brushStrength;
 				rVal = rVal + distance * ((heightMapPositiveDir ? 1.0f : 0.0f) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
 				texData.setTexelColor(col, i, j);
