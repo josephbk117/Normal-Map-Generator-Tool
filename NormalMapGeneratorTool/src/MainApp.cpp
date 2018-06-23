@@ -43,7 +43,7 @@ void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h);
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength);
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength, float brushMinHeight, float brushMaxHeight);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -128,6 +128,8 @@ int main(void)
 	float brushScale = 0.05f;
 	float brushOffset = 1.0f;
 	float brushStrength = 1.0f;
+	float brushMinHeight = 0.0f;
+	float brushMaxHeight = 1.0f;
 	double initTime = glfwGetTime();
 
 	glGenFramebuffers(1, &framebuffer);
@@ -220,7 +222,7 @@ int main(void)
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
-					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, convertedBrushScale, brushOffset, heightMapPositiveDir, brushStrength);
+					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, convertedBrushScale, brushOffset, heightMapPositiveDir, brushStrength, brushMinHeight, brushMaxHeight);
 					first.join();
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
@@ -393,6 +395,14 @@ int main(void)
 		if (ImGui::DragFloat(" Brush Scale", &brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
 		if (ImGui::DragFloat(" Brush Offset", &brushOffset, 0.01f, 1.0f, 100.0f, "%.2f")) {}
 		if (ImGui::DragFloat(" Brush Strength", &brushStrength, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Brush Min Height", &brushMinHeight, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		if (ImGui::DragFloat(" Brush Max Height", &brushMaxHeight, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+
+		if (brushMinHeight > brushMaxHeight)
+			brushMinHeight = brushMaxHeight;
+		else if (brushMaxHeight < brushMinHeight)
+			brushMaxHeight = brushMinHeight;
+
 		if (mapViewMode < 3)
 		{
 			if (ImGui::DragFloat(" Normal Strength", &normalMapStrength, 0.1f, -100.0f, 100.0f, "%.2f")) {}
@@ -496,7 +506,7 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength)
+void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, float brushScale, float brushOffset, bool heightMapPositiveDir, float brushStrength, float brushMinHeight, float brushMaxHeight)
 {
 	ColourData colData;
 	float rVal;
@@ -515,7 +525,7 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 			{
 				distance = (1.0f - (distance / brushScale)) * brushOffset;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushStrength;
-				rVal = rVal + distance * ((heightMapPositiveDir ? 1.0f : 0.0f) - rVal);
+				rVal = rVal + distance * ((heightMapPositiveDir ? brushMaxHeight : brushMinHeight) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
 				texData.setTexelColor(col, i, j);
 			}
