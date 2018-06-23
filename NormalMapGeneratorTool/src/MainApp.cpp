@@ -26,6 +26,14 @@
 //TODO : Undo/Redo Capability
 //Custom Model Import To View With Normals
 
+
+const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
+const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
+const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
+const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
+const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
+
+
 int windowWidth = 800;
 int windowHeight = 800;
 unsigned int framebuffer;
@@ -335,6 +343,7 @@ int main(void)
 			normalmapPanel.getTransform()->setRotation(0);
 			zoomLevel = 1;
 		}
+		ImGui::Spacing();
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()/1.45f);
 		ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
@@ -358,11 +367,45 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 		ImGui::Spacing();
-		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
+		if (mapViewMode == 3)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+			if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
+			ImGui::PopStyleColor();
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+			if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
+			ImGui::PopStyleColor();
+		}
 		ImGui::SameLine(0, 5);
-		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
+		if (mapViewMode == 1)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+			if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
+			ImGui::PopStyleColor();
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+			if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
+			ImGui::PopStyleColor();
+		}		
 		ImGui::SameLine(0, 5);
-		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+		if (mapViewMode == 2)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+			if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+			ImGui::PopStyleColor();
+		}
+		else
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+			if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+			ImGui::PopStyleColor();
+		}
+		
 		ImGui::PopStyleVar();
 		ImGui::Text("PROPERTIES");
 		ImGui::Separator();
@@ -564,12 +607,6 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 {
 	ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
 	ImVec4* colors = style->Colors;
-
-	const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
-	const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
-	const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
-	const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
-	const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
 	colors[ImGuiCol_Text] = WHITE;
 	colors[ImGuiCol_TextDisabled] = DARK_GREY;
