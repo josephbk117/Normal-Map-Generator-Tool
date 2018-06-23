@@ -85,6 +85,8 @@ Transform * DrawingPanel::getTransform() noexcept
 
 void DrawingPanel::setTextureID(unsigned int textureID)
 {
+	if (this->textureID != textureID)
+		glDeleteTextures(1, &this->textureID);
 	this->textureID = textureID;
 }
 

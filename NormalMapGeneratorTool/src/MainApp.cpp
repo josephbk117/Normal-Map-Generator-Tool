@@ -15,8 +15,8 @@
 #include "ShaderProgram.h"
 #include "Transform.h"
 
-//TODO : Mouse drag (middle mouse) for moving
 //TODO : Rotation editor values
+//TODO : Display brush preview
 //TODO : Drawing Single Height
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Saving at custom location
@@ -98,7 +98,6 @@ int main(void)
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
 
-
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int modelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
@@ -107,6 +106,7 @@ int main(void)
 	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
+
 	float normalMapStrength = 10.0f;
 	float specularity = 0;
 	float lightIntensity = 1;
@@ -206,10 +206,12 @@ int main(void)
 					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
 
-					int left = glm::clamp((int)((xpos - brushScale) * 512.0f), 0, 512);
-					int right = glm::clamp((int)((xpos + brushScale) * 512.0f), 0, 512);
-					int bottom = glm::clamp((int)((ypos - brushScale) * 512.0f), 0, 512);
-					int top = glm::clamp((int)((ypos + brushScale) * 512.0f), 0, 512);
+					float maxWidth = texData.getWidth();
+
+					int left = glm::clamp((int)((xpos - brushScale) * maxWidth), 0, (int)maxWidth);
+					int right = glm::clamp((int)((xpos + brushScale) * maxWidth), 0, (int)maxWidth);
+					int bottom = glm::clamp((int)((ypos - brushScale) * maxWidth), 0, (int)maxWidth);
+					int top = glm::clamp((int)((ypos + brushScale) * maxWidth), 0, (int)maxWidth);
 
 					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, brushScale, brushOffset, heightMapPositiveDir);
 					first.join();
@@ -255,6 +257,7 @@ int main(void)
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapPanel.draw();
 		static char saveLocation[500] = "D:\\scr.tga";
+		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static bool shouldSaveNormalMap = false;
 		if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
 		{
@@ -310,7 +313,6 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
 
-
 		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
@@ -333,6 +335,23 @@ int main(void)
 			normalmapPanel.getTransform()->setRotation(0);
 			zoomLevel = 1;
 		}
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()/1.45f);
+		ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
+		ImGui::PopItemWidth();
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
+		{
+			TextureManager::getTextureDataFromFile(imageLoadLocation, texData);
+			texId = TextureManager::loadTextureFromData(texData, false);
+			normalmapPanel.setTextureID(texId);
+		}
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
+		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
+		ImGui::PopItemWidth();
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; }
+		ImGui::PopStyleVar();
 		ImGui::Spacing();
 		ImGui::Text("VIEW MODE");
 		ImGui::Separator();
@@ -361,10 +380,6 @@ int main(void)
 				if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 			}
 		}
-
-		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
-		ImGui::SameLine(0, 5);
-		if (ImGui::Button("EXPORT", ImVec2(modeButtonWidth - 5, 27))) { shouldSaveNormalMap = true; }
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
