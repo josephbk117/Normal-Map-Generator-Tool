@@ -17,6 +17,7 @@
 
 //TODO : Mouse drag (middle mouse) for moving
 //TODO : Rotation editor values
+//TODO : Drawing Single Height
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Saving at custom location
 //TODO : Diffuse & Specular lighting colour
@@ -175,7 +176,7 @@ int main(void)
 			double x, y;
 			glfwGetCursorPos(window, &x, &y);
 			glm::vec2 currentPos(x, y);
-			glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * 0.5f * (float)deltaTime;
+			glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * (1.0f + zoomLevel) * (float)deltaTime;
 			normalmapPanel.getTransform()->translate(diff.x, -diff.y);
 			prevMiddleMouseButtonCoord = currentPos;
 		}
@@ -252,19 +253,39 @@ int main(void)
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
-		normalmapShader.use();
 		normalmapPanel.draw();
-		static char saveLocation[500];
-		if (isKeyPressed(GLFW_KEY_F10))
+		static char saveLocation[500] = "D:\\scr.tga";
+		static bool shouldSaveNormalMap = false;
+		if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
 		{
+			glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
+			glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
+
+			normalmapPanel.getTransform()->setPosition(glm::vec2());
+			float aspectRatio = (float)windowWidth / (float)windowHeight;
+			if (windowWidth < windowHeight)
+				normalmapPanel.getTransform()->setScale(glm::vec2(1, aspectRatio));
+			else
+				normalmapPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1));
+			normalmapPanel.getTransform()->update();
+			normalmapShader.applyShaderUniformMatrix(modelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+			normalmapPanel.draw();
+
+			int tempWindowWidth = windowWidth;
+			int tempWindowHeight = windowHeight;
+
 			int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
 			int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
+
 			std::string locationStr = std::string(saveLocation);
 			if (locationStr.length() > 4)
 			{
-				if (saveScreenshot(std::string(saveLocation), widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
-					std::cout << "Saved at " << saveLocation;
+				if (saveScreenshot(locationStr, widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
+					std::cout << "Saved at " << locationStr;
+				shouldSaveNormalMap = false;
 			}
+			normalmapPanel.getTransform()->setPosition(tempPos);
+			normalmapPanel.getTransform()->setScale(tempScale);
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -341,7 +362,10 @@ int main(void)
 			}
 		}
 
-		ImGui::InputText("Save location", saveLocation, sizeof(saveLocation));
+		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("EXPORT", ImVec2(modeButtonWidth - 5, 27))) { shouldSaveNormalMap = true; }
+
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
