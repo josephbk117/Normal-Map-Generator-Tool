@@ -206,10 +206,10 @@ int main(void)
 				{
 					int winPosX, winPosY;
 					glfwGetWindowPos(window, &winPosX, &winPosY);
-					glfwSetWindowPos(window, winPosX + diff.x, winPosY + diff.y);
+					glfwSetWindowPos(window, winPosX + currentPos.x - 200, winPosY + currentPos.y - 10);
 				}
-				prevGlobalFirstMouseCoord = currentPos;
 			}
+			prevGlobalFirstMouseCoord = glm::vec2(x, y);
 		}
 		else
 			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
