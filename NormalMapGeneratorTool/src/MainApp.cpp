@@ -18,20 +18,17 @@
 
 //TODO : Rotation editor values
 //TODO : Display brush preview
-//TODO : Drawing Single Height
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
 //TODO : Custom Window Chrome
 //TODO : Undo/Redo Capability
 //TODO : Custom Model Import To View With Normals
 
-
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
 const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
 const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
-
 
 int windowWidth = 800;
 int windowHeight = 800;
@@ -123,7 +120,7 @@ int main(void)
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
 	bool flipX_Ydir = false;
-	
+
 	glm::vec3 rotation = glm::vec3(0);
 	int k = 0;
 	bool showHeightMapInput = true;
@@ -399,11 +396,12 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::Spacing();
-		if (ImGui::DragFloat(" Brush Scale", &brushData.brushScale, 0.001f, 0.0f, 1.0f, "%.3f")) {}
-		if (ImGui::DragFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 1.0f, 100.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Brush Strength", &brushData.brushStrength, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Brush Min Height", &brushData.brushMinHeight, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-		if (ImGui::DragFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 0.0f, 1.0f, "%.3f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 
 		if (brushData.brushMinHeight > brushData.brushMaxHeight)
 			brushData.brushMinHeight = brushData.brushMaxHeight;
@@ -414,16 +412,17 @@ int main(void)
 		{
 			ImGui::Text("NORMAL SETTINGS");
 			ImGui::Separator();
-			if (ImGui::DragFloat(" Normal Strength", &normalMapStrength, 0.1f, -100.0f, 100.0f, "%.2f")) {}
+			if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
 			if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
 			if (mapViewMode == 2)
 			{
 				ImGui::Text("LIGHT SETTINGS");
 				ImGui::Separator();
-				if (ImGui::DragFloat(" Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
-				if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
+				if (ImGui::SliderFloat(" Light Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
+				if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
 			}
 		}
+		ImGui::PopStyleColor();
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
