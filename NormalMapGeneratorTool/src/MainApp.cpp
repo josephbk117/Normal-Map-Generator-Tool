@@ -51,7 +51,7 @@ int main(void)
 {
 	if (!glfwInit())
 		return -1;
-	//glfwWindowHint(GLFW_DECORATED, false);
+	glfwWindowHint(GLFW_DECORATED, false);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -88,6 +88,8 @@ int main(void)
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
+	DrawingPanel topBarWindowChrome;
+	topBarWindowChrome.init(1.0f, 0.5f);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 
@@ -101,6 +103,13 @@ int main(void)
 	ShaderProgram frameShader;
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
+
+	ShaderProgram windowChromeShader;
+	windowChromeShader.compileShaders("Resources\\spriteBase.vs", "Resources\\windowChrome.fs");
+	windowChromeShader.linkShaders();
+
+	int windowChromeModelUniform = windowChromeShader.getUniformLocation("model");
+	int windowChromeColourUniform = windowChromeShader.getUniformLocation("_chromeColour");
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int modelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -152,6 +161,7 @@ int main(void)
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
+	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -182,7 +192,29 @@ int main(void)
 		if (isKeyPressed(GLFW_KEY_8))
 			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
 
-		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+		if (state == GLFW_PRESS)
+		{
+			double x, y;
+			glfwGetCursorPos(window, &x, &y);
+			if (y < 40)
+			{
+				glm::vec2 currentPos(x, y);
+				glm::vec2 diff = (currentPos - prevGlobalFirstMouseCoord);
+
+				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+				{
+					int winPosX, winPosY;
+					glfwGetWindowPos(window, &winPosX, &winPosY);
+					glfwSetWindowPos(window, winPosX + diff.x, winPosY + diff.y);
+				}
+				prevGlobalFirstMouseCoord = currentPos;
+			}
+		}
+		else
+			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
+
+		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 		if (state == GLFW_PRESS)
 		{
 			double x, y;
@@ -225,8 +257,7 @@ int main(void)
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
-					std::thread first(SetPixelValues, left, right, bottom, top, xpos, ypos, brushData);
-					first.join();
+					SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
@@ -316,17 +347,19 @@ int main(void)
 		frameDrawingPanel.draw();
 
 		ImGui_ImplGlfwGL3_NewFrame();
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+		window_flags = 0;
 		window_flags |= ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoResize;
 		window_flags |= ImGuiWindowFlags_NoCollapse;
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
 
-		ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiSetCond_Always);
+		ImGui::SetNextWindowPos(ImVec2(0, 40), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
@@ -430,9 +463,18 @@ int main(void)
 		ImGui::End();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
 
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+		topBarWindowChrome.getTransform()->setPosition(0, 0.95f);
+		topBarWindowChrome.getTransform()->setScale(glm::vec2(1, 0.1f));
+		topBarWindowChrome.getTransform()->update();
+		windowChromeShader.use();
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
+		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
+		topBarWindowChrome.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

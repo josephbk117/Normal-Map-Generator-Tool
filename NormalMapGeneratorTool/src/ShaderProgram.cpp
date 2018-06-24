@@ -92,6 +92,11 @@ void ShaderProgram::applyShaderUniformMatrix(int uniformId, const glm::mat4& mat
 	glUniformMatrix4fv(uniformId, 1, GL_FALSE, &matrixValue[0][0]);
 }
 
+void ShaderProgram::applyShaderVector3(int uniformId, const glm::vec3& value)
+{
+	glUniform3f(uniformId, value.x, value.y, value.z);
+}
+
 void ShaderProgram::applyShaderFloat(int uniformId, float value)
 {
 	glUniform1f(uniformId, value);

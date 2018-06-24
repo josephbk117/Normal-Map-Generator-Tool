@@ -161,6 +161,7 @@
     <None Include="Resources\frameBuffer.fs" />
     <None Include="Resources\spriteBase.fs" />
     <None Include="Resources\spriteBase.vs" />
+    <None Include="Resources\windowChrome.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png" />

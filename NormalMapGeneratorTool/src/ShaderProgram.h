@@ -13,6 +13,7 @@ public:
 	void unuse();
 	int getUniformLocation(const std::string& uniformName)const;
 	static void applyShaderUniformMatrix(int uniformId, const glm::mat4& matrixValue);
+	static void applyShaderVector3(int uniformId, const glm::vec3& value);
 	static void applyShaderFloat(int uniformId, float value);
 	static void applyShaderInt(int uniformId, int value);
 	static void applyShaderBool(int uniformId, bool value);

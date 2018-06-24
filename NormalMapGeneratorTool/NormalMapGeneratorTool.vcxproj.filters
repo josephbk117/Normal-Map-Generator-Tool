@@ -117,6 +117,7 @@
     <None Include="Resources\spriteBase.vs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\windowChrome.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">
