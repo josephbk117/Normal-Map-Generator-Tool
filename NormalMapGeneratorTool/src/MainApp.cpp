@@ -113,14 +113,16 @@ int main(void)
 	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
+	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
 
 	float normalMapStrength = 10.0f;
-	float specularity = 0;
-	float lightIntensity = 1;
+	float specularity = 0.5f;
+	float lightIntensity = 0.5f;
 	zoomLevel = 1;
 	int mapViewMode = 1;
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
+	bool flipX_Ydir = false;
 	
 	glm::vec3 rotation = glm::vec3(0);
 	int k = 0;
@@ -268,6 +270,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
+		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapPanel.draw();
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
@@ -391,7 +394,7 @@ int main(void)
 		ImGui::PopStyleColor();
 
 		ImGui::PopStyleVar();
-		ImGui::Text("PROPERTIES");
+		ImGui::Text("BRUSH SETTINGS");
 		ImGui::Separator();
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -409,9 +412,14 @@ int main(void)
 
 		if (mapViewMode < 3)
 		{
+			ImGui::Text("NORMAL SETTINGS");
+			ImGui::Separator();
 			if (ImGui::DragFloat(" Normal Strength", &normalMapStrength, 0.1f, -100.0f, 100.0f, "%.2f")) {}
+			if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
 			if (mapViewMode == 2)
 			{
+				ImGui::Text("LIGHT SETTINGS");
+				ImGui::Separator();
 				if (ImGui::DragFloat(" Light Intensity", &lightIntensity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 				if (ImGui::DragFloat(" Specularity", &specularity, 0.01f, 0.0f, 1.0f, "%.2f")) {}
 			}

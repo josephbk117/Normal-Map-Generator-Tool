@@ -15,6 +15,7 @@ public:
 	static void applyShaderUniformMatrix(int uniformId, const glm::mat4& matrixValue);
 	static void applyShaderFloat(int uniformId, float value);
 	static void applyShaderInt(int uniformId, int value);
+	static void applyShaderBool(int uniformId, bool value);
 private:
 	unsigned int programID, vertexShaderID, fragmentShaderID;
 	void compileShader(const std::string& filePath, unsigned int ID);

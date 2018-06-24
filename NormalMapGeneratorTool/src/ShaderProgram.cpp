@@ -102,6 +102,11 @@ void ShaderProgram::applyShaderInt(int uniformId, int value)
 	glUniform1i(uniformId, value);
 }
 
+void ShaderProgram::applyShaderBool(int uniformId, bool value)
+{
+	glUniform1i(uniformId, value);
+}
+
 void ShaderProgram::compileShader(const std::string & filePath, unsigned int ID)
 {
 	std::ifstream shaderFile(filePath);

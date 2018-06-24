@@ -9,6 +9,7 @@ uniform float _HeightmapDimY;
 uniform float _Specularity;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
+uniform bool _flipX_Ydir;
 /*void make_kernel(inout vec4 n[9], sampler2D tex, vec2 coord)
 {
 	float w = 1.0 / 512;
@@ -56,6 +57,8 @@ void main()
         vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
         norm += normalOffset;
         norm = normalize(norm);
+		if(_flipX_Ydir == true)
+			norm = norm.grb;
         vec3 lightDir = normalize(vec3(1.0,1.0,1.0));
         float light = (dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity;
         vec3 LightReflect = normalize(reflect(lightDir, norm));
