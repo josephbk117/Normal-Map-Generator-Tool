@@ -137,6 +137,7 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\BrushData.h" />
     <ClInclude Include="src\FrameBuffer.h" />
     <ClInclude Include="src\ColourData.h" />
     <ClInclude Include="src\DrawingPanel.h" />
