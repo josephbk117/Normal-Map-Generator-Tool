@@ -31,6 +31,10 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
+const float TOP_BAR_HEIGHT = 50.0f;
+const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
+const float TOP_BAR_BUTTON_GAP_SIZE = 100.0f;
+
 int windowWidth = 800;
 int windowHeight = 800;
 unsigned int framebuffer;
@@ -47,6 +51,10 @@ void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 float zoomLevel = 1;
+float yUiScale = 1;
+float xUiButtonScale = 1;
+float yUiButtonScale = 1;
+float xGapButtonGapSize = 1;
 TextureData texData;
 
 int main(void)
@@ -60,6 +68,10 @@ int main(void)
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
 
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+	yUiScale = TOP_BAR_HEIGHT / windowHeight;
+	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
+	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
+	xGapButtonGapSize = TOP_BAR_BUTTON_GAP_SIZE / windowWidth;
 
 	if (!window)
 	{
@@ -91,13 +103,13 @@ int main(void)
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel topBarWindowChrome;
-	topBarWindowChrome.init(1.0f, 0.5f);
+	topBarWindowChrome.init(1.0f, 1.0f);
 	DrawingPanel topBarCloseButton;
 	DrawingPanel topBarRestoreDownMaximizeButton;
 	DrawingPanel topBarMinimizeButton;
-	topBarCloseButton.init(0.03f, 0.03f);
-	topBarRestoreDownMaximizeButton.init(0.03f, 0.03f);
-	topBarMinimizeButton.init(0.03f, 0.03f);
+	topBarCloseButton.init(1.0f, 1.0f);
+	topBarRestoreDownMaximizeButton.init(1.0f, 1.0f);
+	topBarMinimizeButton.init(1.0f, 1.0f);
 
 	unsigned int closeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
 	unsigned int restoreTexture = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
@@ -149,6 +161,7 @@ int main(void)
 	int k = 0;
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
+	bool isMaximized = false;
 
 	BrushData brushData;
 	brushData.brushScale = 0.05f;
@@ -173,10 +186,10 @@ int main(void)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -237,7 +250,16 @@ int main(void)
 						glfwSetWindowShouldClose(window, true);
 					else if (x > windowWidth - 100 && x < windowWidth - 50)
 					{
-						glfwMaximizeWindow(window);
+						if (!isMaximized)
+						{
+							glfwMaximizeWindow(window);
+							isMaximized = true;
+						}
+						else
+						{
+							glfwSetWindowSize(window, 800, 800);
+							isMaximized = false;
+						}
 					}
 					else
 						glfwIconifyWindow(window);
@@ -515,16 +537,22 @@ int main(void)
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
-		topBarCloseButton.getTransform()->setPosition(0.95f, 0.95f);
-		topBarRestoreDownMaximizeButton.getTransform()->setPosition(0.85f, 0.95f);
-		topBarMinimizeButton.getTransform()->setPosition(0.75f, 0.95f);
+		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
+		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
+		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, 0.95f);
+
+		topBarRestoreDownMaximizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
+		topBarRestoreDownMaximizeButton.getTransform()->setPosition(1.0f - xGapButtonGapSize * 1.5f, 0.95f);
+
+		topBarMinimizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
+		topBarMinimizeButton.getTransform()->setPosition(1.0f - (xGapButtonGapSize * 2.5f), 0.95f);
 
 		topBarCloseButton.getTransform()->update();
 		topBarRestoreDownMaximizeButton.getTransform()->update();
 		topBarMinimizeButton.getTransform()->update();
 
-		topBarWindowChrome.getTransform()->setPosition(0, 0.95f);
-		topBarWindowChrome.getTransform()->setScale(glm::vec2(1, 0.1f));
+		topBarWindowChrome.getTransform()->setScale(glm::vec2(1, yUiScale));
+		topBarWindowChrome.getTransform()->setPosition(0, 0.96f);
 		topBarWindowChrome.getTransform()->update();
 		windowChromeShader.use();
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -534,7 +562,7 @@ int main(void)
 
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
-		if(topBarButtonOver == 3)
+		if (topBarButtonOver == 3)
 			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
 		topBarCloseButton.draw();
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
@@ -682,6 +710,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	windowWidth = width;
 	windowHeight = height;
+	yUiScale = TOP_BAR_HEIGHT / windowHeight;
+
+	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
+	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
+	xGapButtonGapSize = TOP_BAR_BUTTON_GAP_SIZE / windowWidth;
+
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glViewport(0, 0, width, height);
