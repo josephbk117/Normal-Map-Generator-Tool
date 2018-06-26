@@ -209,10 +209,24 @@ int main(void)
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
+		static int topBarButtonOver = 0;
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		topBarButtonOver = 0;
+		if (y < 40)
+		{
+			if (x > windowWidth - 125)
+			{
+				if (x > windowWidth - 50)
+					topBarButtonOver = 3;
+				else if (x > windowWidth - 100 && x < windowWidth - 50)
+					topBarButtonOver = 2;
+				else
+					topBarButtonOver = 1;
+			}
+		}
 		if (state == GLFW_PRESS)
 		{
-			double x, y;
-			glfwGetCursorPos(window, &x, &y);
 			if (initPos == glm::vec2(-1000, -1000))
 				initPos = glm::vec2(x, y);
 			if (y < 40)
@@ -520,14 +534,22 @@ int main(void)
 
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
+		if(topBarButtonOver == 3)
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
 		topBarCloseButton.draw();
+		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, restoreTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarRestoreDownMaximizeButton.getTransform()->getMatrix());
+		if (topBarButtonOver == 2)
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
 		topBarRestoreDownMaximizeButton.draw();
+		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, minimizeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarMinimizeButton.getTransform()->getMatrix());
+		if (topBarButtonOver == 1)
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
 		topBarMinimizeButton.draw();
 
 		glfwSwapBuffers(window);
