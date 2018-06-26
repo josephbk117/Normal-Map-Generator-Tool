@@ -166,6 +166,10 @@
   <ItemGroup>
     <Image Include="Resources\goli.png" />
     <Image Include="Resources\test2.png" />
+    <Image Include="Resources\UI\closeIcon.png" />
+    <Image Include="Resources\UI\maxWinIcon.png" />
+    <Image Include="Resources\UI\minWinIcon.png" />
+    <Image Include="Resources\UI\toTrayIcon.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

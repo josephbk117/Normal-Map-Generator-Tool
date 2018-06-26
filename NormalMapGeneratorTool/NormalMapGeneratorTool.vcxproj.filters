@@ -126,5 +126,17 @@
     <Image Include="Resources\test2.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\UI\toTrayIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\minWinIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\maxWinIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\closeIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

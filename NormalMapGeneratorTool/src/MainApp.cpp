@@ -33,7 +33,8 @@ const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
 const float TOP_BAR_HEIGHT = 50.0f;
 const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
-const float TOP_BAR_BUTTON_GAP_SIZE = 100.0f;
+const float TOP_BAR_BUTTON_X_GAP_SIZE = 80.0f;
+const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
 
 int windowWidth = 800;
 int windowHeight = 800;
@@ -55,6 +56,7 @@ float yUiScale = 1;
 float xUiButtonScale = 1;
 float yUiButtonScale = 1;
 float xGapButtonGapSize = 1;
+float yGapButtonGapSize = 1;
 TextureData texData;
 
 int main(void)
@@ -71,7 +73,8 @@ int main(void)
 	yUiScale = TOP_BAR_HEIGHT / windowHeight;
 	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
 	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
-	xGapButtonGapSize = TOP_BAR_BUTTON_GAP_SIZE / windowWidth;
+	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
+	yGapButtonGapSize = TOP_BAR_BUTTON_Y_GAP_SIZE / windowHeight;
 
 	if (!window)
 	{
@@ -219,6 +222,11 @@ int main(void)
 			normalmapPanel.getTransform()->translate(0, -1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
 			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
+		if (isKeyPressed(GLFW_KEY_V))
+		{
+			glfwSetWindowSize(window, 800, 800);
+			isMaximized = false;
+		}
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
@@ -232,9 +240,9 @@ int main(void)
 			{
 				if (x > windowWidth - 50)
 					topBarButtonOver = 3;
-				else if (x > windowWidth - 100 && x < windowWidth - 50)
+				else if (x > windowWidth - 80 && x < windowWidth - 50)
 					topBarButtonOver = 2;
-				else
+				else if (x < windowWidth - 90)
 					topBarButtonOver = 1;
 			}
 		}
@@ -539,13 +547,14 @@ int main(void)
 
 		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
 		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
-		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, 0.95f);
+		float yOffsetGap = 1.0f - yGapButtonGapSize;
+		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, yOffsetGap);
 
 		topBarRestoreDownMaximizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
-		topBarRestoreDownMaximizeButton.getTransform()->setPosition(1.0f - xGapButtonGapSize * 1.5f, 0.95f);
+		topBarRestoreDownMaximizeButton.getTransform()->setPosition(1.0f - xGapButtonGapSize * 1.5f, yOffsetGap);
 
 		topBarMinimizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
-		topBarMinimizeButton.getTransform()->setPosition(1.0f - (xGapButtonGapSize * 2.5f), 0.95f);
+		topBarMinimizeButton.getTransform()->setPosition(1.0f - (xGapButtonGapSize * 2.5f), yOffsetGap);
 
 		topBarCloseButton.getTransform()->update();
 		topBarRestoreDownMaximizeButton.getTransform()->update();
@@ -563,21 +572,21 @@ int main(void)
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 3)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
 		topBarCloseButton.draw();
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, restoreTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarRestoreDownMaximizeButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 2)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
 		topBarRestoreDownMaximizeButton.draw();
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, minimizeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarMinimizeButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 1)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(ACCENT_COL.x, ACCENT_COL.y, ACCENT_COL.z));
+			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
 		topBarMinimizeButton.draw();
 
 		glfwSwapBuffers(window);
@@ -714,7 +723,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
 	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
-	xGapButtonGapSize = TOP_BAR_BUTTON_GAP_SIZE / windowWidth;
+	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
+	yGapButtonGapSize = TOP_BAR_BUTTON_Y_GAP_SIZE / windowHeight;
 
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
