@@ -193,26 +193,30 @@ int main(void)
 			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		if (state == GLFW_PRESS)
 		{
 			double x, y;
 			glfwGetCursorPos(window, &x, &y);
+			if (initPos == glm::vec2(-1000, -1000))
+				initPos = glm::vec2(x, y);
 			if (y < 40)
 			{
 				glm::vec2 currentPos(x, y);
-				glm::vec2 diff = (currentPos - prevGlobalFirstMouseCoord);
-
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 				{
 					int winPosX, winPosY;
 					glfwGetWindowPos(window, &winPosX, &winPosY);
-					glfwSetWindowPos(window, winPosX + currentPos.x - 200, winPosY + currentPos.y - 10);
+					glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
 				}
 			}
 			prevGlobalFirstMouseCoord = glm::vec2(x, y);
 		}
 		else
+		{
+			initPos = glm::vec2(-1000, -1000);
 			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
+		}
 
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 		if (state == GLFW_PRESS)
