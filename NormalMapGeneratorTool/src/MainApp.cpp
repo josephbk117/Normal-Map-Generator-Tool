@@ -589,6 +589,23 @@ int main(void)
 			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
 		topBarMinimizeButton.draw();
 
+		glBindTexture(GL_TEXTURE_2D, 0);
+		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
+
+		topBarWindowChrome.getTransform()->setPosition(0, -1.02f);
+		topBarWindowChrome.getTransform()->setScale(glm::vec2(1.0f, yUiScale));
+		topBarWindowChrome.getTransform()->update();
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
+		topBarWindowChrome.draw();
+
+
+		topBarWindowChrome.getTransform()->setPosition(1.02f, -yGapButtonGapSize * 2);
+		topBarWindowChrome.getTransform()->setScale(glm::vec2(yUiScale, 1.0f));
+		topBarWindowChrome.getTransform()->update();
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
+		topBarWindowChrome.draw();
+
+
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
