@@ -17,6 +17,7 @@
 #include "Transform.h"
 
 //TODO : Rotation editor values
+//TODO : Move framebuffer stuff to custom class
 //TODO : Display brush preview
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
@@ -47,6 +48,7 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 float zoomLevel = 1;
 TextureData texData;
+
 int main(void)
 {
 	if (!glfwInit())
@@ -90,9 +92,22 @@ int main(void)
 	frameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel topBarWindowChrome;
 	topBarWindowChrome.init(1.0f, 0.5f);
+	DrawingPanel topBarCloseButton;
+	DrawingPanel topBarRestoreDownMaximizeButton;
+	DrawingPanel topBarMinimizeButton;
+	topBarCloseButton.init(0.03f, 0.03f);
+	topBarRestoreDownMaximizeButton.init(0.03f, 0.03f);
+	topBarMinimizeButton.init(0.03f, 0.03f);
+
+	unsigned int closeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
+	unsigned int restoreTexture = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
+	unsigned int minimizeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
+
+	topBarCloseButton.setTextureID(closeTexture);
+	topBarRestoreDownMaximizeButton.setTextureID(restoreTexture);
+	topBarMinimizeButton.setTextureID(minimizeTexture);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
-
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
 	normalmapPanel.setTextureID(texId);
 
@@ -202,12 +217,26 @@ int main(void)
 				initPos = glm::vec2(x, y);
 			if (y < 40)
 			{
-				glm::vec2 currentPos(x, y);
-				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+				if (x > windowWidth - 125)
 				{
-					int winPosX, winPosY;
-					glfwGetWindowPos(window, &winPosX, &winPosY);
-					glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
+					if (x > windowWidth - 50)
+						glfwSetWindowShouldClose(window, true);
+					else if (x > windowWidth - 100 && x < windowWidth - 50)
+					{
+						glfwMaximizeWindow(window);
+					}
+					else
+						glfwIconifyWindow(window);
+				}
+				else
+				{
+					glm::vec2 currentPos(x, y);
+					if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+					{
+						int winPosX, winPosY;
+						glfwGetWindowPos(window, &winPosX, &winPosY);
+						glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
+					}
 				}
 			}
 			prevGlobalFirstMouseCoord = glm::vec2(x, y);
@@ -472,13 +501,34 @@ int main(void)
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
+		topBarCloseButton.getTransform()->setPosition(0.95f, 0.95f);
+		topBarRestoreDownMaximizeButton.getTransform()->setPosition(0.85f, 0.95f);
+		topBarMinimizeButton.getTransform()->setPosition(0.75f, 0.95f);
+
+		topBarCloseButton.getTransform()->update();
+		topBarRestoreDownMaximizeButton.getTransform()->update();
+		topBarMinimizeButton.getTransform()->update();
+
 		topBarWindowChrome.getTransform()->setPosition(0, 0.95f);
 		topBarWindowChrome.getTransform()->setScale(glm::vec2(1, 0.1f));
 		topBarWindowChrome.getTransform()->update();
 		windowChromeShader.use();
+		glBindTexture(GL_TEXTURE_2D, 0);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 		topBarWindowChrome.draw();
+
+		glBindTexture(1, closeTexture);
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
+		topBarCloseButton.draw();
+
+		glBindTexture(1, restoreTexture);
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarRestoreDownMaximizeButton.getTransform()->getMatrix());
+		topBarRestoreDownMaximizeButton.draw();
+
+		glBindTexture(1, minimizeTexture);
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarMinimizeButton.getTransform()->getMatrix());
+		topBarMinimizeButton.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
