@@ -38,6 +38,8 @@ const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
 
 int windowWidth = 800;
 int windowHeight = 800;
+int maxWindowWidth = -1;
+int maxWindowHeight = -1;
 FrameBufferSystem fbs;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -69,7 +71,10 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
 
-	glfwSetWindowSizeLimits(window, 600, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
+	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	maxWindowWidth = mode->width;
+	maxWindowHeight = mode->height;
+	glfwSetWindowSizeLimits(window, 600, 500, maxWindowWidth, maxWindowHeight);
 
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
@@ -91,7 +96,6 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
-	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
 	// Setup Dear ImGui binding
 	IMGUI_CHECKVERSION();
@@ -776,10 +780,8 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	if (width < 500)
-		width = 500;
-	if (height < 500)
-		height = 500;
+	width = glm::clamp(width, 500, maxWindowWidth);
+	height = glm::clamp(height, 500, maxWindowHeight);
 
 	windowWidth = width;
 	windowHeight = height;
