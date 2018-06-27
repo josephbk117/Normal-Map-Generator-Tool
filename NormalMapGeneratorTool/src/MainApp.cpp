@@ -31,7 +31,8 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
-const float TOP_BAR_HEIGHT = 50.0f;
+const float FRAME_BAR_HEIGHT = 50.0f;
+const float FRAME_BAR_WIDTH = 35.0f;
 const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
 const float TOP_BAR_BUTTON_X_GAP_SIZE = 80.0f;
 const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
@@ -53,6 +54,7 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 float zoomLevel = 1;
 float yUiScale = 1;
+float xUiScale = 1;
 float xUiButtonScale = 1;
 float yUiButtonScale = 1;
 float xGapButtonGapSize = 1;
@@ -69,10 +71,11 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
 
-	glfwSetWindowSizeLimits(window, 600, 500, GLFW_DONT_CARE, 900);
+	glfwSetWindowSizeLimits(window, 600, 500, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-	yUiScale = TOP_BAR_HEIGHT / windowHeight;
+	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
+	xUiScale = FRAME_BAR_WIDTH / windowWidth;
 	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
 	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
 	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
@@ -653,8 +656,8 @@ int main(void)
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeBar.draw();
 
-		windowChromeBar.getTransform()->setPosition(1.02f, -yGapButtonGapSize * 2);
-		windowChromeBar.getTransform()->setScale(glm::vec2(yUiScale, 1.0f));
+		windowChromeBar.getTransform()->setPosition(1, -yGapButtonGapSize * 2);
+		windowChromeBar.getTransform()->setScale(glm::vec2(xUiScale, 1.0f));
 		windowChromeBar.getTransform()->update();
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeBar.draw();
@@ -789,8 +792,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	windowWidth = width;
 	windowHeight = height;
-	yUiScale = TOP_BAR_HEIGHT / windowHeight;
-
+	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
+	xUiScale = FRAME_BAR_WIDTH / windowWidth;
 	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
 	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
 	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
