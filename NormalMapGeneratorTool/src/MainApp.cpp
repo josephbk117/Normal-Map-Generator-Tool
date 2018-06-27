@@ -480,7 +480,7 @@ int main(void)
 		bool *p_open = NULL;
 
 		ImGui::SetNextWindowPos(ImVec2(0, 40), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight - 70), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
