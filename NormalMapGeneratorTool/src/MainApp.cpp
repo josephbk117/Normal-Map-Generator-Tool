@@ -69,6 +69,8 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
 
+	glfwSetWindowSizeLimits(window, 600, 500, GLFW_DONT_CARE, 900);
+
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	yUiScale = TOP_BAR_HEIGHT / windowHeight;
 	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
@@ -105,8 +107,8 @@ int main(void)
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
-	DrawingPanel topBarWindowChrome;
-	topBarWindowChrome.init(1.0f, 1.0f);
+	DrawingPanel windowChromeBar;
+	windowChromeBar.init(1.0f, 1.0f);
 	DrawingPanel topBarCloseButton;
 	DrawingPanel topBarRestoreDownMaximizeButton;
 	DrawingPanel topBarMinimizeButton;
@@ -193,6 +195,7 @@ int main(void)
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
+
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -234,7 +237,7 @@ int main(void)
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		topBarButtonOver = 0;
-		if (y < 40)
+		if (y < 40 && y > -5)
 		{
 			if (x > windowWidth - 125)
 			{
@@ -250,36 +253,88 @@ int main(void)
 		{
 			if (initPos == glm::vec2(-1000, -1000))
 				initPos = glm::vec2(x, y);
-			if (y < 40)
+
+			if (x > windowWidth - 30 && x < windowWidth + 10 && y > windowHeight - 30 && y < windowHeight + 10)
 			{
-				if (x > windowWidth - 125)
+				glm::vec2 currentPos(x, y);
+				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 				{
-					if (x > windowWidth - 50)
-						glfwSetWindowShouldClose(window, true);
-					else if (x > windowWidth - 100 && x < windowWidth - 50)
-					{
-						if (!isMaximized)
-						{
-							glfwMaximizeWindow(window);
-							isMaximized = true;
-						}
-						else
-						{
-							glfwSetWindowSize(window, 800, 800);
-							isMaximized = false;
-						}
-					}
-					else
-						glfwIconifyWindow(window);
+					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
+					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
+					windowWidth += diff.x;
+					windowHeight += diff.y;
 				}
-				else
+			}
+			else if (x > windowWidth - 30 && x < windowWidth + 10)
+			{
+				glm::vec2 currentPos(x, y);
+				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+				{
+					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
+					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
+					windowWidth += diff.x;
+				}
+			}
+			else if (x < 30 && x > -10)
+			{
+				glm::vec2 currentPos(x, y);
+				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+				{
+					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
+					glfwSetWindowSize(window, windowWidth - diff.x * 10, windowHeight);
+					windowWidth -= diff.x * 10;
+
+					int xPos, yPos;
+					glfwGetWindowPos(window, &xPos, &yPos);
+					glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos);
+				}
+			}
+			if (y < 40 && y > -5)
+			{
+				if (y < 15)
 				{
 					glm::vec2 currentPos(x, y);
 					if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 					{
-						int winPosX, winPosY;
-						glfwGetWindowPos(window, &winPosX, &winPosY);
-						glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
+						glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
+						glfwSetWindowSize(window, windowWidth, windowHeight - diff.y * 10);
+						windowHeight -= diff.y * 10;
+						int xPos, yPos;
+						glfwGetWindowPos(window, &xPos, &yPos);
+						glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
+					}
+				}
+				else
+				{
+					if (x > windowWidth - 125)
+					{
+						if (x > windowWidth - 50)
+							glfwSetWindowShouldClose(window, true);
+						else if (x > windowWidth - 100 && x < windowWidth - 50)
+						{
+							if (!isMaximized)
+							{
+								glfwMaximizeWindow(window);
+								isMaximized = true;
+							}
+							else
+							{
+								glfwSetWindowSize(window, 800, 800);
+								isMaximized = false;
+							}
+						}
+						else
+							glfwIconifyWindow(window);
+					}
+					else
+					{
+						glm::vec2 currentPos(x, y);
+						if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+						{
+							int winPosX, winPosY;
+							glfwGetWindowPos(window, &winPosX, &winPosY);
+							glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
+						}
 					}
 				}
 			}
@@ -560,14 +615,14 @@ int main(void)
 		topBarRestoreDownMaximizeButton.getTransform()->update();
 		topBarMinimizeButton.getTransform()->update();
 
-		topBarWindowChrome.getTransform()->setScale(glm::vec2(1, yUiScale));
-		topBarWindowChrome.getTransform()->setPosition(0, 0.96f);
-		topBarWindowChrome.getTransform()->update();
+		windowChromeBar.getTransform()->setScale(glm::vec2(1, yUiScale));
+		windowChromeBar.getTransform()->setPosition(0, 0.96f);
+		windowChromeBar.getTransform()->update();
 		windowChromeShader.use();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-		topBarWindowChrome.draw();
+		windowChromeBar.draw();
 
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
@@ -592,19 +647,17 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
-		topBarWindowChrome.getTransform()->setPosition(0, -1.02f);
-		topBarWindowChrome.getTransform()->setScale(glm::vec2(1.0f, yUiScale));
-		topBarWindowChrome.getTransform()->update();
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
-		topBarWindowChrome.draw();
+		windowChromeBar.getTransform()->setPosition(0, -1.02f);
+		windowChromeBar.getTransform()->setScale(glm::vec2(1.0f, yUiScale));
+		windowChromeBar.getTransform()->update();
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
+		windowChromeBar.draw();
 
-
-		topBarWindowChrome.getTransform()->setPosition(1.02f, -yGapButtonGapSize * 2);
-		topBarWindowChrome.getTransform()->setScale(glm::vec2(yUiScale, 1.0f));
-		topBarWindowChrome.getTransform()->update();
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarWindowChrome.getTransform()->getMatrix());
-		topBarWindowChrome.draw();
-
+		windowChromeBar.getTransform()->setPosition(1.02f, -yGapButtonGapSize * 2);
+		windowChromeBar.getTransform()->setScale(glm::vec2(yUiScale, 1.0f));
+		windowChromeBar.getTransform()->update();
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
+		windowChromeBar.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
