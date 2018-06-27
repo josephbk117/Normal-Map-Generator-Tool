@@ -8,7 +8,7 @@
 #include "imgui_impl_glfw_gl3.h"
 
 #include "DrawingPanel.h"
-#include "FrameBuffer.h"
+#include "FrameBufferSystem.h"
 #include "TextureData.h"
 #include "ColourData.h"
 #include "BrushData.h"
@@ -17,7 +17,6 @@
 #include "Transform.h"
 
 //TODO : Rotation editor values
-//TODO : Move framebuffer stuff to custom class
 //TODO : Display brush preview
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
@@ -39,8 +38,7 @@ const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
 
 int windowWidth = 800;
 int windowHeight = 800;
-unsigned int framebuffer;
-unsigned int textureColorbuffer;
+FrameBufferSystem fbs;
 GLFWwindow* window;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -180,19 +178,7 @@ int main(void)
 	brushData.heightMapPositiveDir = false;
 	double initTime = glfwGetTime();
 
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-	glGenTextures(1, &textureColorbuffer);
-	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	fbs.init(windowWidth, windowHeight);
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -204,7 +190,7 @@ int main(void)
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		fbs.BindFrameBuffer();
 		glEnable(GL_DEPTH_TEST);
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -477,8 +463,8 @@ int main(void)
 
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(modelMatrixUniform, glm::mat4());
-		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-		frameDrawingPanel.setTextureID(textureColorbuffer);
+		fbs.BindBufferTexture();
+		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
 
 		ImGui_ImplGlfwGL3_NewFrame();
@@ -798,9 +784,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
 	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
 	yGapButtonGapSize = TOP_BAR_BUTTON_Y_GAP_SIZE / windowHeight;
-
-	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	fbs.updateTextureDimensions(windowWidth, windowHeight);
 	glViewport(0, 0, width, height);
 }
 

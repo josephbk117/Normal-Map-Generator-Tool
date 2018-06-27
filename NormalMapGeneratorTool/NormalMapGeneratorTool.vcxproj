@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\FrameBuffer.cpp" />
+    <ClCompile Include="src\FrameBufferSystem.cpp" />
     <ClCompile Include="src\DrawingPanel.cpp" />
     <ClCompile Include="src\imgui.cpp" />
     <ClCompile Include="src\imgui_demo.cpp" />
@@ -137,8 +137,8 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\FrameBufferSystem.h" />
     <ClInclude Include="src\BrushData.h" />
-    <ClInclude Include="src\FrameBuffer.h" />
     <ClInclude Include="src\ColourData.h" />
     <ClInclude Include="src\DrawingPanel.h" />
     <ClInclude Include="src\imconfig.h" />

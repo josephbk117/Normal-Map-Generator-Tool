@@ -48,7 +48,7 @@
     <ClCompile Include="src\TextureData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\FrameBuffer.cpp">
+    <ClCompile Include="src\FrameBufferSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,10 +95,10 @@
     <ClInclude Include="src\ColourData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\FrameBuffer.h">
+    <ClInclude Include="src\BrushData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\BrushData.h">
+    <ClInclude Include="src\FrameBufferSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -117,7 +117,9 @@
     <None Include="Resources\spriteBase.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\windowChrome.fs" />
+    <None Include="Resources\windowChrome.fs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">
