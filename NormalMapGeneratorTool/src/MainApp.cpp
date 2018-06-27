@@ -776,6 +776,11 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+	if (width < 500)
+		width = 500;
+	if (height < 500)
+		height = 500;
+
 	windowWidth = width;
 	windowHeight = height;
 	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
