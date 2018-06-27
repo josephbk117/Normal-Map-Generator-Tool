@@ -30,7 +30,7 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
-const float FRAME_BAR_HEIGHT = 50.0f;
+const float FRAME_BAR_HEIGHT = 80.0f;
 const float FRAME_BAR_WIDTH = 35.0f;
 const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
 const float TOP_BAR_BUTTON_X_GAP_SIZE = 80.0f;
@@ -188,7 +188,6 @@ int main(void)
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
-
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -254,8 +253,6 @@ int main(void)
 				{
 					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
 					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
-					windowWidth += diff.x;
-					windowHeight += diff.y;
 				}
 			}
 			else if (x > windowWidth - 30 && x < windowWidth + 10)
@@ -265,21 +262,19 @@ int main(void)
 				{
 					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
 					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
-					windowWidth += diff.x;
 				}
 			}
-			else if (x < 30 && x > -10)
+			else if (x < 5 && x > -20)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 				{
 					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
-					glfwSetWindowSize(window, windowWidth - diff.x * 10, windowHeight);
-					windowWidth -= diff.x * 10;
+					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
 
 					int xPos, yPos;
 					glfwGetWindowPos(window, &xPos, &yPos);
-					glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos);
+					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
 				}
 			}
 			if (y < 40 && y > -5)
@@ -609,7 +604,7 @@ int main(void)
 		topBarMinimizeButton.getTransform()->update();
 
 		windowChromeBar.getTransform()->setScale(glm::vec2(1, yUiScale));
-		windowChromeBar.getTransform()->setPosition(0, 0.96f);
+		windowChromeBar.getTransform()->setPosition(0, 1.0f);
 		windowChromeBar.getTransform()->update();
 		windowChromeShader.use();
 		glBindTexture(GL_TEXTURE_2D, 0);
