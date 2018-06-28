@@ -143,5 +143,8 @@
     <Image Include="Resources\test3.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\UI\icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

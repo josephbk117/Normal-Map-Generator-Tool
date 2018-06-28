@@ -168,6 +168,7 @@
     <Image Include="Resources\test2.png" />
     <Image Include="Resources\test3.png" />
     <Image Include="Resources\UI\closeIcon.png" />
+    <Image Include="Resources\UI\icon.png" />
     <Image Include="Resources\UI\maxWinIcon.png" />
     <Image Include="Resources\UI\minWinIcon.png" />
     <Image Include="Resources\UI\toTrayIcon.png" />

@@ -71,6 +71,7 @@ int main(void)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
+	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowWidth = mode->width;
@@ -118,17 +119,21 @@ int main(void)
 	DrawingPanel topBarCloseButton;
 	DrawingPanel topBarRestoreDownMaximizeButton;
 	DrawingPanel topBarMinimizeButton;
+	DrawingPanel topBarLogo;
 	topBarCloseButton.init(1.0f, 1.0f);
 	topBarRestoreDownMaximizeButton.init(1.0f, 1.0f);
 	topBarMinimizeButton.init(1.0f, 1.0f);
+	topBarLogo.init(1.0f, 1.0f);
 
 	unsigned int closeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
 	unsigned int restoreTexture = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
 	unsigned int minimizeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
+	unsigned int logoTexture = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
 
 	topBarCloseButton.setTextureID(closeTexture);
 	topBarRestoreDownMaximizeButton.setTextureID(restoreTexture);
 	topBarMinimizeButton.setTextureID(minimizeTexture);
+	topBarLogo.setTextureID(logoTexture);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
@@ -600,9 +605,12 @@ int main(void)
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
-		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
 		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
 		float yOffsetGap = 1.0f - yGapButtonGapSize;
+		topBarLogo.getTransform()->setScale(glm::vec2(xUiButtonScale * 1.5f, yUiButtonScale * 1.5f));
+		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap - yOffsetGap*0.01f);
+
+		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
 		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, yOffsetGap);
 
 		topBarRestoreDownMaximizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
@@ -614,6 +622,7 @@ int main(void)
 		topBarCloseButton.getTransform()->update();
 		topBarRestoreDownMaximizeButton.getTransform()->update();
 		topBarMinimizeButton.getTransform()->update();
+		topBarLogo.getTransform()->update();
 
 		windowChromeBar.getTransform()->setScale(glm::vec2(1, yUiScale));
 		windowChromeBar.getTransform()->setPosition(0, 1.0f);
@@ -623,6 +632,10 @@ int main(void)
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 		windowChromeBar.draw();
+
+		glBindTexture(1, logoTexture);
+		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarLogo.getTransform()->getMatrix());
+		topBarLogo.draw();
 
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
