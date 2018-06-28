@@ -47,7 +47,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
-bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h);
+bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
@@ -60,6 +60,7 @@ float yUiButtonScale = 1;
 float xGapButtonGapSize = 1;
 float yGapButtonGapSize = 1;
 TextureData texData;
+TextureData brushData;
 
 int main(void)
 {
@@ -174,7 +175,7 @@ int main(void)
 	bool isMaximized = false;
 
 	BrushData brushData;
-	brushData.brushScale = 0.05f;
+	brushData.brushScale = 10.0f;
 	brushData.brushOffset = 1.0f;
 	brushData.brushStrength = 1.0f;
 	brushData.brushMinHeight = 0.0f;
@@ -371,7 +372,7 @@ int main(void)
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
 
 					float maxWidth = texData.getWidth();
-					float convertedBrushScale = brushData.brushScale;
+					float convertedBrushScale = brushData.brushScale / texData.getHeight();
 					int left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
@@ -424,13 +425,13 @@ int main(void)
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static bool shouldSaveNormalMap = false;
 		if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
-		{ 
+		{
 			glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
 			glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
 
 			normalmapPanel.getTransform()->setPosition(glm::vec2());
 			float aspectRatio = (float)windowWidth / (float)windowHeight;
-			
+
 			if (windowWidth < windowHeight)
 			{
 				float scale = (float)texData.getWidth() / windowWidth;
@@ -458,7 +459,7 @@ int main(void)
 			std::string locationStr = std::string(saveLocation);
 			if (locationStr.length() > 4)
 			{
-				if (saveScreenshot(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
+				if (exportImage(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
 					std::cout << "Saved at " << locationStr;
 				shouldSaveNormalMap = false;
 			}
@@ -561,7 +562,7 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::Spacing();
 		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
-		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 0.0f, 1.0f, "%.3f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight(), "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
@@ -749,6 +750,7 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 	glm::vec2 pixelPos(xpos, ypos);
 	float px_width = texData.getWidth();
 	float px_height = texData.getHeight();
+	float distanceRemap = brushData.brushScale / px_height;
 	for (int i = startX; i < width; i++)
 	{
 		for (int j = startY; j < height; j++)
@@ -756,9 +758,9 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 			colData = texData.getTexelColor(i, j);
 			rVal = colData.getColourIn_0_1_Range().r;
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
-			if (distance < brushData.brushScale)
+			if (distance < distanceRemap)
 			{
-				distance = (1.0f - (distance / brushData.brushScale)) * brushData.brushOffset;
+				distance = (1.0f - (distance / distanceRemap)) * brushData.brushOffset;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
 				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
@@ -806,7 +808,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	zoomLevel += zoomLevel * 0.1f * yoffset;
 }
 
-bool saveScreenshot(std::string filename, int xOff, int yOff, int w, int h)
+bool exportImage(std::string filename, int xOff, int yOff, int w, int h)
 {
 	//This prevents the images getting padded 
 	// when the width multiplied by 3 is not a multiple of 4
