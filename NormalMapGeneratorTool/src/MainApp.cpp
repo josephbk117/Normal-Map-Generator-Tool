@@ -74,7 +74,7 @@ int main(void)
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowWidth = mode->width;
 	maxWindowHeight = mode->height;
-	glfwSetWindowSizeLimits(window, 600, 500, maxWindowWidth, maxWindowHeight);
+	glfwSetWindowSizeLimits(window, 500, 500, maxWindowWidth, maxWindowHeight);
 
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
@@ -149,7 +149,7 @@ int main(void)
 	int windowChromeColourUniform = windowChromeShader.getUniformLocation("_chromeColour");
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
-	int modelMatrixUniform = normalmapShader.getUniformLocation("model");
+	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
 	int normalMapModeOnUniform = normalmapShader.getUniformLocation("_normalMapModeOn");
 	int widthUniform = normalmapShader.getUniformLocation("_HeightmapDimX");
@@ -264,17 +264,17 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
 				}
 			}
-			else if (x < 5 && x > -20)
+			else if (x < 10 && x > -40)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 				{
-					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
-					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
-
 					int xPos, yPos;
 					glfwGetWindowPos(window, &xPos, &yPos);
 					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
+					glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (prevGlobalFirstMouseCoord + glm::vec2(xPos, 0));
+					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
+
 				}
 			}
 			if (y < 40 && y > -5)
@@ -411,7 +411,7 @@ int main(void)
 		normalmapPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		normalmapPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
-		normalmapShader.applyShaderUniformMatrix(modelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
@@ -424,18 +424,25 @@ int main(void)
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static bool shouldSaveNormalMap = false;
 		if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
-		{
+		{ 
 			glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
 			glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
 
 			normalmapPanel.getTransform()->setPosition(glm::vec2());
 			float aspectRatio = (float)windowWidth / (float)windowHeight;
+			
 			if (windowWidth < windowHeight)
-				normalmapPanel.getTransform()->setScale(glm::vec2(1, aspectRatio));
+			{
+				float scale = (float)texData.getWidth() / windowWidth;
+				normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
+			}
 			else
-				normalmapPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1));
+			{
+				float scale = (float)texData.getHeight() / windowHeight;
+				normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
+			}
 			normalmapPanel.getTransform()->update();
-			normalmapShader.applyShaderUniformMatrix(modelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+			normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 			normalmapPanel.draw();
 
 			int tempWindowWidth = windowWidth;
@@ -447,7 +454,7 @@ int main(void)
 			std::string locationStr = std::string(saveLocation);
 			if (locationStr.length() > 4)
 			{
-				if (saveScreenshot(locationStr, widthSub, heightSub, windowWidth - (2 * widthSub), windowHeight - (2 * heightSub)))
+				if (saveScreenshot(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
 					std::cout << "Saved at " << locationStr;
 				shouldSaveNormalMap = false;
 			}
@@ -461,7 +468,7 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		frameShader.use();
-		frameShader.applyShaderUniformMatrix(modelMatrixUniform, glm::mat4());
+		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
 		fbs.BindBufferTexture();
 		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
@@ -776,7 +783,7 @@ bool isKeyReleased(int key)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	width = glm::clamp(width, 500, maxWindowWidth);
-	height = glm::clamp(height, 500, maxWindowHeight);
+	height = glm::clamp(height, 125, maxWindowHeight);
 
 	windowWidth = width;
 	windowHeight = height;
