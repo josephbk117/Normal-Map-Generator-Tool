@@ -439,6 +439,10 @@ int main(void)
 			else
 			{
 				float scale = (float)texData.getHeight() / windowHeight;
+				if (windowHeight < texData.getHeight())
+				{
+					scale = 1;
+				}
 				normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
 			}
 			normalmapPanel.getTransform()->update();

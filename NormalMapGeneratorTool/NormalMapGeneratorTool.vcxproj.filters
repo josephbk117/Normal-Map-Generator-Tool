@@ -140,5 +140,8 @@
     <Image Include="Resources\UI\closeIcon.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\test3.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
