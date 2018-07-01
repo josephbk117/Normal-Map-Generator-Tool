@@ -364,9 +364,9 @@ int main(void)
 		{
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
-			glm::vec2 currentPos(xpos, ypos);
-			if (currentPos != prevMouseCoord &&
-				glm::distance(glm::vec2(currentPos.x / windowWidth, currentPos.y / windowHeight),
+			glm::vec2 currenMouseCoord(xpos, ypos);
+			if (currenMouseCoord != prevMouseCoord &&
+				glm::distance(glm::vec2(currenMouseCoord.x / windowWidth, currenMouseCoord.y / windowHeight),
 					glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight)) > (brushData.brushRate / texData.getWidth()) * zoomLevel)
 			{
 				xpos = xpos / windowWidth;
@@ -379,24 +379,40 @@ int main(void)
 					glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
 					std::cout << "\nMouse pos : " << xpos << ", " << ypos;
 					std::cout << "\nnormal panel world pos x : " << normalmapPanel.getPanelWorldDimension().x << ", " << normalmapPanel.getPanelWorldDimension().y;
-					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
-					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
+
+					xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+
 					std::cout << "\nAfter Mouse pos : " << xpos << ", " << ypos;
 
 					float maxWidth = texData.getWidth();
 					float convertedBrushScale = brushData.brushScale / texData.getHeight();
+
 					int left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
 					SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
+					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
+					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
+					for (int i = 0; i < distance*10; i++)
+					{
+						left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+						right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+						bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+						top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+
+						SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
+						xpos += diff.x / (distance * 10);
+						ypos += diff.y / (distance * 10);
+					}*/
 
 					GLenum format = TextureManager::getTextureFormatFromData(4);
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
 						texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
+					prevMouseCoord = currenMouseCoord;
 				}
-				prevMouseCoord = currentPos;
 			}
 		}
 		else
