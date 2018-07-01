@@ -371,7 +371,7 @@ int main(void)
 			{
 				xpos = xpos / windowWidth;
 				ypos = 1.0f - (ypos / windowHeight);
-				if (normalmapPanel.isPointInPanel(xpos, ypos))
+				if (true/*normalmapPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
 				{
 					float prevX = prevMouseCoord.x / windowWidth;
 					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
@@ -381,7 +381,7 @@ int main(void)
 					std::cout << "\nnormal panel world pos x : " << normalmapPanel.getPanelWorldDimension().x << ", " << normalmapPanel.getPanelWorldDimension().y;
 
 					xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
-					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+					ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
 					std::cout << "\nAfter Mouse pos : " << xpos << ", " << ypos;
 
@@ -520,7 +520,7 @@ int main(void)
 		bool *p_open = NULL;
 
 		ImGui::SetNextWindowPos(ImVec2(0, 40), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 250.0f, 600.0f), windowHeight - 70), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 70), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
