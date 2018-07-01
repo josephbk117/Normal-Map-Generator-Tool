@@ -632,7 +632,7 @@ int main(void)
 		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
 		float yOffsetGap = 1.0f - yGapButtonGapSize;
 		topBarLogo.getTransform()->setScale(glm::vec2(xUiButtonScale * 1.5f, yUiButtonScale * 1.5f));
-		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap - yOffsetGap * 0.01f);
+		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap);
 
 		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
 		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, yOffsetGap);
