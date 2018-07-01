@@ -6,5 +6,6 @@ struct BrushData
 	float brushStrength = 1.0f;
 	float brushMinHeight = 0.0f;
 	float brushMaxHeight = 1.0f;
+	float brushRate = 0.0f;
 	bool heightMapPositiveDir = false;
 };

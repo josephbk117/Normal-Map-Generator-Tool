@@ -109,7 +109,11 @@ glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
 	float right = (transform.getScale().x * 0.5f) + 0.5f;
 	float top = (transform.getScale().y * 0.5f) + 0.5f;
 	float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
-	return glm::vec4(left, right, top, bottom);
+	return glm::vec4
+	(left + transform.getPosition().x,
+	right + transform.getPosition().x,
+	top + transform.getPosition().y,
+	bottom + transform.getPosition().y);
 }
 
 void DrawingPanel::draw()noexcept

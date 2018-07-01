@@ -17,6 +17,7 @@
 #include "Transform.h"
 
 //TODO : Rotation editor values
+//TODO : Distance based drawing
 //TODO : Display brush preview
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
@@ -185,6 +186,7 @@ int main(void)
 	brushData.brushStrength = 1.0f;
 	brushData.brushMinHeight = 0.0f;
 	brushData.brushMaxHeight = 1.0f;
+	brushData.brushRate = 0.0f;
 	brushData.heightMapPositiveDir = false;
 	double initTime = glfwGetTime();
 
@@ -363,7 +365,9 @@ int main(void)
 			double xpos, ypos;
 			glfwGetCursorPos(window, &xpos, &ypos);
 			glm::vec2 currentPos(xpos, ypos);
-			if (currentPos != prevMouseCoord)
+			if (currentPos != prevMouseCoord &&
+				glm::distance(glm::vec2(currentPos.x / windowWidth, currentPos.y / windowHeight),
+					glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight)) > (brushData.brushRate / texData.getWidth()) * zoomLevel)
 			{
 				xpos = xpos / windowWidth;
 				ypos = 1.0f - (ypos / windowHeight);
@@ -373,8 +377,11 @@ int main(void)
 					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
 					glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
+					std::cout << "\nMouse pos : " << xpos << ", " << ypos;
+					std::cout << "\nnormal panel world pos x : " << normalmapPanel.getPanelWorldDimension().x << ", " << normalmapPanel.getPanelWorldDimension().y;
 					xpos = (xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x);
 					ypos = (ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w);
+					std::cout << "\nAfter Mouse pos : " << xpos << ", " << ypos;
 
 					float maxWidth = texData.getWidth();
 					float convertedBrushScale = brushData.brushScale / texData.getHeight();
@@ -572,6 +579,7 @@ int main(void)
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight(), "%0.2f", 1.0f)) {}
 
 		if (brushData.brushMinHeight > brushData.brushMaxHeight)
 			brushData.brushMinHeight = brushData.brushMaxHeight;
@@ -608,7 +616,7 @@ int main(void)
 		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
 		float yOffsetGap = 1.0f - yGapButtonGapSize;
 		topBarLogo.getTransform()->setScale(glm::vec2(xUiButtonScale * 1.5f, yUiButtonScale * 1.5f));
-		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap - yOffsetGap*0.01f);
+		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap - yOffsetGap * 0.01f);
 
 		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
 		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, yOffsetGap);
