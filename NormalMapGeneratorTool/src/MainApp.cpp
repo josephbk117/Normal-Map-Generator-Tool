@@ -49,7 +49,7 @@ void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
+void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -61,7 +61,6 @@ float yUiButtonScale = 1;
 float xGapButtonGapSize = 1;
 float yGapButtonGapSize = 1;
 TextureData texData;
-TextureData brushData;
 
 int main(void)
 {
@@ -126,10 +125,15 @@ int main(void)
 	topBarMinimizeButton.init(1.0f, 1.0f);
 	topBarLogo.init(1.0f, 1.0f);
 
+	DrawingPanel brushPanel;
+	brushPanel.init(1.0f, 1.0f);
+
 	unsigned int closeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
 	unsigned int restoreTexture = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
 	unsigned int minimizeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
 	unsigned int logoTexture = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
+
+	TextureData brushTexData;
 
 	topBarCloseButton.setTextureID(closeTexture);
 	topBarRestoreDownMaximizeButton.setTextureID(restoreTexture);
@@ -152,6 +156,10 @@ int main(void)
 	windowChromeShader.compileShaders("Resources\\spriteBase.vs", "Resources\\windowChrome.fs");
 	windowChromeShader.linkShaders();
 
+	ShaderProgram brushPreviewShader;
+	brushPreviewShader.compileShaders("Resources\\spriteBase.vs", "Resources\\brushPreview.fs");
+	brushPreviewShader.linkShaders();
+
 	int windowChromeModelUniform = windowChromeShader.getUniformLocation("model");
 	int windowChromeColourUniform = windowChromeShader.getUniformLocation("_chromeColour");
 
@@ -164,6 +172,8 @@ int main(void)
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
 	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
+
+	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -191,6 +201,15 @@ int main(void)
 	double initTime = glfwGetTime();
 
 	fbs.init(windowWidth, windowHeight);
+
+	unsigned char *completeWhite = new unsigned char[4 * 256 * 256];
+	for (int i = 0; i < 4 * 256 * 256; i++)
+		completeWhite[i] = 255;
+
+	brushTexData.setTextureData(completeWhite, 256, 256, 4);
+	unsigned int brushtexture = TextureManager::loadTextureFromData(brushTexData, false);
+	brushPanel.setTextureID(brushtexture);
+
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -235,7 +254,9 @@ int main(void)
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static int topBarButtonOver = 0;
 		double x, y;
+
 		glfwGetCursorPos(window, &x, &y);
+		glm::vec2 mouseCoord = glm::vec2(x, y);
 		topBarButtonOver = 0;
 		if (y < 40 && y > -5)
 		{
@@ -393,7 +414,7 @@ int main(void)
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
-					SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
+					SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
 					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
 					for (int i = 0; i < distance*10; i++)
@@ -494,6 +515,14 @@ int main(void)
 			normalmapPanel.getTransform()->setPosition(tempPos);
 			normalmapPanel.getTransform()->setScale(tempScale);
 		}
+
+		glBindTexture(GL_TEXTURE_2D, brushtexture);
+		brushPreviewShader.use();
+		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
+		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / windowWidth, brushData.brushScale / windowWidth));
+		brushPanel.getTransform()->update();
+		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
+		brushPanel.draw();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -596,6 +625,15 @@ int main(void)
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight(), "%0.2f", 1.0f)) {}
+
+		BrushData bCopy = brushData;
+		bCopy.brushMaxHeight = 0.3f;
+
+		SetPixelValues(brushTexData, 0, 256, 0, 256, 0, 0, bCopy);
+		GLenum format = TextureManager::getTextureFormatFromData(4);
+		glBindTexture(GL_TEXTURE_2D, brushtexture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, brushTexData.getWidth(),
+			brushTexData.getHeight(), format, GL_UNSIGNED_BYTE, brushTexData.getTextureData());
 
 		if (brushData.brushMinHeight > brushData.brushMaxHeight)
 			brushData.brushMinHeight = brushData.brushMaxHeight;
@@ -779,20 +817,20 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
+void SetPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
 {
 	ColourData colData;
 	float rVal;
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);
-	float px_width = texData.getWidth();
-	float px_height = texData.getHeight();
+	float px_width = inputTexData.getWidth();
+	float px_height = inputTexData.getHeight();
 	float distanceRemap = brushData.brushScale / px_height;
 	for (int i = startX; i < width; i++)
 	{
 		for (int j = startY; j < height; j++)
 		{
-			colData = texData.getTexelColor(i, j);
+			colData = inputTexData.getTexelColor(i, j);
 			rVal = colData.getColourIn_0_1_Range().r;
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < distanceRemap)
@@ -801,7 +839,7 @@ void SetPixelValues(int startX, int width, int startY, int height, double xpos, 
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
 				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
-				texData.setTexelColor(col, i, j);
+				inputTexData.setTexelColor(col, i, j);
 			}
 		}
 	}

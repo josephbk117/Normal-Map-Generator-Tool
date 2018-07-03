@@ -158,6 +158,7 @@
     <Font Include="Resources\arial.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\brushPreview.fs" />
     <None Include="Resources\frameBuffer.fs" />
     <None Include="Resources\spriteBase.fs" />
     <None Include="Resources\spriteBase.vs" />

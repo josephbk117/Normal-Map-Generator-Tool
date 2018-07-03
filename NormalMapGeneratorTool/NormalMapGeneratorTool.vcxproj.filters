@@ -120,6 +120,7 @@
     <None Include="Resources\windowChrome.fs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\brushPreview.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">
