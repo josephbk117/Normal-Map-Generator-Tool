@@ -50,6 +50,7 @@ bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
+void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -517,9 +518,10 @@ int main(void)
 		}
 
 		glBindTexture(GL_TEXTURE_2D, brushtexture);
+		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
-		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / windowWidth, brushData.brushScale / windowWidth));
+		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
@@ -627,9 +629,8 @@ int main(void)
 		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight(), "%0.2f", 1.0f)) {}
 
 		BrushData bCopy = brushData;
-		bCopy.brushMaxHeight = 0.3f;
+		SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
 
-		SetPixelValues(brushTexData, 0, 256, 0, 256, 0, 0, bCopy);
 		GLenum format = TextureManager::getTextureFormatFromData(4);
 		glBindTexture(GL_TEXTURE_2D, brushtexture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, brushTexData.getWidth(),
@@ -841,6 +842,37 @@ void SetPixelValues(TextureData& inputTexData, int startX, int width, int startY
 				ColourData col(rVal, rVal, rVal, 1.0f);
 				inputTexData.setTexelColor(col, i, j);
 			}
+		}
+	}
+}
+
+void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
+{
+	ColourData colData;
+	float rVal;
+	float distance;
+	glm::vec2 pixelPos(xpos, ypos);
+	float px_width = inputTexData.getWidth();
+	float px_height = inputTexData.getHeight();
+	float distanceRemap = 0.5f;
+	for (int i = startX; i < width; i++)
+	{
+		for (int j = startY; j < height; j++)
+		{
+			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+			ColourData col;
+			if (distance < distanceRemap)
+			{
+				distance = (1.0f - (distance / distanceRemap)) * brushData.brushOffset;
+				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
+				if(brushData.heightMapPositiveDir)
+					col.setColour_32_bit(brushData.brushMaxHeight, brushData.brushMaxHeight, brushData.brushMaxHeight, distance);
+				else
+					col.setColour_32_bit(brushData.brushMinHeight, brushData.brushMinHeight, brushData.brushMinHeight, distance);
+			}
+			else
+				col.setColour_32_bit(0, 0, 0, 0);
+			inputTexData.setTexelColor(col, i, j);
 		}
 	}
 }
