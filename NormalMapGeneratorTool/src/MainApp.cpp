@@ -521,7 +521,7 @@ int main(void)
 		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
-		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()));
+		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()) * 2.0f);
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
