@@ -276,7 +276,7 @@ int main(void)
 			if (initPos == glm::vec2(-1000, -1000))
 				initPos = glm::vec2(x, y);
 
-			if (x > windowWidth - 30 && x < windowWidth + 10 && y > windowHeight - 30 && y < windowHeight + 10)
+			if (x > windowWidth - 30 && x < windowWidth + 30 && y > windowHeight - 30 && y < windowHeight + 30)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
@@ -285,7 +285,7 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
 				}
 			}
-			else if (x > windowWidth - 30 && x < windowWidth + 10)
+			else if (x > windowWidth - 30 && x < windowWidth + 30)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
@@ -294,7 +294,7 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
 				}
 			}
-			else if (x < 10 && x > -40)
+			/*else if (x < 10 && x > -40)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
@@ -306,7 +306,7 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
 
 				}
-			}
+			}*/
 			if (y < 40 && y > -5)
 			{
 				if (y < 15)
@@ -360,6 +360,19 @@ int main(void)
 		}
 		else
 		{
+			if (x < 500 && x > -500)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					int xPos, yPos;
+					glfwGetWindowPos(window, &xPos, &yPos);
+					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
+					glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
+					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
+				}
+			}
+
 			initPos = glm::vec2(-1000, -1000);
 			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 		}
