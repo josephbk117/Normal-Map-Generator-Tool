@@ -521,16 +521,10 @@ int main(void)
 		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
-		//brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()) * 2.0f);
-
-
-
-		aspectRatio = (float)windowWidth / (float)windowHeight;
 
 		if (windowWidth < windowHeight)
 		{
 			float scale = (float)1;
-			//normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * 2.0f);
 		}
 		else
@@ -540,10 +534,8 @@ int main(void)
 			{
 				scale = 1;
 			}
-			//normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
-
 
 
 		brushPanel.getTransform()->update();
