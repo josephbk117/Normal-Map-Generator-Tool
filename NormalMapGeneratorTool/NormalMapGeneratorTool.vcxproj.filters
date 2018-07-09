@@ -101,6 +101,9 @@
     <ClInclude Include="src\FrameBufferSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\arial.ttf">
@@ -120,7 +123,9 @@
     <None Include="Resources\windowChrome.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\brushPreview.fs" />
+    <None Include="Resources\brushPreview.fs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">
@@ -147,5 +152,13 @@
     <Image Include="Resources\UI\icon.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Nora.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

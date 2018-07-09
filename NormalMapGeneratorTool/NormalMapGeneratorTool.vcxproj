@@ -137,6 +137,7 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\FrameBufferSystem.h" />
     <ClInclude Include="src\BrushData.h" />
     <ClInclude Include="src\ColourData.h" />
@@ -165,6 +166,9 @@
     <None Include="Resources\windowChrome.fs" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="Nora.ico">
+      <FileType>Image</FileType>
+    </Image>
     <Image Include="Resources\goli.png" />
     <Image Include="Resources\test2.png" />
     <Image Include="Resources\test3.png" />
@@ -173,6 +177,9 @@
     <Image Include="Resources\UI\maxWinIcon.png" />
     <Image Include="Resources\UI\minWinIcon.png" />
     <Image Include="Resources\UI\toTrayIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
