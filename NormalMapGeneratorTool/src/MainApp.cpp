@@ -521,7 +521,31 @@ int main(void)
 		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
-		brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()) * 2.0f);
+		//brushPanel.getTransform()->setScale(glm::vec2(brushData.brushScale / texData.getWidth(), brushData.brushScale / texData.getHeight()) * 2.0f);
+
+
+
+		aspectRatio = (float)windowWidth / (float)windowHeight;
+
+		if (windowWidth < windowHeight)
+		{
+			float scale = (float)1;
+			//normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * 2.0f);
+		}
+		else
+		{
+			float scale = (float)1;
+			if (windowHeight < texData.getHeight())
+			{
+				scale = 1;
+			}
+			//normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
+		}
+
+
+
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
@@ -865,7 +889,7 @@ void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int s
 			{
 				distance = (1.0f - (distance / distanceRemap)) * brushData.brushOffset;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
-				if(brushData.heightMapPositiveDir)
+				if (brushData.heightMapPositiveDir)
 					col.setColour_32_bit(brushData.brushMaxHeight, brushData.brushMaxHeight, brushData.brushMaxHeight, distance);
 				else
 					col.setColour_32_bit(brushData.brushMinHeight, brushData.brushMinHeight, brushData.brushMinHeight, distance);

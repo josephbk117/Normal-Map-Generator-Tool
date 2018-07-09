@@ -6,5 +6,8 @@ uniform sampler2D textureOne;
 
 void main()
 {
-	color = texture(textureOne, textureUV);
+	float v = 0;
+	if(distance(vec2(0.5,0.5), textureUV) > 0.45 && distance(vec2(0.5,0.5), textureUV) < 0.5)
+		v = 1;
+	color = mix(texture(textureOne, textureUV), vec4(1,1,1,0.5),v);
 }
