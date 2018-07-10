@@ -15,6 +15,7 @@
 #include "TextureLoader.h"
 #include "ShaderProgram.h"
 #include "Transform.h"
+#include "WindowTransformUtility.h"
 
 //TODO : Rotation editor values
 //TODO : Distance based drawing
@@ -255,10 +256,11 @@ int main(void)
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
+		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 		static int topBarButtonOver = 0;
 		double x, y;
-
 		glfwGetCursorPos(window, &x, &y);
+
 		glm::vec2 mouseCoord = glm::vec2(x, y);
 		topBarButtonOver = 0;
 		if (y < 40 && y > -5)
@@ -276,85 +278,41 @@ int main(void)
 		if (state == GLFW_PRESS)
 		{
 			if (initPos == glm::vec2(-1000, -1000))
+			{
+				windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
 				initPos = glm::vec2(x, y);
-
-			if (x > windowWidth - 30 && x < windowWidth + 30 && y > windowHeight - 30 && y < windowHeight + 30)
-			{
-				glm::vec2 currentPos(x, y);
-				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-				{
-					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
-					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
-				}
 			}
-			else if (x > windowWidth - 30 && x < windowWidth + 30)
-			{
-				glm::vec2 currentPos(x, y);
-				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-				{
-					glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
-					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
-				}
-			}
-			/*else if (x < 10 && x > -40)
-			{
-				glm::vec2 currentPos(x, y);
-				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-				{
-					int xPos, yPos;
-					glfwGetWindowPos(window, &xPos, &yPos);
-					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
-					glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (prevGlobalFirstMouseCoord + glm::vec2(xPos, 0));
-					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
 
-				}
-			}*/
-			if (y < 40 && y > -5)
+			if (y < 40 && y >= 15)
 			{
-				if (y < 15)
+				if (x > windowWidth - 125)
+				{
+					if (x > windowWidth - 50)
+						glfwSetWindowShouldClose(window, true);
+					else if (x > windowWidth - 100 && x < windowWidth - 50)
+					{
+						if (!isMaximized)
+						{
+							glfwMaximizeWindow(window);
+							isMaximized = true;
+						}
+						else
+						{
+							glfwSetWindowSize(window, 800, 800);
+							isMaximized = false;
+						}
+					}
+					else
+						glfwIconifyWindow(window);
+				}
+				else if (windowSideAtInitPos == WindowSide::NONE)
 				{
 					glm::vec2 currentPos(x, y);
 					if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
 					{
-						glm::vec2 diff = currentPos - prevGlobalFirstMouseCoord;
-						glfwSetWindowSize(window, windowWidth, windowHeight - diff.y * 10);
-						windowHeight -= diff.y * 10;
-						int xPos, yPos;
-						glfwGetWindowPos(window, &xPos, &yPos);
-						glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
-					}
-				}
-				else
-				{
-					if (x > windowWidth - 125)
-					{
-						if (x > windowWidth - 50)
-							glfwSetWindowShouldClose(window, true);
-						else if (x > windowWidth - 100 && x < windowWidth - 50)
-						{
-							if (!isMaximized)
-							{
-								glfwMaximizeWindow(window);
-								isMaximized = true;
-							}
-							else
-							{
-								glfwSetWindowSize(window, 800, 800);
-								isMaximized = false;
-							}
-						}
-						else
-							glfwIconifyWindow(window);
-					}
-					else
-					{
-						glm::vec2 currentPos(x, y);
-						if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-						{
-							int winPosX, winPosY;
-							glfwGetWindowPos(window, &winPosX, &winPosY);
-							glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
-						}
+						int winPosX, winPosY;
+						glfwGetWindowPos(window, &winPosX, &winPosY);
+						glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
 					}
 				}
 			}
@@ -362,7 +320,7 @@ int main(void)
 		}
 		else
 		{
-			if (x < 500 && x > -500)
+			if (windowSideAtInitPos == WindowSide::LEFT)
 			{
 				glm::vec2 currentPos(x, y);
 				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
@@ -374,7 +332,48 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
 				}
 			}
+			else if (windowSideAtInitPos == WindowSide::RIGHT)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					glm::vec2 diff = currentPos - initPos;
+					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
+				}
+			}
+			else if (windowSideAtInitPos == WindowSide::BOTTOM_RIGHT)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					glm::vec2 diff = currentPos - initPos;
+					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
+				}
+			}
+			else if (windowSideAtInitPos == WindowSide::TOP)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					glm::vec2 diff = currentPos - initPos;
+					glfwSetWindowSize(window, windowWidth, windowHeight - diff.y);
+					windowHeight -= diff.y;
+					int xPos, yPos;
+					glfwGetWindowPos(window, &xPos, &yPos);
+					glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
+				}
+			}
+			else if (windowSideAtInitPos == WindowSide::BOTTOM)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					glm::vec2 diff = currentPos - initPos;
+					glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
+				}
+			}
 
+			windowSideAtInitPos = WindowSide::NONE;
 			initPos = glm::vec2(-1000, -1000);
 			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 		}
@@ -520,7 +519,6 @@ int main(void)
 
 			int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
 			int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
-
 			std::string locationStr = std::string(saveLocation);
 			if (locationStr.length() > 4)
 			{
