@@ -42,8 +42,10 @@ int windowWidth = 800;
 int windowHeight = 800;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
+
 FrameBufferSystem fbs;
 GLFWwindow* window;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
@@ -55,6 +57,7 @@ void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int s
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
+
 float zoomLevel = 1;
 float yUiScale = 1;
 float xUiScale = 1;
@@ -62,6 +65,7 @@ float xUiButtonScale = 1;
 float yUiButtonScale = 1;
 float xGapButtonGapSize = 1;
 float yGapButtonGapSize = 1;
+
 TextureData texData;
 
 int main(void)
@@ -120,10 +124,12 @@ int main(void)
 	frameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel windowChromeBar;
 	windowChromeBar.init(1.0f, 1.0f);
+
 	DrawingPanel topBarCloseButton;
 	DrawingPanel topBarRestoreDownMaximizeButton;
 	DrawingPanel topBarMinimizeButton;
 	DrawingPanel topBarLogo;
+
 	topBarCloseButton.init(1.0f, 1.0f);
 	topBarRestoreDownMaximizeButton.init(1.0f, 1.0f);
 	topBarMinimizeButton.init(1.0f, 1.0f);
@@ -214,7 +220,6 @@ int main(void)
 	unsigned int brushtexture = TextureManager::loadTextureFromData(brushTexData, false);
 	brushPanel.setTextureID(brushtexture);
 
-
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
@@ -283,7 +288,7 @@ int main(void)
 				initPos = glm::vec2(x, y);
 			}
 
-			if (y < 40 && y >= 15)
+			if (y < 40 && y >= WindowTransformUtility::BORDER_SIZE)
 			{
 				if (x > windowWidth - 125)
 				{
@@ -425,13 +430,9 @@ int main(void)
 					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
 					glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
-					std::cout << "\nMouse pos : " << xpos << ", " << ypos;
-					std::cout << "\nnormal panel world pos x : " << normalmapPanel.getPanelWorldDimension().x << ", " << normalmapPanel.getPanelWorldDimension().y;
 
 					xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 					ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
-
-					std::cout << "\nAfter Mouse pos : " << xpos << ", " << ypos;
 
 					float maxWidth = texData.getWidth();
 					float convertedBrushScale = brushData.brushScale / texData.getHeight();
@@ -497,6 +498,7 @@ int main(void)
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapPanel.draw();
+
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static bool shouldSaveNormalMap = false;
@@ -561,7 +563,6 @@ int main(void)
 			}
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
-
 
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());

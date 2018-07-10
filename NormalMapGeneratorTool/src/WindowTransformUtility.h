@@ -3,29 +3,31 @@ enum class WindowSide { NONE = -1, LEFT = 0, TOP_LEFT = 1, TOP = 2, TOP_RIGHT = 
 static class WindowTransformUtility
 {
 public:
+	static const int BORDER_SIZE = 15;
+
 	static WindowSide GetWindowSideAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
 	{
-		if (mouseX < 15)
+		if (mouseX < BORDER_SIZE)
 		{
-			if (mouseY <= 15)
+			if (mouseY <= BORDER_SIZE)
 				return WindowSide::TOP_LEFT;
-			else if (mouseY > windowHeight - 15)
+			else if (mouseY > windowHeight - BORDER_SIZE)
 				return WindowSide::BOTTOM_LEFT;
 			return WindowSide::LEFT;
 		}
-		else if (mouseX > windowWidth - 15)
+		else if (mouseX > windowWidth - BORDER_SIZE)
 		{
-			if (mouseY <= 15)
+			if (mouseY <= BORDER_SIZE)
 				return WindowSide::TOP_RIGHT;
-			else if (mouseY > windowHeight - 15)
+			else if (mouseY > windowHeight - BORDER_SIZE)
 				return WindowSide::BOTTOM_RIGHT;
 			return WindowSide::RIGHT;
 		}
-		else if (mouseY < 15)
+		else if (mouseY < BORDER_SIZE)
 		{
 			return WindowSide::TOP;
 		}
-		else if (mouseY > windowHeight - 15)
+		else if (mouseY > windowHeight - BORDER_SIZE)
 		{
 			return WindowSide::BOTTOM;
 		}
