@@ -372,6 +372,18 @@ int main(void)
 					glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
 				}
 			}
+			else if (windowSideAtInitPos == WindowSide::BOTTOM_LEFT)
+			{
+				glm::vec2 currentPos(x, y);
+				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+				{
+					glm::vec2 diff = currentPos - initPos;
+					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight + diff.y);
+					int xPos, yPos;
+					glfwGetWindowPos(window, &xPos, &yPos);
+					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
+				}
+			}
 
 			windowSideAtInitPos = WindowSide::NONE;
 			initPos = glm::vec2(-1000, -1000);
