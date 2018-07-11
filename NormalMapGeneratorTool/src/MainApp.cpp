@@ -670,7 +670,7 @@ int main(void)
 			isBlurOn = !isBlurOn;
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Toggle Height", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+		if (ImGui::Button((brushData.heightMapPositiveDir) ? "Height -VE" : "Height +VE", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
 			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
 		}
