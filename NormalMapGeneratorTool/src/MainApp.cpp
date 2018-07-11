@@ -17,9 +17,10 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
+//TODO : Brush Property - (Brush Mode) Add Height Toggle, Blur Option
+//TODO : Bluring
 //TODO : Rotation editor values
 //TODO : Distance based drawing
-//TODO : Display brush preview
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
 //TODO : Custom Window Chrome
@@ -54,6 +55,7 @@ bool isKeyReleased(int key);
 bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
+void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -199,6 +201,7 @@ int main(void)
 	bool showHeightMapInput = true;
 	bool isFullscreen = false;
 	bool isMaximized = false;
+	bool isBlurOn = false;
 
 	BrushData brushData;
 	brushData.brushScale = 10.0f;
@@ -442,7 +445,10 @@ int main(void)
 					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
 
-					SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+					if (!isBlurOn)
+						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+					else
+						SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
 					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
 					for (int i = 0; i < distance*10; i++)
@@ -604,10 +610,6 @@ int main(void)
 				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
 			isFullscreen = !isFullscreen;
 		}
-		if (ImGui::Button("Toggle Height", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-		{
-			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
-		}
 		if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
 			normalmapPanel.getTransform()->setPosition(0, 0);
@@ -663,12 +665,21 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::Spacing();
 		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+		if (ImGui::Button((isBlurOn) ? "Blur OFF" : "Blur ON", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
+		{
+			isBlurOn = !isBlurOn;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Toggle Height", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+		{
+			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
+		}
 		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight(), "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight(), "%0.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
 
 		BrushData bCopy = brushData;
 		SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
@@ -860,7 +871,7 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
+void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, BrushData brushData)
 {
 	ColourData colData;
 	float rVal;
@@ -869,9 +880,9 @@ void SetPixelValues(TextureData& inputTexData, int startX, int width, int startY
 	float px_width = inputTexData.getWidth();
 	float px_height = inputTexData.getHeight();
 	float distanceRemap = brushData.brushScale / px_height;
-	for (int i = startX; i < width; i++)
+	for (int i = startX; i < endX; i++)
 	{
-		for (int j = startY; j < height; j++)
+		for (int j = startY; j < endY; j++)
 		{
 			colData = inputTexData.getTexelColor(i, j);
 			rVal = colData.getColourIn_0_1_Range().r;
@@ -886,6 +897,68 @@ void SetPixelValues(TextureData& inputTexData, int startX, int width, int startY
 			}
 		}
 	}
+}
+
+void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, BrushData brushData)
+{
+	float rVal;
+	float distance;
+	glm::vec2 pixelPos(xpos, ypos);
+	float px_width = inputTexData.getWidth();
+	float px_height = inputTexData.getHeight();
+	float distanceRemap = brushData.brushScale / px_height;
+
+	//Temp allocation of image section
+	int _width = endX - startX;
+	int _height = endY - startY;
+	ColourData *tempPixelData = new ColourData[_width * _height];
+	int totalPixelCount = _width * _height;
+	for (int i = startX; i < endX; i++)
+	{
+		for (int j = startY; j < endY; j++)
+		{
+			int index = (i - startX)*(endX - startX) + (j - startY);
+			index = glm::clamp(index, 0, totalPixelCount - 1);
+			tempPixelData[index] = inputTexData.getTexelColor(i, j);
+		}
+	}
+
+	for (int i = startX; i < endX; i++)
+	{
+		for (int j = startY; j < endY; j++)
+		{
+			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+			if (distance < distanceRemap)
+			{
+				int index = (i - startX)*(endX - startX) + (j - startY);
+				index = glm::clamp(index, 0, totalPixelCount - 1);
+
+				float avg = tempPixelData[index].getColourIn_0_1_Range().r * 0.5f;
+
+				int leftIndex = ((i - 1) - startX)*(endX - startX) + (j - startY);
+				int rightIndex = ((i + 1) - startX)*(endX - startX) + (j - startY);
+				int topIndex = (i - startX)*(endX - startX) + ((j + 1) - startY);
+				int bottomIndex = (i - startX)*(endX - startX) + ((j - 1) - startY);
+
+				leftIndex = glm::clamp(leftIndex, 0, totalPixelCount - 1);
+				rightIndex = glm::clamp(rightIndex, 0, totalPixelCount - 1);
+				topIndex = glm::clamp(topIndex, 0, totalPixelCount - 1);
+				bottomIndex = glm::clamp(bottomIndex, 0, totalPixelCount - 1);
+
+				avg += tempPixelData[leftIndex].getColourIn_0_1_Range().r * 0.125f;
+				avg += tempPixelData[rightIndex].getColourIn_0_1_Range().r * 0.125f;
+				avg += tempPixelData[topIndex].getColourIn_0_1_Range().r * 0.125f;
+				avg += tempPixelData[bottomIndex].getColourIn_0_1_Range().r * 0.125f;
+
+				//avg /= 5;
+
+				ColourData colData;
+				colData.setColour_32_bit(glm::vec4(avg, avg, avg, 1.0f));
+				inputTexData.setTexelColor(colData, i, j);
+			}
+		}
+	}
+	delete[] tempPixelData;
 }
 
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
