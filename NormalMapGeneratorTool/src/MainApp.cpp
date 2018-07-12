@@ -928,7 +928,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 		for (int j = startY; j < endY; j++)
 		{
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
-			if (distance < distanceRemap)
+			if (distance < distanceRemap - 0.01f)
 			{
 				int index = (i - startX)*(endX - startX) + (j - startY);
 				index = glm::clamp(index, 0, totalPixelCount - 1);
@@ -940,15 +940,31 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 				int topIndex = (i - startX)*(endX - startX) + ((j + 1) - startY);
 				int bottomIndex = (i - startX)*(endX - startX) + ((j - 1) - startY);
 
+				int topLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j+1) - startY);
+				int bottomLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j - 1) - startY);
+				int topRightIndex = ((i + 1) - startX)*(endX - startX) + ((j + 1) - startY);
+				int bottomRightIndex = ((i + 1) - startX)*(endX - startX) + ((j - 1) - startY);
+
 				leftIndex = glm::clamp(leftIndex, 0, totalPixelCount - 1);
 				rightIndex = glm::clamp(rightIndex, 0, totalPixelCount - 1);
 				topIndex = glm::clamp(topIndex, 0, totalPixelCount - 1);
 				bottomIndex = glm::clamp(bottomIndex, 0, totalPixelCount - 1);
 
-				avg += tempPixelData[leftIndex].getColourIn_0_1_Range().r * 0.125f;
-				avg += tempPixelData[rightIndex].getColourIn_0_1_Range().r * 0.125f;
-				avg += tempPixelData[topIndex].getColourIn_0_1_Range().r * 0.125f;
-				avg += tempPixelData[bottomIndex].getColourIn_0_1_Range().r * 0.125f;
+				topLeftIndex = glm::clamp(topLeftIndex, 0, totalPixelCount - 1);
+				bottomLeftIndex = glm::clamp(bottomLeftIndex, 0, totalPixelCount - 1);
+				topRightIndex = glm::clamp(topRightIndex, 0, totalPixelCount - 1);
+				bottomRightIndex = glm::clamp(bottomRightIndex, 0, totalPixelCount - 1);
+
+
+				avg += tempPixelData[leftIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[rightIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[topIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[bottomIndex].getColourIn_0_1_Range().r * 0.0625f;
+
+				avg += tempPixelData[topLeftIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[topRightIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[bottomLeftIndex].getColourIn_0_1_Range().r * 0.0625f;
+				avg += tempPixelData[bottomRightIndex].getColourIn_0_1_Range().r * 0.0625f;
 
 				//avg /= 5;
 
