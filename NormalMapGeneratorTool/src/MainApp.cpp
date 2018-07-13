@@ -17,7 +17,6 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
-//TODO : Brush Property - (Brush Mode) Add Height Toggle, Blur Option
 //TODO : Bluring
 //TODO : Rotation editor values
 //TODO : Distance based drawing
@@ -39,7 +38,7 @@ const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
 const float TOP_BAR_BUTTON_X_GAP_SIZE = 80.0f;
 const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
 
-int windowWidth = 800;
+int windowWidth = 1200;
 int windowHeight = 800;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
@@ -440,14 +439,20 @@ int main(void)
 					float maxWidth = texData.getWidth();
 					float convertedBrushScale = brushData.brushScale / texData.getHeight();
 
-					int left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-					int right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-					int bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-					int top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+					int left = (int)((xpos - convertedBrushScale) * maxWidth);
+					int right = (int)((xpos + convertedBrushScale) * maxWidth);
+					int bottom = (int)((ypos - convertedBrushScale) * maxWidth);
+					int top = (int)((ypos + convertedBrushScale) * maxWidth);
 
 					if (!isBlurOn)
+					{
+						left = glm::clamp(left, 0, (int)maxWidth);
+						right = glm::clamp(right, 0, (int)maxWidth);
+						bottom = glm::clamp(bottom, 0, (int)maxWidth);
+						top = glm::clamp(top, 0, (int)maxWidth);
 						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
-					else
+					}
+					else if (left >= 0 && right < (int)maxWidth && top >=0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth)
 						SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
 					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
@@ -911,15 +916,16 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 	//Temp allocation of image section
 	int _width = endX - startX;
 	int _height = endY - startY;
-	ColourData *tempPixelData = new ColourData[_width * _height];
 	int totalPixelCount = _width * _height;
+	ColourData *tempPixelData = new ColourData[totalPixelCount];
+
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
 		{
-			int index = (i - startX)*(endX - startX) + (j - startY);
-			index = glm::clamp(index, 0, totalPixelCount - 1);
-			tempPixelData[index] = inputTexData.getTexelColor(i, j);
+			int index = (i - startX)*_width + (j - startY);
+			if (index >= 0 && index < totalPixelCount)
+				tempPixelData[index] = inputTexData.getTexelColor(i, j);
 		}
 	}
 
@@ -931,8 +937,10 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 			if (distance < distanceRemap - 0.01f)
 			{
 				int index = (i - startX)*(endX - startX) + (j - startY);
-				index = glm::clamp(index, 0, totalPixelCount - 1);
+				if (index < 0 || index >= totalPixelCount)
+					continue;
 
+				index = (i - startX)*(endX - startX) + (j - startY);
 				float avg = tempPixelData[index].getColourIn_0_1_Range().r * 0.5f;
 
 				int leftIndex = ((i - 1) - startX)*(endX - startX) + (j - startY);
@@ -940,33 +948,17 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 				int topIndex = (i - startX)*(endX - startX) + ((j + 1) - startY);
 				int bottomIndex = (i - startX)*(endX - startX) + ((j - 1) - startY);
 
-				int topLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j+1) - startY);
+				int topLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j + 1) - startY);
 				int bottomLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j - 1) - startY);
 				int topRightIndex = ((i + 1) - startX)*(endX - startX) + ((j + 1) - startY);
 				int bottomRightIndex = ((i + 1) - startX)*(endX - startX) + ((j - 1) - startY);
 
-				leftIndex = glm::clamp(leftIndex, 0, totalPixelCount - 1);
-				rightIndex = glm::clamp(rightIndex, 0, totalPixelCount - 1);
-				topIndex = glm::clamp(topIndex, 0, totalPixelCount - 1);
-				bottomIndex = glm::clamp(bottomIndex, 0, totalPixelCount - 1);
-
-				topLeftIndex = glm::clamp(topLeftIndex, 0, totalPixelCount - 1);
-				bottomLeftIndex = glm::clamp(bottomLeftIndex, 0, totalPixelCount - 1);
-				topRightIndex = glm::clamp(topRightIndex, 0, totalPixelCount - 1);
-				bottomRightIndex = glm::clamp(bottomRightIndex, 0, totalPixelCount - 1);
-
-
-				avg += tempPixelData[leftIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[rightIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[topIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[bottomIndex].getColourIn_0_1_Range().r * 0.0625f;
-
-				avg += tempPixelData[topLeftIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[topRightIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[bottomLeftIndex].getColourIn_0_1_Range().r * 0.0625f;
-				avg += tempPixelData[bottomRightIndex].getColourIn_0_1_Range().r * 0.0625f;
-
-				//avg /= 5;
+				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
+				//not clamping values based in width and heifhgt of current pixel center
+				for (int i = 0; i < 8; i++)
+				{
+					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount - 10) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
+				}
 
 				ColourData colData;
 				colData.setColour_32_bit(glm::vec4(avg, avg, avg, 1.0f));
