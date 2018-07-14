@@ -376,11 +376,12 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(15, 13));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 		if (ImGui::BeginMainMenuBar())
 		{
-
-			if (ImGui::BeginMenu("FILE"))
+			ImGui::Indent(20);
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
+			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Open Project", "CTRL+O"))
 				{
@@ -389,6 +390,30 @@ int main(void)
 				if (ImGui::MenuItem("Open Scene")) {}
 				ImGui::EndMenu();
 			}
+
+			const char* items[] = { "Default Theme", "Dark Theme", "Light Theme", "Blue Theme" };
+			static int item_current = 0;
+			ImGui::PushItemWidth(180);
+			ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
+			ImGui::PopItemWidth();
+			switch (item_current)
+			{
+			case 0:
+				CustomColourImGuiTheme();
+				break;
+			case 1:
+				ImGui::StyleColorsDark();
+				break;
+			case 2:
+				ImGui::StyleColorsLight();
+				break;
+			case 3:
+				ImGui::StyleColorsClassic();
+				break;
+			default:
+				break;
+			}
+			ImGui::PopStyleVar();
 
 		}
 		ImGui::EndMainMenuBar();
@@ -413,8 +438,8 @@ int main(void)
 		ImGui::Text("v0.65 - Alpha");
 		ImGui::End();
 
-		ImGui::SetNextWindowPos(ImVec2(0, 40), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 65), ImGuiSetCond_Always);
+		ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 67), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
@@ -1124,10 +1149,10 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 	ImVec4* colors = style->Colors;
 
 	colors[ImGuiCol_Text] = WHITE;
-	colors[ImGuiCol_TextDisabled] = DARK_GREY;
+	colors[ImGuiCol_TextDisabled] = SECONDARY_COL;
 	colors[ImGuiCol_WindowBg] = PRIMARY_COL;
-	colors[ImGuiCol_ChildBg] = DARK_GREY;
-	colors[ImGuiCol_PopupBg] = DARK_GREY;
+	colors[ImGuiCol_ChildBg] = PRIMARY_COL;
+	colors[ImGuiCol_PopupBg] = PRIMARY_COL;
 	colors[ImGuiCol_Border] = ACCENT_COL;
 	colors[ImGuiCol_BorderShadow] = DARK_GREY;
 	colors[ImGuiCol_FrameBg] = ACCENT_COL;
