@@ -5,7 +5,8 @@
 #include <thread> 
 
 #include "imgui.h"
-#include "imgui_impl_glfw_gl3.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl2.h"
 
 #include "DrawingPanel.h"
 #include "FrameBufferSystem.h"
@@ -17,7 +18,7 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
-//TODO : Bluring
+//TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Saving out notmal map in 512x512 irrespective of window size
@@ -74,12 +75,7 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 	glfwWindowHint(GLFW_DECORATED, false);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
-
 	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -112,10 +108,15 @@ int main(void)
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui_ImplGlfwGL3_Init(window, true);
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL2_Init();
+
+	// Setup style
+	CustomColourImGuiTheme();
+
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-	CustomColourImGuiTheme();
+
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
@@ -569,9 +570,7 @@ int main(void)
 		{
 			float scale = (float)1;
 			if (windowHeight < texData.getHeight())
-			{
 				scale = 1;
-			}
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
 
@@ -590,7 +589,10 @@ int main(void)
 		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
 
-		ImGui_ImplGlfwGL3_NewFrame();
+		ImGui_ImplOpenGL2_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -679,7 +681,7 @@ int main(void)
 		{
 			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
 		}
-		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight(), "%.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
@@ -714,7 +716,6 @@ int main(void)
 			}
 		}
 		ImGui::PopStyleColor();
-
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
@@ -722,9 +723,10 @@ int main(void)
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
-
 		ImGui::Render();
-		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glUseProgram(0);
+		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
 		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
 		float yOffsetGap = 1.0f - yGapButtonGapSize;
@@ -795,9 +797,14 @@ int main(void)
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
 	}
-	ImGui_ImplGlfwGL3_Shutdown();
+
+	// Cleanup
+	ImGui_ImplOpenGL2_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
