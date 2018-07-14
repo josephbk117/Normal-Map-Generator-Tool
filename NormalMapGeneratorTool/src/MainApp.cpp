@@ -56,6 +56,9 @@ bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
+void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
+void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
+void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -265,7 +268,6 @@ int main(void)
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
-		static int topBarButtonOver = 0;
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		glm::vec2 mouseCoord = glm::vec2(x, y);
@@ -278,6 +280,7 @@ int main(void)
 		else
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
+		static int topBarButtonOver = 0;
 		topBarButtonOver = 0;
 		if (y < 40 && y > -5)
 		{
@@ -293,202 +296,11 @@ int main(void)
 		}
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-		if (state == GLFW_PRESS)
-		{
-			if (initPos == glm::vec2(-1000, -1000))
-			{
-				windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
-				initPos = glm::vec2(x, y);
-			}
-
-			if (y < 40 && y >= WindowTransformUtility::BORDER_SIZE)
-			{
-				if (x > windowWidth - 125)
-				{
-					if (x > windowWidth - 50)
-						glfwSetWindowShouldClose(window, true);
-					else if (x > windowWidth - 100 && x < windowWidth - 50)
-					{
-						if (!isMaximized)
-						{
-							glfwMaximizeWindow(window);
-							isMaximized = true;
-						}
-						else
-						{
-							glfwSetWindowSize(window, 800, 800);
-							isMaximized = false;
-						}
-					}
-					else
-						glfwIconifyWindow(window);
-				}
-				else if (windowSideAtInitPos == WindowSide::NONE)
-				{
-					glm::vec2 currentPos(x, y);
-					if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-					{
-						int winPosX, winPosY;
-						glfwGetWindowPos(window, &winPosX, &winPosY);
-						glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
-					}
-				}
-			}
-			prevGlobalFirstMouseCoord = glm::vec2(x, y);
-		}
-		else
-		{
-			if (windowSideAtInitPos == WindowSide::LEFT)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					int xPos, yPos;
-					glfwGetWindowPos(window, &xPos, &yPos);
-					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
-					glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
-					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
-				}
-			}
-			else if (windowSideAtInitPos == WindowSide::RIGHT)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					glm::vec2 diff = currentPos - initPos;
-					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
-				}
-			}
-			else if (windowSideAtInitPos == WindowSide::BOTTOM_RIGHT)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					glm::vec2 diff = currentPos - initPos;
-					glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
-				}
-			}
-			else if (windowSideAtInitPos == WindowSide::TOP)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					glm::vec2 diff = currentPos - initPos;
-					glfwSetWindowSize(window, windowWidth, windowHeight - diff.y);
-					windowHeight -= diff.y;
-					int xPos, yPos;
-					glfwGetWindowPos(window, &xPos, &yPos);
-					glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
-				}
-			}
-			else if (windowSideAtInitPos == WindowSide::BOTTOM)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					glm::vec2 diff = currentPos - initPos;
-					glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
-				}
-			}
-			else if (windowSideAtInitPos == WindowSide::BOTTOM_LEFT)
-			{
-				glm::vec2 currentPos(x, y);
-				if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-				{
-					glm::vec2 diff = currentPos - initPos;
-					glfwSetWindowSize(window, windowWidth - diff.x, windowHeight + diff.y);
-					int xPos, yPos;
-					glfwGetWindowPos(window, &xPos, &yPos);
-					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
-				}
-			}
-			windowSideAtInitPos = WindowSide::NONE;
-			initPos = glm::vec2(-1000, -1000);
-			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-		}
-
+		HandleLeftMouseButtonInput(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-		if (state == GLFW_PRESS)
-		{
-			double x, y;
-			glfwGetCursorPos(window, &x, &y);
-			glm::vec2 currentPos(x, y);
-			glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * (1.0f + zoomLevel) * (float)deltaTime;
-			normalmapPanel.getTransform()->translate(diff.x, -diff.y);
-			prevMiddleMouseButtonCoord = currentPos;
-		}
-		else
-		{
-			double x, y;
-			glfwGetCursorPos(window, &x, &y);
-			prevMiddleMouseButtonCoord = glm::vec2(x, y);
-		}
-
+		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, normalmapPanel);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-		if (state == GLFW_PRESS)
-		{
-			double xpos, ypos;
-			glfwGetCursorPos(window, &xpos, &ypos);
-			glm::vec2 currenMouseCoord(xpos, ypos);
-			if (currenMouseCoord != prevMouseCoord &&
-				glm::distance(glm::vec2(currenMouseCoord.x / windowWidth, currenMouseCoord.y / windowHeight),
-					glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight)) > (brushData.brushRate / texData.getWidth()) * zoomLevel)
-			{
-				xpos = xpos / windowWidth;
-				ypos = 1.0f - (ypos / windowHeight);
-				if (true/*normalmapPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
-				{
-					float prevX = prevMouseCoord.x / windowWidth;
-					float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
-
-					glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
-
-					xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
-					ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
-
-					float maxWidth = texData.getWidth();
-					float convertedBrushScale = brushData.brushScale / texData.getHeight();
-
-					int left = (int)((xpos - convertedBrushScale) * maxWidth);
-					int right = (int)((xpos + convertedBrushScale) * maxWidth);
-					int bottom = (int)((ypos - convertedBrushScale) * maxWidth);
-					int top = (int)((ypos + convertedBrushScale) * maxWidth);
-
-					if (!isBlurOn)
-					{
-						left = glm::clamp(left, 0, (int)maxWidth);
-						right = glm::clamp(right, 0, (int)maxWidth);
-						bottom = glm::clamp(bottom, 0, (int)maxWidth);
-						top = glm::clamp(top, 0, (int)maxWidth);
-						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
-					}
-					else if (left >= 0 && right < (int)maxWidth && top >= 0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth)
-						SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
-					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
-					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
-					for (int i = 0; i < distance*10; i++)
-					{
-						left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-						right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-						bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-						top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
-
-						SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
-						xpos += diff.x / (distance * 10);
-						ypos += diff.y / (distance * 10);
-					}*/
-
-					GLenum format = TextureManager::getTextureFormatFromData(4);
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
-						texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
-					prevMouseCoord = currenMouseCoord;
-				}
-			}
-		}
-		else
-		{
-			prevMouseCoord = glm::vec2(-10, -10);
-		}
+		HandleRightMouseButtonInput(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
 
 		if (isKeyPressed(GLFW_KEY_A))
 			normalMapStrength += 2.5f * deltaTime;
@@ -540,9 +352,7 @@ int main(void)
 			{
 				float scale = (float)texData.getHeight() / windowHeight;
 				if (windowHeight < texData.getHeight())
-				{
 					scale = 1;
-				}
 				normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
 			}
 			normalmapPanel.getTransform()->update();
@@ -806,10 +616,8 @@ int main(void)
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
 	}
 
-	// Cleanup
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -817,6 +625,207 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn)
+{
+	if (state == GLFW_PRESS)
+	{
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		glm::vec2 currenMouseCoord(xpos, ypos);
+		if (currenMouseCoord != prevMouseCoord &&
+			glm::distance(glm::vec2(currenMouseCoord.x / windowWidth, currenMouseCoord.y / windowHeight),
+				glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight)) > (brushData.brushRate / texData.getWidth()) * zoomLevel)
+		{
+			xpos = xpos / windowWidth;
+			ypos = 1.0f - (ypos / windowHeight);
+			if (true/*normalmapPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
+			{
+				float prevX = prevMouseCoord.x / windowWidth;
+				float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
+
+				glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
+
+				xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+
+				float maxWidth = texData.getWidth();
+				float convertedBrushScale = brushData.brushScale / texData.getHeight();
+
+				int left = (int)((xpos - convertedBrushScale) * maxWidth);
+				int right = (int)((xpos + convertedBrushScale) * maxWidth);
+				int bottom = (int)((ypos - convertedBrushScale) * maxWidth);
+				int top = (int)((ypos + convertedBrushScale) * maxWidth);
+
+				if (!isBlurOn)
+				{
+					left = glm::clamp(left, 0, (int)maxWidth);
+					right = glm::clamp(right, 0, (int)maxWidth);
+					bottom = glm::clamp(bottom, 0, (int)maxWidth);
+					top = glm::clamp(top, 0, (int)maxWidth);
+					SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+				}
+				else if (left >= 0 && right < (int)maxWidth && top >= 0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth)
+					SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+				/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
+				float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
+				for (int i = 0; i < distance*10; i++)
+				{
+				left = glm::clamp((int)((xpos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+				right = glm::clamp((int)((xpos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+				bottom = glm::clamp((int)((ypos - convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+				top = glm::clamp((int)((ypos + convertedBrushScale) * maxWidth), 0, (int)maxWidth);
+
+				SetPixelValues(left, right, bottom, top, xpos, ypos, brushData);
+				xpos += diff.x / (distance * 10);
+				ypos += diff.y / (distance * 10);
+				}*/
+
+				GLenum format = TextureManager::getTextureFormatFromData(4);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
+					texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
+				prevMouseCoord = currenMouseCoord;
+			}
+		}
+	}
+	else
+	{
+		prevMouseCoord = glm::vec2(-10, -10);
+	}
+}
+void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
+{
+	if (state == GLFW_PRESS)
+	{
+		if (initPos == glm::vec2(-1000, -1000))
+		{
+			windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
+			initPos = glm::vec2(x, y);
+		}
+
+		if (y < 40 && y >= WindowTransformUtility::BORDER_SIZE)
+		{
+			if (x > windowWidth - 125)
+			{
+				if (x > windowWidth - 50)
+					glfwSetWindowShouldClose(window, true);
+				else if (x > windowWidth - 100 && x < windowWidth - 50)
+				{
+					if (!isMaximized)
+					{
+						glfwMaximizeWindow(window);
+						isMaximized = true;
+					}
+					else
+					{
+						glfwSetWindowSize(window, 800, 800);
+						isMaximized = false;
+					}
+				}
+				else
+					glfwIconifyWindow(window);
+			}
+			else if (windowSideAtInitPos == WindowSide::NONE)
+			{
+				glm::vec2 currentPos(x, y);
+				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
+				{
+					int winPosX, winPosY;
+					glfwGetWindowPos(window, &winPosX, &winPosY);
+					glfwSetWindowPos(window, winPosX + currentPos.x - initPos.x, winPosY + currentPos.y - initPos.y);
+				}
+			}
+		}
+		prevGlobalFirstMouseCoord = glm::vec2(x, y);
+	}
+	else
+	{
+		if (windowSideAtInitPos == WindowSide::LEFT)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				int xPos, yPos;
+				glfwGetWindowPos(window, &xPos, &yPos);
+				glfwSetWindowPos(window, xPos + currentPos.x, yPos);
+				glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
+				glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
+			}
+		}
+		else if (windowSideAtInitPos == WindowSide::RIGHT)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				glm::vec2 diff = currentPos - initPos;
+				glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
+			}
+		}
+		else if (windowSideAtInitPos == WindowSide::BOTTOM_RIGHT)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				glm::vec2 diff = currentPos - initPos;
+				glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
+			}
+		}
+		else if (windowSideAtInitPos == WindowSide::TOP)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				glm::vec2 diff = currentPos - initPos;
+				glfwSetWindowSize(window, windowWidth, windowHeight - diff.y);
+				windowHeight -= diff.y;
+				int xPos, yPos;
+				glfwGetWindowPos(window, &xPos, &yPos);
+				glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
+			}
+		}
+		else if (windowSideAtInitPos == WindowSide::BOTTOM)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				glm::vec2 diff = currentPos - initPos;
+				glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
+			}
+		}
+		else if (windowSideAtInitPos == WindowSide::BOTTOM_LEFT)
+		{
+			glm::vec2 currentPos(x, y);
+			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
+			{
+				glm::vec2 diff = currentPos - initPos;
+				glfwSetWindowSize(window, windowWidth - diff.x, windowHeight + diff.y);
+				int xPos, yPos;
+				glfwGetWindowPos(window, &xPos, &yPos);
+				glfwSetWindowPos(window, xPos + currentPos.x, yPos);
+			}
+		}
+		windowSideAtInitPos = WindowSide::NONE;
+		initPos = glm::vec2(-1000, -1000);
+		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
+	}
+}
+void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel)
+{
+	if (state == GLFW_PRESS)
+	{
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		glm::vec2 currentPos(x, y);
+		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * (1.0f + zoomLevel) * (float)deltaTime;
+		normalmapPanel.getTransform()->translate(diff.x, -diff.y);
+		prevMiddleMouseButtonCoord = currentPos;
+	}
+	else
+	{
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		prevMiddleMouseButtonCoord = glm::vec2(x, y);
+	}
 }
 void drawLine(int x0, int y0, int x1, int y1)
 {
