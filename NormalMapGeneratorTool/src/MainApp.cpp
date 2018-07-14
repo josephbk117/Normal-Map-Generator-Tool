@@ -19,7 +19,6 @@
 #include "WindowTransformUtility.h"
 
 //TODO : Implement modal dialouges
-//TODO : Display version number at bottom
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
@@ -61,6 +60,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int 
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
+void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -337,45 +337,7 @@ int main(void)
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static bool shouldSaveNormalMap = false;
-		if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
-		{
-			glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
-			glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
-
-			normalmapPanel.getTransform()->setPosition(glm::vec2());
-			float aspectRatio = (float)windowWidth / (float)windowHeight;
-
-			if (windowWidth < windowHeight)
-			{
-				float scale = (float)texData.getWidth() / windowWidth;
-				normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
-			}
-			else
-			{
-				float scale = (float)texData.getHeight() / windowHeight;
-				if (windowHeight < texData.getHeight())
-					scale = 1;
-				normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
-			}
-			normalmapPanel.getTransform()->update();
-			normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-			normalmapPanel.draw();
-
-			int tempWindowWidth = windowWidth;
-			int tempWindowHeight = windowHeight;
-
-			int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
-			int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
-			std::string locationStr = std::string(saveLocation);
-			if (locationStr.length() > 4)
-			{
-				if (exportImage(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
-					std::cout << "Saved at " << locationStr;
-				shouldSaveNormalMap = false;
-			}
-			normalmapPanel.getTransform()->setPosition(tempPos);
-			normalmapPanel.getTransform()->setScale(tempScale);
-		}
+		SaveNormalMapToFile(shouldSaveNormalMap, normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
 
 		glBindTexture(GL_TEXTURE_2D, brushtexture);
 		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -598,12 +560,11 @@ int main(void)
 		windowChromeBar.getTransform()->update();
 		windowChromeShader.use();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 		//windowChromeBar.draw();
 
-		glBindTexture(1, logoTexture);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarLogo.getTransform()->getMatrix());
+		//glBindTexture(1, logoTexture);
+		//windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarLogo.getTransform()->getMatrix());
 		//topBarLogo.draw();
 
 		glBindTexture(1, closeTexture);
@@ -629,12 +590,6 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
-		windowChromeBar.getTransform()->setPosition(0, -1.02f);
-		windowChromeBar.getTransform()->setScale(glm::vec2(1.0f, yUiScale));
-		windowChromeBar.getTransform()->update();
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
-		//windowChromeBar.draw();
-
 		windowChromeBar.getTransform()->setPosition(1, -yGapButtonGapSize * 2);
 		windowChromeBar.getTransform()->setScale(glm::vec2(xUiScale, 1.0f));
 		windowChromeBar.getTransform()->update();
@@ -652,6 +607,48 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
+{
+	if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
+	{
+		glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
+		glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
+
+		normalmapPanel.getTransform()->setPosition(glm::vec2());
+		float aspectRatio = (float)windowWidth / (float)windowHeight;
+
+		if (windowWidth < windowHeight)
+		{
+			float scale = (float)texData.getWidth() / windowWidth;
+			normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
+		}
+		else
+		{
+			float scale = (float)texData.getHeight() / windowHeight;
+			if (windowHeight < texData.getHeight())
+				scale = 1;
+			normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
+		}
+		normalmapPanel.getTransform()->update();
+		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+		normalmapPanel.draw();
+
+		int tempWindowWidth = windowWidth;
+		int tempWindowHeight = windowHeight;
+
+		int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
+		int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
+		std::string locationStr = std::string(saveLocation);
+		if (locationStr.length() > 4)
+		{
+			if (exportImage(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
+				std::cout << "Saved at " << locationStr;
+			shouldSaveNormalMap = false;
+		}
+		normalmapPanel.getTransform()->setPosition(tempPos);
+		normalmapPanel.getTransform()->setScale(tempScale);
+	}
 }
 void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn)
 {
@@ -720,6 +717,7 @@ void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData
 		prevMouseCoord = glm::vec2(-10, -10);
 	}
 }
+
 void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
 	if (state == GLFW_PRESS)
@@ -836,6 +834,7 @@ void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windo
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 	}
 }
+
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel)
 {
 	if (state == GLFW_PRESS)
@@ -854,6 +853,7 @@ void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoo
 		prevMiddleMouseButtonCoord = glm::vec2(x, y);
 	}
 }
+
 void drawLine(int x0, int y0, int x1, int y1)
 {
 	if (abs(y1 - y0) < abs(x1 - x0))
