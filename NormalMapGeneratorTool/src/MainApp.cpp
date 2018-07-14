@@ -18,6 +18,8 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
+//TODO : Implement modal dialouges
+//TODO : Display version number at bottom
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
@@ -78,7 +80,7 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 	glfwWindowHint(GLFW_DECORATED, false);
-	window = glfwCreateWindow(windowWidth, windowHeight, "Normal Map Editor v0.5 alpha", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.65 alpha", NULL, NULL);
 	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -275,7 +277,7 @@ int main(void)
 		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-		else if(windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
+		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 		else
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
@@ -412,6 +414,24 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(15, 13));
+		if (ImGui::BeginMainMenuBar())
+		{
+
+			if (ImGui::BeginMenu("FILE"))
+			{
+				if (ImGui::MenuItem("Open Project", "CTRL+O"))
+				{
+					;
+				}
+				if (ImGui::MenuItem("Open Scene")) {}
+				ImGui::EndMenu();
+			}
+
+		}
+		ImGui::EndMainMenuBar();
+		ImGui::PopStyleVar();
+
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -424,8 +444,15 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
 
+		ImGui::SetNextWindowPos(ImVec2(0, windowHeight - 25), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
+		ImGui::Begin("Bottom_Bar", p_open, window_flags);
+		ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
+		ImGui::Text("v0.65 - Alpha");
+		ImGui::End();
+
 		ImGui::SetNextWindowPos(ImVec2(0, 40), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 70), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 65), ImGuiSetCond_Always);
 		ImGui::Begin("Settings", p_open, window_flags);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
@@ -573,11 +600,11 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-		windowChromeBar.draw();
+		//windowChromeBar.draw();
 
 		glBindTexture(1, logoTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarLogo.getTransform()->getMatrix());
-		topBarLogo.draw();
+		//topBarLogo.draw();
 
 		glBindTexture(1, closeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
@@ -606,7 +633,7 @@ int main(void)
 		windowChromeBar.getTransform()->setScale(glm::vec2(1.0f, yUiScale));
 		windowChromeBar.getTransform()->update();
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
-		windowChromeBar.draw();
+		//windowChromeBar.draw();
 
 		windowChromeBar.getTransform()->setPosition(1, -yGapButtonGapSize * 2);
 		windowChromeBar.getTransform()->setScale(glm::vec2(xUiScale, 1.0f));
@@ -1109,21 +1136,21 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 	colors[ImGuiCol_TitleBg] = ACCENT_COL;
 	colors[ImGuiCol_TitleBgActive] = SECONDARY_COL;
 	colors[ImGuiCol_TitleBgCollapsed] = ACCENT_COL;
-	colors[ImGuiCol_MenuBarBg] = ImVec4(0.26f, 0.0f, 0.26f, 1.00f);
+	colors[ImGuiCol_MenuBarBg] = PRIMARY_COL;
 	colors[ImGuiCol_ScrollbarBg] = ACCENT_COL;
 	colors[ImGuiCol_ScrollbarGrab] = SECONDARY_COL;
-	colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.59f, 0.49f, 0.49f, 0.80f);
-	colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.59f, 0.59f, 0.49f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabHovered] = SECONDARY_COL;
+	colors[ImGuiCol_ScrollbarGrabActive] = PRIMARY_COL;
 	colors[ImGuiCol_CheckMark] = SECONDARY_COL;
 	colors[ImGuiCol_SliderGrab] = ACCENT_COL;
 	colors[ImGuiCol_SliderGrabActive] = ACCENT_COL;
 	colors[ImGuiCol_Button] = SECONDARY_COL;
 	colors[ImGuiCol_ButtonHovered] = PRIMARY_COL;
 	colors[ImGuiCol_ButtonActive] = ACCENT_COL;
-	colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	colors[ImGuiCol_Header] = ACCENT_COL;
 	colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
 	colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Separator] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	colors[ImGuiCol_Separator] = WHITE;
 	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
 	colors[ImGuiCol_SeparatorActive] = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
 	colors[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
