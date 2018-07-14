@@ -452,7 +452,7 @@ int main(void)
 						top = glm::clamp(top, 0, (int)maxWidth);
 						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					}
-					else if (left >= 0 && right < (int)maxWidth && top >=0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth)
+					else if (left >= 0 && right < (int)maxWidth && top >= 0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth)
 						SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					/*glm::vec2 diff = glm::vec2(xpos, ypos) - glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight));
 					float distance = glm::distance(glm::vec2(xpos, ypos), glm::vec2(prevMouseCoord.x / windowWidth, 1.0f - (prevMouseCoord.y / windowHeight)));
@@ -956,12 +956,10 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (int i = 0; i < 8; i++)
-				{
 					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount - 10) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
-				}
-
+				float finalColor = (1.0f - brushData.brushStrength)*tempPixelData[index].getColourIn_0_1_Range().r + brushData.brushStrength * avg;
 				ColourData colData;
-				colData.setColour_32_bit(glm::vec4(avg, avg, avg, 1.0f));
+				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
 				inputTexData.setTexelColor(colData, i, j);
 			}
 		}
