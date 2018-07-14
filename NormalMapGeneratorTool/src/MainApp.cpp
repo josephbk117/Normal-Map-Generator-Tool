@@ -956,7 +956,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (int i = 0; i < 8; i++)
-					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount - 10) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
+					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
 				float finalColor = (1.0f - brushData.brushStrength)*tempPixelData[index].getColourIn_0_1_Range().r + brushData.brushStrength * avg;
 				ColourData colData;
 				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
