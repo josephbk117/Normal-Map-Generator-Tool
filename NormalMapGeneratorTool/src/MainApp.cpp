@@ -262,14 +262,22 @@ int main(void)
 			isMaximized = false;
 		}
 
-		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
+
 		static int topBarButtonOver = 0;
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
-
 		glm::vec2 mouseCoord = glm::vec2(x, y);
+
+		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
+		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
+			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+		else if(windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
+			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+		else
+			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
+
 		topBarButtonOver = 0;
 		if (y < 40 && y > -5)
 		{
@@ -283,6 +291,8 @@ int main(void)
 					topBarButtonOver = 1;
 			}
 		}
+
+		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		if (state == GLFW_PRESS)
 		{
 			if (initPos == glm::vec2(-1000, -1000))
@@ -392,7 +402,6 @@ int main(void)
 					glfwSetWindowPos(window, xPos + currentPos.x, yPos);
 				}
 			}
-
 			windowSideAtInitPos = WindowSide::NONE;
 			initPos = glm::vec2(-1000, -1000);
 			prevGlobalFirstMouseCoord = glm::vec2(-500, -500);

@@ -3,7 +3,7 @@ enum class WindowSide { NONE = -1, LEFT = 0, TOP_LEFT = 1, TOP = 2, TOP_RIGHT = 
 static class WindowTransformUtility
 {
 public:
-	static const int BORDER_SIZE = 15;
+	static const int BORDER_SIZE = 5;
 
 	static WindowSide GetWindowSideAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
 	{
