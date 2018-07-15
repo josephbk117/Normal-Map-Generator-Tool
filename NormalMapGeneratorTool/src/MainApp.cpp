@@ -31,7 +31,7 @@ const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f
 const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
 const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
 const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
-const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
+const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
 int windowWidth = 1600;
@@ -52,8 +52,8 @@ void SetPixelValues(TextureData& texData, int startX, int width, int startY, int
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
-void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
-void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
+void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
+void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
@@ -272,11 +272,12 @@ int main(void)
 		}
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-		HandleLeftMouseButtonInput(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
+		HandleLeftMouseButtonInput_UI(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
+		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, normalmapPanel);
-		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-		HandleRightMouseButtonInput(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
+		//state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
+		//HandleRightMouseButtonInput(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
 
 		if (isKeyPressed(GLFW_KEY_A))
 			normalMapStrength += 2.5f * deltaTime;
@@ -620,7 +621,7 @@ void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel
 		normalmapPanel.getTransform()->setScale(tempScale);
 	}
 }
-void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn)
+void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -688,7 +689,7 @@ void HandleRightMouseButtonInput(int state, glm::vec2 &prevMouseCoord, BrushData
 	}
 }
 
-void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
+void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
 	if (state == GLFW_PRESS)
 	{
