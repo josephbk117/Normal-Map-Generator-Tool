@@ -18,6 +18,8 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
+//TODO : Replace Top Bar Button
+//TODO : Replace side bar
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
@@ -414,7 +416,25 @@ int main(void)
 				break;
 			}
 			ImGui::PopStyleVar();
-
+			ImGui::Indent(windowWidth - 160);
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
+			
+			if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
+			if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
+			{
+				if (!isMaximized)
+				{
+					glfwMaximizeWindow(window);
+					isMaximized = true;
+				}
+				else
+				{
+					glfwSetWindowSize(window, 800, 800);
+					isMaximized = false;
+				}
+			}
+			if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
+			ImGui::PopStyleVar();
 		}
 		ImGui::EndMainMenuBar();
 		ImGui::PopStyleVar();
@@ -596,21 +616,21 @@ int main(void)
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 3)
 			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		topBarCloseButton.draw();
+		//topBarCloseButton.draw();
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, restoreTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarRestoreDownMaximizeButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 2)
 			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		topBarRestoreDownMaximizeButton.draw();
+		//topBarRestoreDownMaximizeButton.draw();
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
 
 		glBindTexture(1, minimizeTexture);
 		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarMinimizeButton.getTransform()->getMatrix());
 		if (topBarButtonOver == 1)
 			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		topBarMinimizeButton.draw();
+		//topBarMinimizeButton.draw();
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
@@ -755,27 +775,7 @@ void HandleLeftMouseButtonInput(int state, glm::vec2 &initPos, WindowSide &windo
 
 		if (y < 40 && y >= WindowTransformUtility::BORDER_SIZE)
 		{
-			if (x > windowWidth - 125)
-			{
-				if (x > windowWidth - 50)
-					glfwSetWindowShouldClose(window, true);
-				else if (x > windowWidth - 100 && x < windowWidth - 50)
-				{
-					if (!isMaximized)
-					{
-						glfwMaximizeWindow(window);
-						isMaximized = true;
-					}
-					else
-					{
-						glfwSetWindowSize(window, 800, 800);
-						isMaximized = false;
-					}
-				}
-				else
-					glfwIconifyWindow(window);
-			}
-			else if (windowSideAtInitPos == WindowSide::NONE)
+			if (windowSideAtInitPos == WindowSide::NONE)
 			{
 				glm::vec2 currentPos(x, y);
 				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
