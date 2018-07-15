@@ -18,31 +18,23 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 
-//TODO : Replace Top Bar Button
-//TODO : Replace side bar
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Diffuse & Specular lighting colour
-//TODO : Custom Window Chrome
 //TODO : Undo/Redo Capability
 //TODO : Custom Model Import To View With Normals
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
+const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
 const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
 const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
 const ImVec4 WHITE = ImVec4(255 / 255.0f, 247 / 255.0f, 240 / 255.0f, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
-const float FRAME_BAR_HEIGHT = 80.0f;
-const float FRAME_BAR_WIDTH = 35.0f;
-const float TOP_BAR_BUTTON_SIDE_SIZE = 25.0f;
-const float TOP_BAR_BUTTON_X_GAP_SIZE = 80.0f;
-const float TOP_BAR_BUTTON_Y_GAP_SIZE = 40.0f;
-
-int windowWidth = 1200;
+int windowWidth = 1600;
 int windowHeight = 800;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
@@ -68,15 +60,9 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 
 float zoomLevel = 1;
-float yUiScale = 1;
-float xUiScale = 1;
-float xUiButtonScale = 1;
-float yUiButtonScale = 1;
-float xGapButtonGapSize = 1;
-float yGapButtonGapSize = 1;
 
 TextureData texData;
-
+bool isUsingCustomTheme = false;
 int main(void)
 {
 	if (!glfwInit())
@@ -89,14 +75,7 @@ int main(void)
 	maxWindowWidth = mode->width;
 	maxWindowHeight = mode->height;
 	glfwSetWindowSizeLimits(window, 500, 500, maxWindowWidth, maxWindowHeight);
-
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
-	xUiScale = FRAME_BAR_WIDTH / windowWidth;
-	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
-	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
-	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
-	yGapButtonGapSize = TOP_BAR_BUTTON_Y_GAP_SIZE / windowHeight;
 
 	if (!window)
 	{
@@ -171,16 +150,9 @@ int main(void)
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
 
-	ShaderProgram windowChromeShader;
-	windowChromeShader.compileShaders("Resources\\spriteBase.vs", "Resources\\windowChrome.fs");
-	windowChromeShader.linkShaders();
-
 	ShaderProgram brushPreviewShader;
 	brushPreviewShader.compileShaders("Resources\\spriteBase.vs", "Resources\\brushPreview.fs");
 	brushPreviewShader.linkShaders();
-
-	int windowChromeModelUniform = windowChromeShader.getUniformLocation("model");
-	int windowChromeColourUniform = windowChromeShader.getUniformLocation("_chromeColour");
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -405,12 +377,15 @@ int main(void)
 				break;
 			case 1:
 				ImGui::StyleColorsDark();
+				isUsingCustomTheme = false;
 				break;
 			case 2:
 				ImGui::StyleColorsLight();
+				isUsingCustomTheme = false;
 				break;
 			case 3:
 				ImGui::StyleColorsClassic();
+				isUsingCustomTheme = false;
 				break;
 			default:
 				break;
@@ -418,7 +393,9 @@ int main(void)
 			ImGui::PopStyleVar();
 			ImGui::Indent(windowWidth - 160);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
-			
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+			if(isUsingCustomTheme)
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
 			if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
 			if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
 			{
@@ -434,6 +411,9 @@ int main(void)
 				}
 			}
 			if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
+			ImGui::PopStyleColor();
+			if(isUsingCustomTheme)
+				ImGui::PopStyleColor();
 			ImGui::PopStyleVar();
 		}
 		ImGui::EndMainMenuBar();
@@ -456,6 +436,11 @@ int main(void)
 		ImGui::Begin("Bottom_Bar", p_open, window_flags);
 		ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
 		ImGui::Text("v0.65 - Alpha");
+		ImGui::End();
+
+		ImGui::SetNextWindowPos(ImVec2(windowWidth - 25, 42), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(25, windowHeight - 67), ImGuiSetCond_Always);
+		ImGui::Begin("Side_Bar", p_open, window_flags);
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
@@ -580,66 +565,6 @@ int main(void)
 
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-
-		float initOffsetXpos = 1.0 - (xGapButtonGapSize * 0.5f);
-		float yOffsetGap = 1.0f - yGapButtonGapSize;
-		topBarLogo.getTransform()->setScale(glm::vec2(xUiButtonScale * 1.5f, yUiButtonScale * 1.5f));
-		topBarLogo.getTransform()->setPosition(xGapButtonGapSize - 1.0f, yOffsetGap);
-
-		topBarCloseButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
-		topBarCloseButton.getTransform()->setPosition(initOffsetXpos, yOffsetGap);
-
-		topBarRestoreDownMaximizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
-		topBarRestoreDownMaximizeButton.getTransform()->setPosition(1.0f - xGapButtonGapSize * 1.5f, yOffsetGap);
-
-		topBarMinimizeButton.getTransform()->setScale(glm::vec2(xUiButtonScale, yUiButtonScale));
-		topBarMinimizeButton.getTransform()->setPosition(1.0f - (xGapButtonGapSize * 2.5f), yOffsetGap);
-
-		topBarCloseButton.getTransform()->update();
-		topBarRestoreDownMaximizeButton.getTransform()->update();
-		topBarMinimizeButton.getTransform()->update();
-		topBarLogo.getTransform()->update();
-
-		windowChromeBar.getTransform()->setScale(glm::vec2(1, yUiScale));
-		windowChromeBar.getTransform()->setPosition(0, 1.0f);
-		windowChromeBar.getTransform()->update();
-		windowChromeShader.use();
-		glBindTexture(GL_TEXTURE_2D, 0);
-		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-		//windowChromeBar.draw();
-
-		//glBindTexture(1, logoTexture);
-		//windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarLogo.getTransform()->getMatrix());
-		//topBarLogo.draw();
-
-		glBindTexture(1, closeTexture);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarCloseButton.getTransform()->getMatrix());
-		if (topBarButtonOver == 3)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		//topBarCloseButton.draw();
-		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-
-		glBindTexture(1, restoreTexture);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarRestoreDownMaximizeButton.getTransform()->getMatrix());
-		if (topBarButtonOver == 2)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		//topBarRestoreDownMaximizeButton.draw();
-		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-
-		glBindTexture(1, minimizeTexture);
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, topBarMinimizeButton.getTransform()->getMatrix());
-		if (topBarButtonOver == 1)
-			windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(SECONDARY_COL.x, SECONDARY_COL.y, SECONDARY_COL.z));
-		//topBarMinimizeButton.draw();
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-		windowChromeShader.applyShaderVector3(windowChromeColourUniform, glm::vec3(PRIMARY_COL.x, PRIMARY_COL.y, PRIMARY_COL.z));
-
-		windowChromeBar.getTransform()->setPosition(1, -yGapButtonGapSize * 2);
-		windowChromeBar.getTransform()->setScale(glm::vec2(xUiScale, 1.0f));
-		windowChromeBar.getTransform()->update();
-		windowChromeShader.applyShaderUniformMatrix(windowChromeModelUniform, windowChromeBar.getTransform()->getMatrix());
-		windowChromeBar.draw();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -1098,12 +1023,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 	windowWidth = width;
 	windowHeight = height;
-	yUiScale = FRAME_BAR_HEIGHT / windowHeight;
-	xUiScale = FRAME_BAR_WIDTH / windowWidth;
-	xUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowWidth;
-	yUiButtonScale = TOP_BAR_BUTTON_SIDE_SIZE / windowHeight;
-	xGapButtonGapSize = TOP_BAR_BUTTON_X_GAP_SIZE / windowWidth;
-	yGapButtonGapSize = TOP_BAR_BUTTON_Y_GAP_SIZE / windowHeight;
 	fbs.updateTextureDimensions(windowWidth, windowHeight);
 	glViewport(0, 0, width, height);
 }
@@ -1145,6 +1064,7 @@ bool exportImage(std::string filename, int xOff, int yOff, int w, int h)
 }
 void CustomColourImGuiTheme(ImGuiStyle* dst)
 {
+	isUsingCustomTheme = true;
 	ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
 	ImVec4* colors = style->Colors;
 
@@ -1158,10 +1078,10 @@ void CustomColourImGuiTheme(ImGuiStyle* dst)
 	colors[ImGuiCol_FrameBg] = ACCENT_COL;
 	colors[ImGuiCol_FrameBgHovered] = PRIMARY_COL;
 	colors[ImGuiCol_FrameBgActive] = SECONDARY_COL;
-	colors[ImGuiCol_TitleBg] = ACCENT_COL;
+	colors[ImGuiCol_TitleBg] = TITLE_COL;
 	colors[ImGuiCol_TitleBgActive] = SECONDARY_COL;
 	colors[ImGuiCol_TitleBgCollapsed] = ACCENT_COL;
-	colors[ImGuiCol_MenuBarBg] = PRIMARY_COL;
+	colors[ImGuiCol_MenuBarBg] = TITLE_COL;
 	colors[ImGuiCol_ScrollbarBg] = ACCENT_COL;
 	colors[ImGuiCol_ScrollbarGrab] = SECONDARY_COL;
 	colors[ImGuiCol_ScrollbarGrabHovered] = SECONDARY_COL;
