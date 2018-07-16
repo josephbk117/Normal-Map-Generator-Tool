@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FileExplorer.cpp" />
     <ClCompile Include="src\FrameBufferSystem.cpp" />
     <ClCompile Include="src\DrawingPanel.cpp" />
     <ClCompile Include="src\imgui.cpp" />
@@ -143,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\FileExplorer.h" />
     <ClInclude Include="src\FrameBufferSystem.h" />
     <ClInclude Include="src\BrushData.h" />
     <ClInclude Include="src\ColourData.h" />

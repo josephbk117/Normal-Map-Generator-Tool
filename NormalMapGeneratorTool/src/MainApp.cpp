@@ -17,6 +17,7 @@
 #include "ShaderProgram.h"
 #include "Transform.h"
 #include "WindowTransformUtility.h"
+#include "FileExplorer.h"
 
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
@@ -206,6 +207,9 @@ int main(void)
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
+
+	std::string path;
+	FileExplorer fileExplorer;
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -276,8 +280,7 @@ int main(void)
 		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, normalmapPanel);
-		//state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT);
-		//HandleRightMouseButtonInput(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
+
 
 		if (isKeyPressed(GLFW_KEY_A))
 			normalMapStrength += 2.5f * deltaTime;
@@ -311,6 +314,7 @@ int main(void)
 
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
+		static std::string path;
 		static bool shouldSaveNormalMap = false;
 		SaveNormalMapToFile(shouldSaveNormalMap, normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
 
@@ -360,13 +364,14 @@ int main(void)
 			{
 				if (ImGui::MenuItem("Open Project", "CTRL+O"))
 				{
-					;
+					fileExplorer.displayDialog(&path);
 				}
 				if (ImGui::MenuItem("Open Scene")) {}
 				ImGui::EndMenu();
 			}
 
-			const char* items[] = { "Default Theme", "Dark Theme", "Light Theme", "Blue Theme" };
+
+			const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
 			static int item_current = 0;
 			ImGui::PushItemWidth(180);
 			ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
@@ -395,7 +400,7 @@ int main(void)
 			ImGui::Indent(windowWidth - 160);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			if(isUsingCustomTheme)
+			if (isUsingCustomTheme)
 				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
 			if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
 			if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
@@ -413,12 +418,14 @@ int main(void)
 			}
 			if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
 			ImGui::PopStyleColor();
-			if(isUsingCustomTheme)
+			if (isUsingCustomTheme)
 				ImGui::PopStyleColor();
 			ImGui::PopStyleVar();
 		}
 		ImGui::EndMainMenuBar();
 		ImGui::PopStyleVar();
+
+		fileExplorer.display();
 
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
@@ -470,7 +477,7 @@ int main(void)
 		ImGui::SameLine(0, 5);
 		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
 		{
-			TextureManager::getTextureDataFromFile(imageLoadLocation, texData);
+			TextureManager::getTextureDataFromFile(path, texData);
 			texId = TextureManager::loadTextureFromData(texData, false);
 			normalmapPanel.setTextureID(texId);
 		}
@@ -562,8 +569,8 @@ int main(void)
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
-		ImGui::Render();
 
+		ImGui::Render();
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
@@ -627,9 +634,9 @@ void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevM
 	{
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
-		glm::vec2 currenMouseCoord(xpos, ypos);
-		if (currenMouseCoord != prevMouseCoord &&
-			glm::distance(glm::vec2(currenMouseCoord.x / windowWidth, currenMouseCoord.y / windowHeight),
+		glm::vec2 currentMouseCoord(xpos, ypos);
+		if (currentMouseCoord != prevMouseCoord &&
+			glm::distance(glm::vec2(currentMouseCoord.x / windowWidth, currentMouseCoord.y / windowHeight),
 				glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight)) > (brushData.brushRate / texData.getWidth()) * zoomLevel)
 		{
 			xpos = xpos / windowWidth;
@@ -679,7 +686,7 @@ void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevM
 				GLenum format = TextureManager::getTextureFormatFromData(4);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(),
 					texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
-				prevMouseCoord = currenMouseCoord;
+				prevMouseCoord = currentMouseCoord;
 			}
 		}
 	}
