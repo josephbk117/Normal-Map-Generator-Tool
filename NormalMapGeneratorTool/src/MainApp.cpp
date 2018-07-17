@@ -210,6 +210,7 @@ int main(void)
 
 
 	std::string path;
+	std::string prevPath;
 	FileExplorer fileExplorer;
 	bool updateImageLocation = false;
 	while (!glfwWindowShouldClose(window))
@@ -572,14 +573,16 @@ int main(void)
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
-		if (updateImageLocation)
+		if (path != prevPath)
 		{
+			std::cout << "\nLOO";
 			TextureManager::getTextureDataFromFile(path, texData);
 			texId = TextureManager::loadTextureFromData(texData, false);
 			normalmapPanel.setTextureID(texId);
 			for (int i = 0; i < path.length(); i++)
 				imageLoadLocation[i] = path[i];
 			updateImageLocation = false;
+			prevPath = path;
 		}
 
 		glfwSwapBuffers(window);
