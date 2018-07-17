@@ -31,7 +31,7 @@ void FileExplorer::display()
 	}
 	ImGui::OpenPopup("File Explorer");
 	ImGuiWindowFlags window_flags = 0;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(470, 420), ImVec2(800,600));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(470, 420), ImVec2(800, 600));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
@@ -90,8 +90,7 @@ void FileExplorer::display()
 					}
 					if (canShow)
 					{
-						ImGui::TextWrapped(strPath.c_str());
-						if (ImGui::IsItemClicked(0))
+						if (ImGui::Button(strPath.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(),30)))
 						{
 							if (!pathTypeCheck(filterEnd, strPath))
 								isDirty = true;
