@@ -19,6 +19,7 @@
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
 
+//TODO : Check stuff after path selectipn
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
@@ -210,6 +211,7 @@ int main(void)
 
 	std::string path;
 	FileExplorer fileExplorer;
+	bool updateImageLocation = false;
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -364,7 +366,6 @@ int main(void)
 			{
 				if (ImGui::MenuItem("Open Project", "CTRL+O"))
 				{
-					fileExplorer.displayDialog(&path);
 				}
 				if (ImGui::MenuItem("Open Scene")) {}
 				ImGui::EndMenu();
@@ -425,8 +426,6 @@ int main(void)
 		ImGui::EndMainMenuBar();
 		ImGui::PopStyleVar();
 
-		fileExplorer.display();
-
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -477,9 +476,8 @@ int main(void)
 		ImGui::SameLine(0, 5);
 		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
 		{
-			TextureManager::getTextureDataFromFile(path, texData);
-			texId = TextureManager::loadTextureFromData(texData, false);
-			normalmapPanel.setTextureID(texId);
+			fileExplorer.displayDialog(&path, FileType::IMAGE);
+			updateImageLocation = true;
 		}
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
@@ -569,10 +567,20 @@ int main(void)
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
-
+		fileExplorer.display();
 		ImGui::Render();
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
+		if (updateImageLocation)
+		{
+			TextureManager::getTextureDataFromFile(path, texData);
+			texId = TextureManager::loadTextureFromData(texData, false);
+			normalmapPanel.setTextureID(texId);
+			for (int i = 0; i < path.length(); i++)
+				imageLoadLocation[i] = path[i];
+			updateImageLocation = false;
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

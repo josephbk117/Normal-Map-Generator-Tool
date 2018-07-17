@@ -3,6 +3,7 @@
 #include <vector>
 #include <filesystem>
 #include <iostream>
+#include <string>
 FileExplorer FileExplorer::instance;
 FileExplorer::FileExplorer()
 {
@@ -80,8 +81,9 @@ void FileExplorer::display()
 						ImGui::TextWrapped(strPath.c_str());
 						if (ImGui::IsItemClicked(0))
 						{
+							if (!pathTypeCheck(filterEnd, strPath))
+								isDirty = true;
 							path = strPath;
-							isDirty = true;
 						}
 					}
 				}
@@ -91,6 +93,16 @@ void FileExplorer::display()
 		else
 		{
 			std::cout << "\nIs empty " << path;
+			int locationOfLastSlash = path.find_last_of('//');
+			int locationOfFirstSlash = path.find_first_of('//');
+
+			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
+			{
+				path = path.substr(0, locationOfLastSlash);
+				if (path.length() < 3)
+					path += '//';
+				isDirty = true;
+			}
 		}
 		if (ImGui::Button("SELECT"))
 		{
@@ -116,6 +128,34 @@ void FileExplorer::displayDialog(std::string* pathOutput, FileType filter)
 	outputPath = pathOutput;
 }
 
+std::string FileExplorer::getOutputPath()
+{
+	return *outputPath;
+}
+
 FileExplorer::~FileExplorer()
 {
+}
+
+bool FileExplorer::pathTypeCheck(std::vector<std::string> endTypes, std::string & _path)
+{
+	for (unsigned int endTypeIndex = 0; endTypeIndex < endTypes.size(); endTypeIndex++)
+	{
+		if (endTypes[endTypeIndex] == _path) return true;
+		if (endTypes[endTypeIndex].length() > _path.length()) continue;
+		int delta = _path.length() - endTypes[endTypeIndex].length();
+		bool isSuccess = true;
+		for (unsigned int i = 0; i < endTypes[endTypeIndex].length(); ++i)
+		{
+			std::cout << "\nCompare at : " << i << " , " << endTypes[endTypeIndex][i] << " - " << _path[delta + i];
+			if (endTypes[endTypeIndex][i] != _path[delta + i])
+			{
+				isSuccess = false;
+				break;
+			}
+		}
+		if (isSuccess)
+			return true;
+	}
+	return false;
 }

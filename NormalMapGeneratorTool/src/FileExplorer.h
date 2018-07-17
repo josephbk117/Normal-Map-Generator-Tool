@@ -16,10 +16,12 @@ public:
 	FileExplorer();
 	void display();
 	void displayDialog(std::string* pathOutput, FileType filter = FileType::NONE);
+	std::string getOutputPath();
 	~FileExplorer();
 private:
 
 	std::vector<std::string> paths;
 	std::string* outputPath = nullptr;
 	FileType fileFilter = FileType::NONE;
+	bool pathTypeCheck(std::vector<std::string> endTypes, std::string& _path);
 };
