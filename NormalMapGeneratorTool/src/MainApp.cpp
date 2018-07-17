@@ -575,7 +575,6 @@ int main(void)
 
 		if (path != prevPath)
 		{
-			std::cout << "\nLOO";
 			TextureManager::getTextureDataFromFile(path, texData);
 			texId = TextureManager::loadTextureFromData(texData, false);
 			normalmapPanel.setTextureID(texId);

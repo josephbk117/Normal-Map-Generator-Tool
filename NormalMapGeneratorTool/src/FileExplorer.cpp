@@ -7,6 +7,15 @@
 FileExplorer FileExplorer::instance;
 FileExplorer::FileExplorer()
 {
+	std::string rootPath = "C:\\";
+	for (unsigned int i = 0; i < 5; i++)
+	{
+		if (std::experimental::filesystem::exists(rootPath))
+			roots.push_back(rootPath);
+		rootPath[0] = (char)((int)rootPath[0] + 1);
+	}
+	for (int i = 0; i < roots.size(); i++)
+		std::cout << "\nPATH : " << roots[i];
 }
 
 void FileExplorer::display()
@@ -22,10 +31,7 @@ void FileExplorer::display()
 	}
 	ImGui::OpenPopup("File Explorer");
 	ImGuiWindowFlags window_flags = 0;
-	window_flags |= ImGuiWindowFlags_NoMove;
-	window_flags |= ImGuiWindowFlags_NoResize;
-	window_flags |= ImGuiWindowFlags_NoCollapse;
-	ImGui::SetNextWindowSize(ImVec2(470, 420));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(470, 420), ImVec2(800,600));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
@@ -41,6 +47,12 @@ void FileExplorer::display()
 					path += '//';
 				isDirty = true;
 			}
+		}
+		ImGui::SameLine();
+		for (unsigned int i = 0; i < roots.size(); i++)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button(roots[i].c_str())) { path = roots[i]; isDirty = true; }
 		}
 		static ImGuiTextFilter filter;
 		filter.Draw();
