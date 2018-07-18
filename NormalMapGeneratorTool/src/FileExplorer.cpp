@@ -35,18 +35,10 @@ void FileExplorer::display()
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
-		if (ImGui::Button("BACK"))
+		if (ImGui::Button("CLOSE"))
 		{
-			int locationOfLastSlash = path.find_last_of('//');
-			int locationOfFirstSlash = path.find_first_of('//');
-
-			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
-			{
-				path = path.substr(0, locationOfLastSlash);
-				if (path.length() < 3)
-					path += '//';
-				isDirty = true;
-			}
+			shouldDisplay = false;
+			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
 		for (unsigned int i = 0; i < roots.size(); i++)
@@ -58,7 +50,7 @@ void FileExplorer::display()
 		filter.Draw();
 		if (!std::experimental::filesystem::is_empty(path))
 		{
-			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), 300), true, ImGuiWindowFlags_HorizontalScrollbar);
+			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight()-50), true, ImGuiWindowFlags_HorizontalScrollbar);
 			for (std::string strPath : paths)
 			{
 				std::vector<std::string> filterEnd;
@@ -115,15 +107,23 @@ void FileExplorer::display()
 				isDirty = true;
 			}
 		}
+		if (ImGui::Button("BACK"))
+		{
+			int locationOfLastSlash = path.find_last_of('//');
+			int locationOfFirstSlash = path.find_first_of('//');
+
+			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
+			{
+				path = path.substr(0, locationOfLastSlash);
+				if (path.length() < 3)
+					path += '//';
+				isDirty = true;
+			}
+		}
+		ImGui::SameLine();
 		if (ImGui::Button("SELECT"))
 		{
 			*outputPath = path;
-			shouldDisplay = false;
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("CLOSE"))
-		{
 			shouldDisplay = false;
 			ImGui::CloseCurrentPopup();
 		}
