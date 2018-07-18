@@ -138,6 +138,7 @@
     <ClCompile Include="src\MainApp.cpp" />
     <ClCompile Include="src\ShaderProgram.cpp" />
     <ClCompile Include="src\stb_image.cpp" />
+    <ClCompile Include="src\stb_image_write.cpp" />
     <ClCompile Include="src\TextureLoader.cpp" />
     <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\TextureData.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\TextureData.h" />
     <ClInclude Include="src\WindowTransformUtility.h" />
+    <ClInclude Include="src\stb_image_write.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\arial.ttf" />

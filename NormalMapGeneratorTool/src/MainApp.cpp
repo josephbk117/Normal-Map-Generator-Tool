@@ -19,13 +19,15 @@
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
 
+#include "stb_image_write.h"
+
+//Add PNG & BMP, TGA Exprt support
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Saving out notmal map in 512x512 irrespective of window size
-//TODO : Diffuse & Specular lighting colour
-//TODO : Undo/Redo Capability
+//TODO : Undo/Redo Capability, 20 steps in RAM after that Write to diskadde
 //TODO : Custom Model Import To View With Normals
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
@@ -640,6 +642,7 @@ void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel
 		std::string locationStr = std::string(saveLocation);
 		if (locationStr.length() > 4)
 		{
+			//stbi_write_png(locationStr.c_str(), widthSub, heightSub,3,)
 			if (exportImage(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
 				std::cout << "Saved at " << locationStr;
 			shouldSaveNormalMap = false;
