@@ -3,6 +3,7 @@ in vec2 textureUV;
 in vec3 worldPos;
 out vec4 color;
 uniform sampler2D textureOne;
+uniform vec3 lightDir;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
@@ -59,7 +60,6 @@ void main()
         norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
-        vec3 lightDir = normalize(vec3(1.0,1.0,1.0));
         float light = (dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity;
         vec3 LightReflect = normalize(reflect(lightDir, norm));
         vec3 worldEyePos = worldPos - vec3(0,0.0,1.0);

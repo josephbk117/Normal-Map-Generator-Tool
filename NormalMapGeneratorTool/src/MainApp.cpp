@@ -19,7 +19,6 @@
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
 
-//TODO : Check stuff after path selectipn
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
@@ -165,12 +164,14 @@ int main(void)
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
 	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
+	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
 	float lightIntensity = 0.5f;
+	glm::vec3 lightDirection = glm::vec3(90.0f,90.0f,60.0f);
 	zoomLevel = 1;
 	int mapViewMode = 1;
 	float widthRes = texData.getWidth();
@@ -309,6 +310,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
+		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::vec3(lightDirection.x/180.0f, lightDirection.y/180.0f,lightDirection.z/180.0f));
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
@@ -556,8 +558,16 @@ int main(void)
 			{
 				ImGui::Text("LIGHT SETTINGS");
 				ImGui::Separator();
-				if (ImGui::SliderFloat(" Light Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
+				if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
 				if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
+				ImGui::Text("Light Direction");
+				ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth()/3.0f) - 7);
+				if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.0f, 180.0f, "X:%.2f")) {}
+				ImGui::SameLine();
+				if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.0f, 180.0f, "Y:%.2f")) {}
+				ImGui::SameLine();
+				if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.0f, 180.0f, "Z:%.2f")) {}
+				ImGui::PopItemWidth();
 			}
 		}
 		ImGui::PopStyleColor();
