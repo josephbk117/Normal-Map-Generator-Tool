@@ -21,7 +21,6 @@
 
 #include "stb_image_write.h"
 
-//TODO : Make framebuffer size change rather than nomalPanel
 //Add PNG & BMP, TGA Exprt support
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
@@ -52,9 +51,9 @@ void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h);
-void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
-void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
-void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
+void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
+void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
+void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
@@ -78,7 +77,7 @@ int main(void)
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowWidth = mode->width;
 	maxWindowHeight = mode->height;
-	glfwSetWindowSizeLimits(window, 500, 500, maxWindowWidth, maxWindowHeight);
+	glfwSetWindowSizeLimits(window, 512, 512, maxWindowWidth, maxWindowHeight);
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
 	if (!window)
@@ -869,7 +868,7 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, BrushData brushData)
+void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
 {
 	ColourData colData;
 	float rVal;
@@ -897,7 +896,7 @@ void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY,
 	}
 }
 
-void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, BrushData brushData)
+void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
 {
 	float rVal;
 	float distance;
@@ -960,7 +959,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 	delete[] tempPixelData;
 }
 
-void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData)
+void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData)
 {
 	ColourData colData;
 	float rVal;
@@ -1009,13 +1008,17 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	width = glm::clamp(width, 500, maxWindowWidth);
-	height = glm::clamp(height, 125, maxWindowHeight);
+	if (width < 512)
+		glfwSetWindowSize(window, 512, height);
+	if(height < 512)
+		glfwSetWindowSize(window, width, 512);
+	width = glm::clamp(width, 512, maxWindowWidth);
+	height = glm::clamp(height, 512, maxWindowHeight);
 
 	windowWidth = width;
 	windowHeight = height;
-	fbs.updateTextureDimensions(windowWidth, windowHeight);
 	glViewport(0, 0, width, height);
+	fbs.updateTextureDimensions(windowWidth, windowHeight);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
