@@ -113,19 +113,6 @@ int main(void)
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
-	DrawingPanel windowChromeBar;
-	windowChromeBar.init(1.0f, 1.0f);
-
-	DrawingPanel topBarCloseButton;
-	DrawingPanel topBarRestoreDownMaximizeButton;
-	DrawingPanel topBarMinimizeButton;
-	DrawingPanel topBarLogo;
-
-	topBarCloseButton.init(1.0f, 1.0f);
-	topBarRestoreDownMaximizeButton.init(1.0f, 1.0f);
-	topBarMinimizeButton.init(1.0f, 1.0f);
-	topBarLogo.init(1.0f, 1.0f);
-
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
@@ -135,11 +122,6 @@ int main(void)
 	unsigned int logoTexture = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
 
 	TextureData brushTexData;
-
-	topBarCloseButton.setTextureID(closeTexture);
-	topBarRestoreDownMaximizeButton.setTextureID(restoreTexture);
-	topBarMinimizeButton.setTextureID(minimizeTexture);
-	topBarLogo.setTextureID(logoTexture);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);

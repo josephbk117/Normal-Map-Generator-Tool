@@ -6,5 +6,5 @@ uniform sampler2D textureOne;
 
 void main()
 {
-    color = texture(textureOne, textureUV);
+    color = texture(textureOne, textureUV)*0.5;
 }
