@@ -21,6 +21,7 @@
 
 #include "stb_image_write.h"
 
+//TODO : Make framebuffer size change rather than nomalPanel
 //Add PNG & BMP, TGA Exprt support
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
@@ -50,7 +51,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
-bool exportImage(std::string filename, int xOff, int yOff, int w, int h);
+bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, BrushData brushData);
@@ -63,9 +64,9 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 
 float zoomLevel = 1;
-
 TextureData texData;
 bool isUsingCustomTheme = false;
+
 int main(void)
 {
 	if (!glfwInit())
@@ -92,7 +93,6 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
-
 	// Setup Dear ImGui binding
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -155,7 +155,7 @@ int main(void)
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
 	float lightIntensity = 0.5f;
-	glm::vec3 lightDirection = glm::vec3(90.0f,90.0f,60.0f);
+	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
 	int mapViewMode = 1;
 	float widthRes = texData.getWidth();
@@ -193,19 +193,28 @@ int main(void)
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
-
 	std::string path;
 	std::string prevPath;
 	FileExplorer fileExplorer;
 	bool updateImageLocation = false;
+	bool shouldSaveNormalMap = false;
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
+		if (shouldSaveNormalMap)
+		{
+			int W = 512, H = 512;
+			if (windowWidth <= 512)
+				W = windowWidth;
+			if (windowHeight <= 512)
+				H = windowHeight;
+			glViewport(0, 0, W, H);
+		}
 
 		fbs.BindFrameBuffer();
 		glEnable(GL_DEPTH_TEST);
-		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		normalmapShader.use();
@@ -265,10 +274,9 @@ int main(void)
 
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		HandleLeftMouseButtonInput_UI(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
-		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, normalmapPanel, isBlurOn);
+		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, normalmapPanel);
-
 
 		if (isKeyPressed(GLFW_KEY_A))
 			normalMapStrength += 2.5f * deltaTime;
@@ -283,18 +291,18 @@ int main(void)
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		float aspectRatio = (float)windowWidth / (float)windowHeight;
 		if (windowWidth < windowHeight)
-			normalmapPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
+			frameDrawingPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
 		else
-			normalmapPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
-		normalmapPanel.getTransform()->setX(glm::clamp(normalmapPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
-		normalmapPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
-		normalmapPanel.getTransform()->update();
+			frameDrawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
+		frameDrawingPanel.getTransform()->setX(glm::clamp(normalmapPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
+		frameDrawingPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
+		frameDrawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
-		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::vec3(lightDirection.x/180.0f, lightDirection.y/180.0f,lightDirection.z/180.0f));
+		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f));
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
@@ -304,13 +312,20 @@ int main(void)
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static std::string path;
-		static bool shouldSaveNormalMap = false;
 		SaveNormalMapToFile(shouldSaveNormalMap, normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
+		if (isKeyPressed(GLFW_KEY_F10))
+			shouldSaveNormalMap = true;
 
-		glBindTexture(GL_TEXTURE_2D, brushtexture);
-		glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		brushPreviewShader.use();
-		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		frameShader.use();
+		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
+		fbs.BindBufferTexture();
+		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
+		frameDrawingPanel.draw();
 
 		if (windowWidth < windowHeight)
 		{
@@ -324,21 +339,12 @@ int main(void)
 				scale = 1;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
-
+		glBindTexture(GL_TEXTURE_2D, brushtexture);	glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		brushPreviewShader.use();
+		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		frameShader.use();
-		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
-		fbs.BindBufferTexture();
-		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
-		frameDrawingPanel.draw();
 
 		ImGui_ImplOpenGL2_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -545,7 +551,7 @@ int main(void)
 				if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
 				if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
 				ImGui::Text("Light Direction");
-				ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth()/3.0f) - 7);
+				ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
 				if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.0f, 180.0f, "X:%.2f")) {}
 				ImGui::SameLine();
 				if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.0f, 180.0f, "Y:%.2f")) {}
@@ -592,48 +598,20 @@ int main(void)
 }
 void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
 {
-	if (isKeyPressed(GLFW_KEY_F10) || shouldSaveNormalMap)
+	if (shouldSaveNormalMap)
 	{
-		glm::vec2 tempPos = normalmapPanel.getTransform()->getPosition();
-		glm::vec2 tempScale = normalmapPanel.getTransform()->getScale();
-
-		normalmapPanel.getTransform()->setPosition(glm::vec2());
-		float aspectRatio = (float)windowWidth / (float)windowHeight;
-
-		if (windowWidth < windowHeight)
-		{
-			float scale = (float)texData.getWidth() / windowWidth;
-			normalmapPanel.getTransform()->setScale(glm::vec2(scale, aspectRatio));
-		}
-		else
-		{
-			float scale = (float)texData.getHeight() / windowHeight;
-			if (windowHeight < texData.getHeight())
-				scale = 1;
-			normalmapPanel.getTransform()->setScale(glm::vec2(scale / aspectRatio, scale));
-		}
-		normalmapPanel.getTransform()->update();
-		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-		normalmapPanel.draw();
-
-		int tempWindowWidth = windowWidth;
-		int tempWindowHeight = windowHeight;
-
-		int widthSub = windowWidth - (int)(normalmapPanel.getPanelWorldDimension().y * windowWidth);
-		int heightSub = windowHeight - (int)(normalmapPanel.getPanelWorldDimension().z * windowHeight);
 		std::string locationStr = std::string(saveLocation);
 		if (locationStr.length() > 4)
 		{
 			//stbi_write_png(locationStr.c_str(), widthSub, heightSub,3,)
-			if (exportImage(locationStr, widthSub, heightSub, texData.getWidth(), texData.getHeight()))
+			if (exportImage(locationStr, 0, 0, texData.getWidth(), texData.getHeight()))
 				std::cout << "Saved at " << locationStr;
-			shouldSaveNormalMap = false;
 		}
-		normalmapPanel.getTransform()->setPosition(tempPos);
-		normalmapPanel.getTransform()->setScale(tempScale);
+		glViewport(0, 0, windowWidth, windowHeight);
+		shouldSaveNormalMap = false;
 	}
 }
-void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn)
+void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -651,10 +629,10 @@ void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevM
 				float prevX = prevMouseCoord.x / windowWidth;
 				float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
-				glm::vec4 worldDimensions = normalmapPanel.getPanelWorldDimension();
+				glm::vec4 worldDimensions = frameBufferPanel.getPanelWorldDimension();
 
-				xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (normalmapPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
-				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (normalmapPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+				xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
 				float maxWidth = texData.getWidth();
 				float convertedBrushScale = brushData.brushScale / texData.getHeight();
@@ -1045,20 +1023,24 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	zoomLevel += zoomLevel * 0.1f * yoffset;
 }
 
-bool exportImage(std::string filename, int xOff, int yOff, int w, int h)
+bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h)
 {
 	//This prevents the images getting padded 
 	// when the width multiplied by 3 is not a multiple of 4
+	//fbs.BindBufferTexture();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	int nSize = w * h * 3;
 	// First let's create our buffer, 3 channels per Pixel
-	char* dataBuffer = (char*)malloc(nSize * sizeof(char));
+	char* dataBuffer = new char[nSize];
 
 	if (!dataBuffer) return false;
 	glReadPixels((GLint)xOff, (GLint)yOff, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
+
 	//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
+	//stbi_write_bmp(filename.c_str(), w, h, 3, dataBuffer);
+	
 	//Now the file creation
 #pragma warning(suppress : 4996)
 	FILE *filePtr = fopen(filename.c_str(), "wb");
@@ -1072,7 +1054,7 @@ bool exportImage(std::string filename, int xOff, int yOff, int w, int h)
 	// And finally our image data
 	fwrite(dataBuffer, sizeof(GLubyte), nSize, filePtr);
 	fclose(filePtr);
-	free(dataBuffer);
+	delete[] dataBuffer;
 	return true;
 }
 void CustomColourImGuiTheme(ImGuiStyle* dst)
