@@ -37,6 +37,8 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
+const int WINDOW_SIZE_MIN = 512;
+
 int windowWidth = 1600;
 int windowHeight = 800;
 int maxWindowWidth = -1;
@@ -57,7 +59,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int 
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
-void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
+void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -77,7 +79,7 @@ int main(void)
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowWidth = mode->width;
 	maxWindowHeight = mode->height;
-	glfwSetWindowSizeLimits(window, 512, 512, maxWindowWidth, maxWindowHeight);
+	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowWidth, maxWindowHeight);
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 
 	if (!window)
@@ -197,18 +199,23 @@ int main(void)
 	FileExplorer fileExplorer;
 	bool updateImageLocation = false;
 	bool shouldSaveNormalMap = false;
+	bool changeSize = false;
+	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
+
 		if (shouldSaveNormalMap)
 		{
-			int W = 512, H = 512;
-			if (windowWidth <= 512)
-				W = windowWidth;
-			if (windowHeight <= 512)
-				H = windowHeight;
-			glViewport(0, 0, W, H);
+			glViewport(0, 0, texData.getWidth(), texData.getHeight());
+			if (changeSize)
+			{
+				prevWindowSize = glm::vec2(windowWidth, windowHeight);
+				glfwSetWindowSize(window, texData.getWidth() + 100, texData.getHeight() + 100);
+				changeSize = false;
+				continue;
+			}
 		}
 
 		fbs.BindFrameBuffer();
@@ -226,15 +233,15 @@ int main(void)
 			mapViewMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
-			normalmapPanel.getTransform()->translate(-1 * deltaTime, 0);
+			frameDrawingPanel.getTransform()->translate(-1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_RIGHT))
-			normalmapPanel.getTransform()->translate(1 * deltaTime, 0);
+			frameDrawingPanel.getTransform()->translate(1 * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_UP))
-			normalmapPanel.getTransform()->translate(0, 1 * deltaTime);
+			frameDrawingPanel.getTransform()->translate(0, 1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_DOWN))
-			normalmapPanel.getTransform()->translate(0, -1 * deltaTime);
+			frameDrawingPanel.getTransform()->translate(0, -1 * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
-			normalmapPanel.getTransform()->rotate(1.0f * deltaTime);
+			frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
 		if (isKeyPressed(GLFW_KEY_V))
 		{
 			glfwSetWindowSize(window, 800, 800);
@@ -270,12 +277,12 @@ int main(void)
 					topBarButtonOver = 1;
 			}
 		}
-
+		frameDrawingPanel.getTransform()->update();
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		HandleLeftMouseButtonInput_UI(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
 		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
 		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, normalmapPanel);
+		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
 		if (isKeyPressed(GLFW_KEY_A))
 			normalMapStrength += 2.5f * deltaTime;
@@ -311,9 +318,18 @@ int main(void)
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static std::string path;
-		SaveNormalMapToFile(shouldSaveNormalMap, normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
+		if (shouldSaveNormalMap)
+		{
+			SaveNormalMapToFile(normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
+			glfwSetWindowSize(window, prevWindowSize.x, prevWindowSize.y);
+			shouldSaveNormalMap = false;
+			continue;
+		}
 		if (isKeyPressed(GLFW_KEY_F10))
+		{
 			shouldSaveNormalMap = true;
+			changeSize = true;
+		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -362,7 +378,6 @@ int main(void)
 				if (ImGui::MenuItem("Open Scene")) {}
 				ImGui::EndMenu();
 			}
-
 
 			const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
 			static int item_current = 0;
@@ -475,7 +490,7 @@ int main(void)
 		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
 		ImGui::PopItemWidth();
 		ImGui::SameLine(0, 5);
-		if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; }
+		if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
 		ImGui::PopStyleVar();
 		ImGui::Spacing();
 		ImGui::Text("VIEW MODE");
@@ -595,19 +610,13 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-void SaveNormalMapToFile(bool &shouldSaveNormalMap, DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
+void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
 {
-	if (shouldSaveNormalMap)
+	std::string locationStr = std::string(saveLocation);
+	if (locationStr.length() > 4)
 	{
-		std::string locationStr = std::string(saveLocation);
-		if (locationStr.length() > 4)
-		{
-			//stbi_write_png(locationStr.c_str(), widthSub, heightSub,3,)
-			if (exportImage(locationStr, 0, 0, texData.getWidth(), texData.getHeight()))
-				std::cout << "Saved at " << locationStr;
-		}
-		glViewport(0, 0, windowWidth, windowHeight);
-		shouldSaveNormalMap = false;
+		if (exportImage(locationStr, 0, 0, texData.getWidth(), texData.getHeight()))
+			std::cout << "Saved at " << locationStr;
 	}
 }
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
@@ -775,7 +784,7 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 	}
 }
 
-void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel)
+void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -783,7 +792,7 @@ void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoo
 		glfwGetCursorPos(window, &x, &y);
 		glm::vec2 currentPos(x, y);
 		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * (1.0f + zoomLevel) * (float)deltaTime;
-		normalmapPanel.getTransform()->translate(diff.x, -diff.y);
+		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
 	}
 	else
@@ -1008,12 +1017,12 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	if (width < 512)
-		glfwSetWindowSize(window, 512, height);
-	if(height < 512)
-		glfwSetWindowSize(window, width, 512);
-	width = glm::clamp(width, 512, maxWindowWidth);
-	height = glm::clamp(height, 512, maxWindowHeight);
+	if (width < WINDOW_SIZE_MIN)
+		glfwSetWindowSize(window, WINDOW_SIZE_MIN, height);
+	if (height < WINDOW_SIZE_MIN)
+		glfwSetWindowSize(window, width, WINDOW_SIZE_MIN);
+	width = glm::clamp(width, WINDOW_SIZE_MIN, maxWindowWidth);
+	height = glm::clamp(height, WINDOW_SIZE_MIN, maxWindowHeight);
 
 	windowWidth = width;
 	windowHeight = height;
@@ -1043,7 +1052,7 @@ bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h)
 	//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 	//stbi_write_bmp(filename.c_str(), w, h, 3, dataBuffer);
-	
+
 	//Now the file creation
 #pragma warning(suppress : 4996)
 	FILE *filePtr = fopen(filename.c_str(), "wb");
