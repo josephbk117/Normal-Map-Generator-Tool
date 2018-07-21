@@ -60,6 +60,12 @@
     <ClCompile Include="src\stb_image_write.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h">
@@ -125,6 +131,15 @@
     <ClInclude Include="src\stb_image_write.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\OBJ_Loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ModelObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\arial.ttf">
@@ -147,6 +162,11 @@
     <None Include="Resources\brushPreview.fs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\3dmodel.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\modelView.vs" />
+    <None Include="Resources\modelView.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">

@@ -8,6 +8,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
 
+#include "Camera.h"
 #include "DrawingPanel.h"
 #include "FrameBufferSystem.h"
 #include "TextureData.h"
@@ -18,10 +19,13 @@
 #include "Transform.h"
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
+#include "ModelObject.h"
 
 #include "stb_image_write.h"
+#include "OBJ_Loader.h"
 
 //Add PNG & BMP, TGA Exprt support
+//TODO : MAke camera move around instead of model
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
 //TODO : Rotation editor values
@@ -58,7 +62,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int 
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
-void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
+void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
@@ -110,6 +114,74 @@ int main(void)
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
+
+	objl::Loader objLoader;
+	if (objLoader.LoadFile("Resources\\3D Models\\Cube\\Cube.obj"))
+		std::cout << "\nModel is loaded";
+	std::vector<objl::Vertex> resourceObjvertices = objLoader.LoadedVertices;
+
+	//float *objVerticesArray = new float[resourceObjvertices.size() * 8];
+	float objVerticesArray[] = 
+	{
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+	};
+	/*for (int i = 0; i < resourceObjvertices.size(); i += 8)
+	{
+		//std::cout << "\n :: " << resourceObjvertices[i].Position.X << " ," << resourceObjvertices[i].Position.Y << " ," << resourceObjvertices[i].Position.Z;
+		objVerticesArray[i] = resourceObjvertices[i].Position.X * 0.3f;
+		objVerticesArray[i + 1] = resourceObjvertices[i].Position.Y * 0.3f;
+		objVerticesArray[i + 2] = resourceObjvertices[i].Position.Z *0.3f;
+
+		objVerticesArray[i + 3] = resourceObjvertices[i].Normal.X;
+		objVerticesArray[i + 4] = resourceObjvertices[i].Normal.Y;
+		objVerticesArray[i + 5] = resourceObjvertices[i].Normal.Z;
+
+		objVerticesArray[i + 6] = resourceObjvertices[i].TextureCoordinate.X;
+		objVerticesArray[i + 7] = resourceObjvertices[i].TextureCoordinate.Y;
+	}*/
+
+	ModelObject cubeObject(objVerticesArray, sizeof(objVerticesArray));
+
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -132,6 +204,10 @@ int main(void)
 	normalmapShader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
 	normalmapShader.linkShaders();
 
+	ShaderProgram modelViewShader;
+	modelViewShader.compileShaders("Resources\\modelView.vs", "Resources\\modelView.fs");
+	modelViewShader.linkShaders();
+
 	ShaderProgram frameShader;
 	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
 	frameShader.linkShaders();
@@ -139,6 +215,11 @@ int main(void)
 	ShaderProgram brushPreviewShader;
 	brushPreviewShader.compileShaders("Resources\\spriteBase.vs", "Resources\\brushPreview.fs");
 	brushPreviewShader.linkShaders();
+
+	Camera camera;
+	camera.init(windowWidth, windowHeight);
+
+
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -152,6 +233,11 @@ int main(void)
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
+
+	int modelViewmodelUniform = modelViewShader.getUniformLocation("model");
+	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
+	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
+	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -201,8 +287,10 @@ int main(void)
 	bool shouldSaveNormalMap = false;
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
+	
 	while (!glfwWindowShouldClose(window))
 	{
+		
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
@@ -219,9 +307,13 @@ int main(void)
 		}
 
 		fbs.BindFrameBuffer();
-		glEnable(GL_DEPTH_TEST);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
 		glBindTexture(GL_TEXTURE_2D, texId);
 		normalmapShader.use();
 
@@ -300,7 +392,7 @@ int main(void)
 			frameDrawingPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
 		else
 			frameDrawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
-		frameDrawingPanel.getTransform()->setX(glm::clamp(normalmapPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
+		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
 		frameDrawingPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		frameDrawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
@@ -314,13 +406,22 @@ int main(void)
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapPanel.draw();
+		glEnable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, texId);
+		static float rot = 0;
+		modelViewShader.use();
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		//modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
+		cubeObject.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
 		static std::string path;
 		if (shouldSaveNormalMap)
 		{
-			SaveNormalMapToFile(normalmapPanel, normalmapShader, normalPanelModelMatrixUniform, saveLocation);
+			SaveNormalMapToFile(saveLocation);
 			glfwSetWindowSize(window, prevWindowSize.x, prevWindowSize.y);
 			shouldSaveNormalMap = false;
 			continue;
@@ -334,7 +435,7 @@ int main(void)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
@@ -518,6 +619,10 @@ int main(void)
 		ImGui::PopStyleVar();
 		fileExplorer.display();
 		ImGui::Render();
+
+		
+		glBindVertexArray(0);
+
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
@@ -614,7 +719,7 @@ void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
 }
-void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
+void SaveNormalMapToFile(char  saveLocation[500])
 {
 	std::string locationStr = std::string(saveLocation);
 	if (locationStr.length() > 4)

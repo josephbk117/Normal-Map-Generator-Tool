@@ -4,6 +4,7 @@ class FrameBufferSystem
 private:
 	unsigned int framebuffer;
 	unsigned int textureColorbuffer;
+	unsigned int textureDepthBuffer;
 public:
 	FrameBufferSystem();
 	void init(int windowWidth, int windowHeight);
