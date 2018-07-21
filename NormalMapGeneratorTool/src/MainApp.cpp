@@ -26,7 +26,6 @@
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
-//TODO : Saving out notmal map in 512x512 irrespective of window size
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to diskadde
 //TODO : Custom Model Import To View With Normals
 
@@ -60,6 +59,7 @@ void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoo
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500]);
+void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -308,7 +308,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
-		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f));
+		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
@@ -365,73 +365,7 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
-		if (ImGui::BeginMainMenuBar())
-		{
-			ImGui::Indent(20);
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Open Project", "CTRL+O"))
-				{
-				}
-				if (ImGui::MenuItem("Open Scene")) {}
-				ImGui::EndMenu();
-			}
-
-			const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
-			static int item_current = 0;
-			ImGui::PushItemWidth(180);
-			ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
-			ImGui::PopItemWidth();
-			switch (item_current)
-			{
-			case 0:
-				CustomColourImGuiTheme();
-				break;
-			case 1:
-				ImGui::StyleColorsDark();
-				isUsingCustomTheme = false;
-				break;
-			case 2:
-				ImGui::StyleColorsLight();
-				isUsingCustomTheme = false;
-				break;
-			case 3:
-				ImGui::StyleColorsClassic();
-				isUsingCustomTheme = false;
-				break;
-			default:
-				break;
-			}
-			ImGui::PopStyleVar();
-			ImGui::Indent(windowWidth - 160);
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			if (isUsingCustomTheme)
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
-			if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
-			if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
-			{
-				if (!isMaximized)
-				{
-					glfwMaximizeWindow(window);
-					isMaximized = true;
-				}
-				else
-				{
-					glfwSetWindowSize(window, 800, 800);
-					isMaximized = false;
-				}
-			}
-			if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
-			ImGui::PopStyleColor();
-			if (isUsingCustomTheme)
-				ImGui::PopStyleColor();
-			ImGui::PopStyleVar();
-		}
-		ImGui::EndMainMenuBar();
-		ImGui::PopStyleVar();
+		WindowTopBarSetUp(minimizeTexture, restoreTexture, isMaximized, closeTexture);
 
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
@@ -609,6 +543,76 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
+	if (ImGui::BeginMainMenuBar())
+	{
+		ImGui::Indent(20);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Open Project", "CTRL+O"))
+			{
+			}
+			if (ImGui::MenuItem("Open Scene")) {}
+			ImGui::EndMenu();
+		}
+
+		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
+		static int item_current = 0;
+		ImGui::PushItemWidth(180);
+		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
+		ImGui::PopItemWidth();
+		switch (item_current)
+		{
+		case 0:
+			CustomColourImGuiTheme();
+			break;
+		case 1:
+			ImGui::StyleColorsDark();
+			isUsingCustomTheme = false;
+			break;
+		case 2:
+			ImGui::StyleColorsLight();
+			isUsingCustomTheme = false;
+			break;
+		case 3:
+			ImGui::StyleColorsClassic();
+			isUsingCustomTheme = false;
+			break;
+		default:
+			break;
+		}
+		ImGui::PopStyleVar();
+		ImGui::Indent(windowWidth - 160);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		if (isUsingCustomTheme)
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
+		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
+		if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
+		{
+			if (!isMaximized)
+			{
+				glfwMaximizeWindow(window);
+				isMaximized = true;
+			}
+			else
+			{
+				glfwSetWindowSize(window, 800, 800);
+				isMaximized = false;
+			}
+		}
+		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
+		ImGui::PopStyleColor();
+		if (isUsingCustomTheme)
+			ImGui::PopStyleColor();
+		ImGui::PopStyleVar();
+	}
+	ImGui::EndMainMenuBar();
+	ImGui::PopStyleVar();
 }
 void SaveNormalMapToFile(DrawingPanel &normalmapPanel, ShaderProgram &normalmapShader, int normalPanelModelMatrixUniform, char  saveLocation[500])
 {
