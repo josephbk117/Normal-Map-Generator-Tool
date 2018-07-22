@@ -246,9 +246,10 @@ int main(void)
 	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
 	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
-	int modelNormalMapStrength = modelViewShader.getUniformLocation("_HeightmapStrength");
-	int modelLightIntensity = modelViewShader.getUniformLocation("_LightIntensity");
-	int modelLightSpecularity = modelViewShader.getUniformLocation("_Specularity");
+	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
+	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
+	int modelLightSpecularityUniform = modelViewShader.getUniformLocation("_Specularity");
+	int modelLightDirectionUniform = modelViewShader.getUniformLocation("lightDir");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -442,13 +443,14 @@ int main(void)
 		static float rot = 0;
 		rot += 0.1f;
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.2f, 1.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
-		modelViewShader.applyShaderFloat(modelNormalMapStrength, normalMapStrength);
-		modelViewShader.applyShaderFloat(modelLightIntensity, lightIntensity);
-		modelViewShader.applyShaderFloat(modelLightSpecularity, 1.0f - specularity);
+		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
+		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
+		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
+		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
