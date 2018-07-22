@@ -189,6 +189,8 @@ int main(void)
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
+	DrawingPanel previewFrameDrawingPanel;
+	previewFrameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
@@ -409,15 +411,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
-		//normalmapPanel.draw();
-		glEnable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, texId);
-		static float rot = 0;
-		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
-		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		cubeObject.draw();
+		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
@@ -442,14 +436,30 @@ int main(void)
 
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
-		fbs.BindBufferTexture();
 		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		previewFbs.BindFrameBuffer();
+		glClearColor(0.3, 0.4, 0.9, 1.0);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		static float rot = 0;
+		rot += 0.1f;
+		modelViewShader.use();
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		glBindTexture(GL_TEXTURE_2D, texId);
+		cubeObject.draw();
+
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(0.2f, 0.4f, 0.4f)), glm::vec3(3.9f, 1.3, 0)));
-		frameDrawingPanel.draw();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		previewFrameDrawingPanel.setTextureID(previewFbs.getBufferTexture());
+		previewFrameDrawingPanel.draw();
+
 		if (windowWidth < windowHeight)
 		{
 			float scale = 1.0f;
