@@ -246,6 +246,7 @@ int main(void)
 	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
 	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
+	int modelNormalMapStrength = modelViewShader.getUniformLocation("_HeightmapStrength");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -443,16 +444,12 @@ int main(void)
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
+		modelViewShader.applyShaderFloat(modelNormalMapStrength, normalMapStrength);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		/*frameShader.use();
-		glm::mat4 _transform = glm::mat4();
-		_transform = 
-		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(aspectRatioHolder * 0.5f, 1.0f)), glm::vec3(2, 1, 0)));
-		previewFrameDrawingPanel.setTextureID(previewFbs.getBufferTexture());
-		previewFrameDrawingPanel.draw();*/
 
 		if (windowWidth < windowHeight)
 		{
