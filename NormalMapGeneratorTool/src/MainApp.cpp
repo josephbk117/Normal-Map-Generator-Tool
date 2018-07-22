@@ -25,6 +25,8 @@
 #include "OBJ_Loader.h"
 
 //Add PNG & BMP, TGA Exprt support
+//TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
+//TODO : Add detail value in normal settings, Sampling rate in shader
 //TODO : MAke camera move around instead of model
 //TODO : Implement modal dialouges
 //TODO : Additional texture on top
@@ -48,6 +50,7 @@ int maxWindowWidth = -1;
 int maxWindowHeight = -1;
 
 FrameBufferSystem fbs;
+FrameBufferSystem previewFbs;
 GLFWwindow* window;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -121,7 +124,7 @@ int main(void)
 	std::vector<objl::Vertex> resourceObjvertices = objLoader.LoadedVertices;
 
 	//float *objVerticesArray = new float[resourceObjvertices.size() * 8];
-	float objVerticesArray[] = 
+	float objVerticesArray[] =
 	{
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -267,6 +270,7 @@ int main(void)
 	double initTime = glfwGetTime();
 
 	fbs.init(windowWidth, windowHeight);
+	previewFbs.init(windowWidth, windowHeight);
 
 	unsigned char *completeWhite = new unsigned char[4 * 256 * 256];
 	for (int i = 0; i < 4 * 256 * 256; i++)
@@ -287,10 +291,10 @@ int main(void)
 	bool shouldSaveNormalMap = false;
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
-	
+
 	while (!glfwWindowShouldClose(window))
 	{
-		
+
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
@@ -393,7 +397,7 @@ int main(void)
 		else
 			frameDrawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
 		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
-		frameDrawingPanel.getTransform()->setY(glm::clamp(normalmapPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
+		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		frameDrawingPanel.getTransform()->update();
 		//---- Applying Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
@@ -405,7 +409,7 @@ int main(void)
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
-		normalmapPanel.draw();
+		//normalmapPanel.draw();
 		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		static float rot = 0;
@@ -413,7 +417,6 @@ int main(void)
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.5f, 0.8f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -3.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		//modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
 		cubeObject.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
@@ -443,9 +446,13 @@ int main(void)
 		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
 
+		frameShader.use();
+		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(0.2f, 0.4f, 0.4f)), glm::vec3(3.9f, 1.3, 0)));
+		frameDrawingPanel.draw();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		if (windowWidth < windowHeight)
 		{
-			float scale = (float)1;
+			float scale = 1.0f;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * 2.0f);
 		}
 		else
@@ -620,7 +627,7 @@ int main(void)
 		fileExplorer.display();
 		ImGui::Render();
 
-		
+
 		glBindVertexArray(0);
 
 		glUseProgram(0);
