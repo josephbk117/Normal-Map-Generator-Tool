@@ -168,19 +168,23 @@ int main(void)
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
-	/*for (int i = 0; i < resourceObjvertices.size(); i += 8)
+	/*int counter = 0;
+	for (int i = 0; i < resourceObjvertices.size(); i ++)
 	{
-		//std::cout << "\n :: " << resourceObjvertices[i].Position.X << " ," << resourceObjvertices[i].Position.Y << " ," << resourceObjvertices[i].Position.Z;
-		objVerticesArray[i] = resourceObjvertices[i].Position.X * 0.3f;
-		objVerticesArray[i + 1] = resourceObjvertices[i].Position.Y * 0.3f;
-		objVerticesArray[i + 2] = resourceObjvertices[i].Position.Z *0.3f;
+		std::cout << "\n_____\n Position: " << resourceObjvertices[i].Position.X << " ," << resourceObjvertices[i].Position.Y << " ," << resourceObjvertices[i].Position.Z;
+		std::cout << "\n Normal: " << resourceObjvertices[i].Normal.X << " ," << resourceObjvertices[i].Normal.Y << " ," << resourceObjvertices[i].Normal.Z;
+		std::cout << "\n UV: " << resourceObjvertices[i].TextureCoordinate.X << " ," << resourceObjvertices[i].TextureCoordinate.Y;
+		objVerticesArray[counter] = resourceObjvertices[i].Position.X;
+		objVerticesArray[counter + 1] = resourceObjvertices[i].Position.Y;
+		objVerticesArray[counter + 2] = resourceObjvertices[i].Position.Z;
 
-		objVerticesArray[i + 3] = resourceObjvertices[i].Normal.X;
-		objVerticesArray[i + 4] = resourceObjvertices[i].Normal.Y;
-		objVerticesArray[i + 5] = resourceObjvertices[i].Normal.Z;
+		objVerticesArray[counter + 3] = resourceObjvertices[i].Normal.X;
+		objVerticesArray[counter + 4] = resourceObjvertices[i].Normal.Y;
+		objVerticesArray[counter + 5] = resourceObjvertices[i].Normal.Z;
 
-		objVerticesArray[i + 6] = resourceObjvertices[i].TextureCoordinate.X;
-		objVerticesArray[i + 7] = resourceObjvertices[i].TextureCoordinate.Y;
+		objVerticesArray[counter + 6] = resourceObjvertices[i].TextureCoordinate.X;
+		objVerticesArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
+		counter += 8;
 	}*/
 
 	ModelObject cubeObject(objVerticesArray, sizeof(objVerticesArray));
@@ -223,7 +227,6 @@ int main(void)
 
 	Camera camera;
 	camera.init(windowWidth, windowHeight);
-
 
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -361,21 +364,18 @@ int main(void)
 		else
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
-		static int topBarButtonOver = 0;
-		topBarButtonOver = 0;
-		if (y < 40 && y > -5)
-		{
-			if (x > windowWidth - 125)
-			{
-				if (x > windowWidth - 50)
-					topBarButtonOver = 3;
-				else if (x > windowWidth - 80 && x < windowWidth - 50)
-					topBarButtonOver = 2;
-				else if (x < windowWidth - 90)
-					topBarButtonOver = 1;
-			}
-		}
+		//---- Making sure the dimensions do not change for drawing panel ----//
+		float aspectRatio = (float)windowWidth / (float)windowHeight;
+		glm::vec2 aspectRatioHolder;
+		if (windowWidth < windowHeight)
+			aspectRatioHolder = glm::vec2(1, aspectRatio);
+		else
+			aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1);
+		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * zoomLevel);
+		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
+		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		frameDrawingPanel.getTransform()->update();
+
 		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 		HandleLeftMouseButtonInput_UI(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
 		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
@@ -392,15 +392,7 @@ int main(void)
 			zoomLevel -= zoomLevel * 1.5f * deltaTime;
 		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
 
-		//---- Making sure the dimensions do not change for drawing panel ----//
-		float aspectRatio = (float)windowWidth / (float)windowHeight;
-		if (windowWidth < windowHeight)
-			frameDrawingPanel.getTransform()->setScale(glm::vec2(1, aspectRatio) * zoomLevel);
-		else
-			frameDrawingPanel.getTransform()->setScale(glm::vec2(1.0f / aspectRatio, 1) * zoomLevel);
-		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
-		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
-		frameDrawingPanel.getTransform()->update();
+
 		//---- Applying Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
@@ -454,11 +446,13 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		frameShader.use();
-		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(0.2f, 0.4f, 0.4f)), glm::vec3(3.9f, 1.3, 0)));
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		/*frameShader.use();
+		glm::mat4 _transform = glm::mat4();
+		_transform = 
+		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(aspectRatioHolder * 0.5f, 1.0f)), glm::vec3(2, 1, 0)));
 		previewFrameDrawingPanel.setTextureID(previewFbs.getBufferTexture());
-		previewFrameDrawingPanel.draw();
+		previewFrameDrawingPanel.draw();*/
 
 		if (windowWidth < windowHeight)
 		{
@@ -590,7 +584,6 @@ int main(void)
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
-
 		BrushData bCopy = brushData;
 		SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
 
@@ -634,12 +627,23 @@ int main(void)
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
+
+		//________Preview Display_______
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+		ImGui::SetNextWindowPos(ImVec2(windowWidth - 280, 42), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(256, windowHeight - 67), ImGuiSetCond_Always);
+		ImGui::Begin("Preview_Bar", p_open, window_flags);
+		ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(256, 256));
+		ImGui::End();
+		ImGui::PopStyleVar(3);
+
 		fileExplorer.display();
 		ImGui::Render();
 
 
 		glBindVertexArray(0);
-
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
