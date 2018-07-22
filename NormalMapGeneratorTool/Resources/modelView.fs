@@ -5,6 +5,7 @@ in vec3 FragPos;
 in vec3 Normal;  
 in vec2 TexCoords;
 uniform sampler2D inTexture;
+uniform vec3 diffuseColour;
 uniform vec3 lightDir;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
@@ -43,7 +44,7 @@ void main()
 			vec3 _norm = normalize(Normal*norm);
 			vec3 _lightDir = normalize(lightDir);
 			float diff = max(dot(_norm, _lightDir), 0.0);
-			vec3 diffuse = vec3(1.0,1.0,1.0) * _LightIntensity * (diff * vec3(0.9,0.9,0.9));
+			vec3 diffuse = vec3(1.0,1.0,1.0) * _LightIntensity * (diff * diffuseColour);
     
 			// specular
 			vec3 viewDir = normalize(vec3(0,0,-2.4) - FragPos);
@@ -51,7 +52,7 @@ void main()
 			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 20);
 			vec3 specular = vec3(1.0,1.0,1.0) * (spec * _Specularity);
         
-			vec3 result = vec3(0.2,0.262,0.36) + diffuse + specular;
+			vec3 result = vec3(0.1,0.162,0.26) + diffuse + specular;
 			FragColor = vec4(result, 1.0);
 		}
         else

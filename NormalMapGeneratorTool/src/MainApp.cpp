@@ -42,7 +42,7 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
-const int WINDOW_SIZE_MIN = 512;
+const int WINDOW_SIZE_MIN = 720;
 
 int windowWidth = 1600;
 int windowHeight = 800;
@@ -72,6 +72,7 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 
 float zoomLevel = 1;
+float modelPreviewRotationSpeed = 0.1f;
 TextureData texData;
 bool isUsingCustomTheme = false;
 
@@ -250,6 +251,7 @@ int main(void)
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
 	int modelLightSpecularityUniform = modelViewShader.getUniformLocation("_Specularity");
 	int modelLightDirectionUniform = modelViewShader.getUniformLocation("lightDir");
+	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -443,7 +445,7 @@ int main(void)
 		static float rot = 0;
 		rot += 0.1f;
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += 0.1f), glm::vec3(1.0f, 0.2f, 1.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += modelPreviewRotationSpeed), glm::vec3(1.0f, 0.2f, 1.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
@@ -451,6 +453,8 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
+		static glm::vec3 diffuseColour = glm::vec3(1,1,1);
+		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
@@ -500,8 +504,8 @@ int main(void)
 		ImGui::Text("v0.65 - Alpha");
 		ImGui::End();
 
-		ImGui::SetNextWindowPos(ImVec2(windowWidth - 25, 42), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(25, windowHeight - 67), ImGuiSetCond_Always);
+		ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
 		ImGui::Begin("Side_Bar", p_open, window_flags);
 		ImGui::End();
 
@@ -634,16 +638,17 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-		ImGui::SetNextWindowPos(ImVec2(windowWidth - 280, 42), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(256, windowHeight - 67), ImGuiSetCond_Always);
+		ImGui::SetNextWindowPos(ImVec2(windowWidth - 305, 42), ImGuiSetCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
 		ImGui::Begin("Preview_Bar", p_open, window_flags);
-		ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(256, 256));
+		ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
+		ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
+		ImGui::SliderFloat("Rotation speed", &modelPreviewRotationSpeed, 0, 1, "%.2f");
 		ImGui::End();
 		ImGui::PopStyleVar(3);
 
 		fileExplorer.display();
 		ImGui::Render();
-
 
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -672,7 +677,7 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
+inline void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
@@ -751,7 +756,7 @@ void SaveNormalMapToFile(char  saveLocation[500])
 			std::cout << "Saved at " << locationStr;
 	}
 }
-void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -819,7 +824,7 @@ void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevM
 	}
 }
 
-void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
+inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -916,7 +921,7 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 	}
 }
 
-void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
+inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
 {
 	if (state == GLFW_PRESS)
 	{
@@ -1009,7 +1014,7 @@ void plotLineHigh(int x0, int y0, int x1, int y1)
 	}
 }
 
-void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
+inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
 {
 	ColourData colData;
 	float rVal;
@@ -1037,7 +1042,7 @@ void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY,
 	}
 }
 
-void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
+inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
 {
 	float rVal;
 	float distance;
@@ -1100,7 +1105,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int s
 	delete[] tempPixelData;
 }
 
-void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData)
+inline void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData)
 {
 	ColourData colData;
 	float rVal;
