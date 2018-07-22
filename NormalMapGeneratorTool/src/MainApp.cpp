@@ -247,6 +247,8 @@ int main(void)
 	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 	int modelNormalMapStrength = modelViewShader.getUniformLocation("_HeightmapStrength");
+	int modelLightIntensity = modelViewShader.getUniformLocation("_LightIntensity");
+	int modelLightSpecularity = modelViewShader.getUniformLocation("_Specularity");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 0.5f;
@@ -435,7 +437,6 @@ int main(void)
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		previewFbs.BindFrameBuffer();
-		glClearColor(0.3, 0.4, 0.9, 1.0);
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		static float rot = 0;
@@ -446,6 +447,8 @@ int main(void)
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrength, normalMapStrength);
+		modelViewShader.applyShaderFloat(modelLightIntensity, lightIntensity);
+		modelViewShader.applyShaderFloat(modelLightSpecularity, 1.0f - specularity);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
