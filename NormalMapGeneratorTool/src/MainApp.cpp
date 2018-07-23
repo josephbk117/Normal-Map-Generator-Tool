@@ -445,7 +445,7 @@ int main(void)
 		static float rot = 0;
 		rot += 0.1f;
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += modelPreviewRotationSpeed), glm::vec3(1.0f, 0.2f, 1.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(1.0f, 0.2f, 1.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
@@ -590,8 +590,12 @@ int main(void)
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
-		BrushData bCopy = brushData;
-		SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
+		static BrushData bCopy = BrushData();
+		if (bCopy != brushData)
+		{
+			bCopy = brushData;
+			SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
+		}
 
 		GLenum format = TextureManager::getTextureFormatFromData(4);
 		glBindTexture(GL_TEXTURE_2D, brushtexture);
@@ -638,13 +642,17 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
 		ImGui::SetNextWindowPos(ImVec2(windowWidth - 305, 42), ImGuiSetCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
 		ImGui::Begin("Preview_Bar", p_open, window_flags);
 		ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
-		ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
-		ImGui::SliderFloat("Rotation speed", &modelPreviewRotationSpeed, 0, 1, "%.2f");
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()+5);
+		ImGui::ColorEdit3("##Diffuse Color", &diffuseColour[0]);
+		ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
+		ImGui::PopItemWidth();
 		ImGui::End();
+		ImGui::PopStyleColor();
 		ImGui::PopStyleVar(3);
 
 		fileExplorer.display();
