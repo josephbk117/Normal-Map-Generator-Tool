@@ -67,6 +67,7 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
+void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -429,7 +430,7 @@ int main(void)
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
-		glClearColor(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.0);
+		glClearColor(0.1f,0.1f,0.1f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		frameShader.use();
@@ -501,7 +502,7 @@ int main(void)
 		ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
 		ImGui::Begin("Bottom_Bar", p_open, window_flags);
 		ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
-		ImGui::Text("v0.65 - Alpha");
+		ImGui::Text("v0.75 - Alpha");
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
@@ -639,22 +640,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
-		ImGui::SetNextWindowPos(ImVec2(windowWidth - 305, 42), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
-		ImGui::Begin("Preview_Bar", p_open, window_flags);
-		ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()+5);
-		ImGui::ColorEdit3("##Diffuse Color", &diffuseColour[0]);
-		ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
-		ImGui::PopItemWidth();
-		ImGui::End();
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar(3);
-
+		DisplayPreview(p_open, window_flags, diffuseColour);
 		fileExplorer.display();
 		ImGui::Render();
 
@@ -684,6 +670,24 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour)
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+	ImGui::SetNextWindowPos(ImVec2(windowWidth - 305, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::Begin("Preview_Bar", p_open, window_flags);
+	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::ColorEdit3("##Diffuse Color", &diffuseColour[0]);
+	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
+	ImGui::PopItemWidth();
+	ImGui::End();
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar(3);
 }
 inline void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {

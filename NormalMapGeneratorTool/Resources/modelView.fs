@@ -41,10 +41,11 @@ void main()
         if(_normalMapModeOn == 2)
 		{
 			// diffuse 
+			norm = (2.0 * norm)-1.0;
 			vec3 _norm = normalize(Normal*norm);
 			vec3 _lightDir = normalize(lightDir);
 			float diff = max(dot(_norm, _lightDir), 0.0);
-			vec3 diffuse = vec3(1.0,1.0,1.0) * _LightIntensity * (diff * diffuseColour);
+			vec3 diffuse = _LightIntensity * (diff * diffuseColour);
     
 			// specular
 			vec3 viewDir = normalize(vec3(0,0,-2.4) - FragPos);
@@ -52,7 +53,7 @@ void main()
 			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 20);
 			vec3 specular = vec3(1.0,1.0,1.0) * (spec * _Specularity);
         
-			vec3 result = vec3(0.1,0.162,0.26) + diffuse + specular;
+			vec3 result = vec3(0.14,0.14,0.14) + diffuse + specular;
 			FragColor = vec4(result, 1.0);
 		}
         else

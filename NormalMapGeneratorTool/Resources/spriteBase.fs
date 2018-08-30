@@ -60,16 +60,22 @@ void main()
         norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
+		norm = (2.0 * norm) - 1.0;
         float light = (dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity;
         vec3 LightReflect = normalize(reflect(lightDir, norm));
-        vec3 worldEyePos = worldPos - vec3(0,0.0,1.0);
+        vec3 worldEyePos = worldPos - vec3(0.0,0.0,10.0);
         float SpecularFactor = (dot(worldEyePos, LightReflect) + 1.0)*0.5 * _Specularity;
-        if(SpecularFactor > 0)
-            SpecularFactor *= SpecularFactor;
+
         if(_normalMapModeOn == 2)
-            color = vec4(light,light,light,1.0) + clamp(SpecularFactor,0,1);
+		{
+			 if(SpecularFactor > 0)
+				SpecularFactor *= SpecularFactor;
+			else
+				SpecularFactor = 0;
+            color = vec4(SpecularFactor + light,SpecularFactor +light,SpecularFactor +light,1.0);
+		}
         else
-            color = vec4(norm,1.0);
+            color = vec4((norm+1.0)*0.5,1.0);
     }
     else
     {
