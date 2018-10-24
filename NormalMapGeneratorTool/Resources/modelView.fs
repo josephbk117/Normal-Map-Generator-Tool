@@ -54,6 +54,9 @@ void main()
 			vec3 specular = vec3(1.0,1.0,1.0) * (spec * _Specularity);
         
 			vec3 result = vec3(0.14,0.14,0.14) + diffuse + specular;
+			result.x = pow(result.x, 1.0/2.4);
+			result.y = pow(result.y, 1.0/2.4);
+			result.z = pow(result.z, 1.0/2.4);
 			FragColor = vec4(result, 1.0);
 		}
         else

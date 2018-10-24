@@ -68,11 +68,12 @@ void main()
 
         if(_normalMapModeOn == 2)
 		{
-			 if(SpecularFactor > 0)
+			if(SpecularFactor > 0)
 				SpecularFactor *= SpecularFactor;
 			else
 				SpecularFactor = 0;
-            color = vec4(SpecularFactor + light,SpecularFactor +light,SpecularFactor +light,1.0);
+			float gammaCorrected = pow(SpecularFactor + light, 1.0/2.4);
+            color = vec4(gammaCorrected, gammaCorrected, gammaCorrected, 1.0);
 		}
         else
             color = vec4((norm+1.0)*0.5,1.0);
