@@ -243,6 +243,9 @@ int main(void)
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
+	int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
+	int brushPreviewStrengthUniform = brushPreviewShader.getUniformLocation("_BrushStrength");
+	int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
 
 	int modelViewmodelUniform = modelViewShader.getUniformLocation("model");
 	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
@@ -430,7 +433,7 @@ int main(void)
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.1f,0.1f,0.1f, 1.0);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		frameShader.use();
@@ -454,7 +457,7 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
-		static glm::vec3 diffuseColour = glm::vec3(1,1,1);
+		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
@@ -473,10 +476,15 @@ int main(void)
 				scale = 1;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
-		glBindTexture(GL_TEXTURE_2D, brushtexture);	glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBindTexture(GL_TEXTURE_2D, brushtexture);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
+		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
+		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, brushData.brushOffset);
+		brushPreviewShader.applyShaderVector3(brushPreviewColourUniform, (brushData.heightMapPositiveDir ? glm::vec3(1) : glm::vec3(0)));
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
 
