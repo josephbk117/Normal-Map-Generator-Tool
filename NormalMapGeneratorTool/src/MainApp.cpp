@@ -118,8 +118,7 @@ int main(void)
 
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
-
-
+	
 	objl::Loader objLoader;
 	if (objLoader.LoadFile("Resources\\3D Models\\Cube\\Cube.obj"))
 		std::cout << "\nModel is loaded";
@@ -205,8 +204,6 @@ int main(void)
 	unsigned int minimizeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
 	unsigned int logoTexture = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
 
-	TextureData brushTexData;
-
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
 	normalmapPanel.setTextureID(texId);
@@ -229,7 +226,6 @@ int main(void)
 
 	Camera camera;
 	camera.init(windowWidth, windowHeight);
-
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -286,14 +282,6 @@ int main(void)
 
 	fbs.init(windowWidth, windowHeight);
 	previewFbs.init(windowWidth, windowHeight);
-
-	unsigned char *completeWhite = new unsigned char[4 * 256 * 256];
-	for (int i = 0; i < 4 * 256 * 256; i++)
-		completeWhite[i] = 255;
-
-	brushTexData.setTextureData(completeWhite, 256, 256, 4);
-	unsigned int brushtexture = TextureManager::loadTextureFromData(brushTexData, false);
-	brushPanel.setTextureID(brushtexture);
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -476,7 +464,6 @@ int main(void)
 				scale = 1;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
 		}
-		glBindTexture(GL_TEXTURE_2D, brushtexture);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
@@ -584,15 +571,13 @@ int main(void)
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::Spacing();
 		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+
 		if (ImGui::Button((isBlurOn) ? "Blur OFF" : "Blur ON", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
-		{
 			isBlurOn = !isBlurOn;
-		}
 		ImGui::SameLine();
 		if (ImGui::Button((brushData.heightMapPositiveDir) ? "Height -VE" : "Height +VE", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-		{
 			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
-		}
+
 		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
@@ -603,13 +588,7 @@ int main(void)
 		if (bCopy != brushData)
 		{
 			bCopy = brushData;
-			SetBrushPixelValues(brushTexData, 0, 256, 0, 256, 0.5, 0.5, bCopy);
 		}
-
-		GLenum format = TextureManager::getTextureFormatFromData(4);
-		glBindTexture(GL_TEXTURE_2D, brushtexture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, brushTexData.getWidth(),
-			brushTexData.getHeight(), format, GL_UNSIGNED_BYTE, brushTexData.getTextureData());
 
 		if (brushData.brushMinHeight > brushData.brushMaxHeight)
 			brushData.brushMinHeight = brushData.brushMaxHeight;
