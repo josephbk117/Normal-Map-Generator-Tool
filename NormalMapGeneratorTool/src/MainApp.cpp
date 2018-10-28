@@ -32,7 +32,7 @@
 //TODO : Additional texture on top
 //TODO : Rotation editor values
 //TODO : Distance based drawing
-//TODO : Undo/Redo Capability, 20 steps in RAM after that Write to diskadde
+//TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Model Import To View With Normals
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
@@ -68,6 +68,8 @@ void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevM
 void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour);
+inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection);
+inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -236,6 +238,9 @@ int main(void)
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
 	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
+	int RedChannelUniform = normalmapShader.getUniformLocation("_Channel_R");
+	int GreenChannelUniform = normalmapShader.getUniformLocation("_Channel_G");
+	int BlueChannelUniform = normalmapShader.getUniformLocation("_Channel_B");
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
@@ -262,6 +267,9 @@ int main(void)
 	float widthRes = texData.getWidth();
 	float heightRes = texData.getHeight();
 	bool flipX_Ydir = false;
+	bool redChannelActive = true;
+	bool greenChannelActive = true;
+	bool blueChannelActive = true;
 
 	glm::vec3 rotation = glm::vec3(0);
 	int k = 0;
@@ -401,6 +409,9 @@ int main(void)
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
+		normalmapShader.applyShaderBool(RedChannelUniform, redChannelActive);
+		normalmapShader.applyShaderBool(GreenChannelUniform, greenChannelActive);
+		normalmapShader.applyShaderBool(BlueChannelUniform, blueChannelActive);
 		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
@@ -597,25 +608,9 @@ int main(void)
 
 		if (mapViewMode < 3)
 		{
-			ImGui::Text("NORMAL SETTINGS");
-			ImGui::Separator();
-			if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
-			if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
+			DisplayNormalSettingsUserInterface(normalMapStrength, flipX_Ydir, redChannelActive, greenChannelActive, blueChannelActive);
 			if (mapViewMode == 2)
-			{
-				ImGui::Text("LIGHT SETTINGS");
-				ImGui::Separator();
-				if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-				if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
-				ImGui::Text("Light Direction");
-				ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
-				if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.0f, 180.0f, "X:%.2f")) {}
-				ImGui::SameLine();
-				if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.0f, 180.0f, "Y:%.2f")) {}
-				ImGui::SameLine();
-				if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.0f, 180.0f, "Z:%.2f")) {}
-				ImGui::PopItemWidth();
-			}
+				DisplayLightSettingsUserInterface(lightIntensity, specularity, lightDirection);
 		}
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
@@ -657,6 +652,44 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive)
+{
+	ImGui::Text("NORMAL SETTINGS");
+	ImGui::Separator();
+	if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
+	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
+	float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
+
+	if (!redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("R", ImVec2(width, 40))) { redChannelActive = !redChannelActive; } ImGui::SameLine();
+	ImGui::PopStyleColor();
+
+	if (!greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if(ImGui::Button("G", ImVec2(width, 40))) { greenChannelActive = !greenChannelActive; } ImGui::SameLine();
+	ImGui::PopStyleColor();
+
+	if (!blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if(ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
+	ImGui::PopStyleColor();
+}
+inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection)
+{
+	ImGui::Text("LIGHT SETTINGS");
+	ImGui::Separator();
+	if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
+	ImGui::Text("Light Direction");
+	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
+	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.0f, 180.0f, "X:%.2f")) {}
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.0f, 180.0f, "Y:%.2f")) {}
+	ImGui::SameLine();
+	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.0f, 180.0f, "Z:%.2f")) {}
+	ImGui::PopItemWidth();
 }
 void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour)
 {
