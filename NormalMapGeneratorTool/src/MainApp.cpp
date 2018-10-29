@@ -84,7 +84,7 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 	glfwWindowHint(GLFW_DECORATED, false);
-	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.65 alpha", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.75 alpha", NULL, NULL);
 	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -120,7 +120,7 @@ int main(void)
 
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
-	
+
 	objl::Loader objLoader;
 	if (objLoader.LoadFile("Resources\\3D Models\\Cube\\Cube.obj"))
 		std::cout << "\nModel is loaded";
@@ -171,6 +171,7 @@ int main(void)
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
+
 	/*int counter = 0;
 	for (int i = 0; i < resourceObjvertices.size(); i ++)
 	{
@@ -583,23 +584,27 @@ int main(void)
 		ImGui::Spacing();
 		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
 
-		if (ImGui::Button((isBlurOn) ? "Blur OFF" : "Blur ON", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
+		if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
 			isBlurOn = !isBlurOn;
 		ImGui::SameLine();
+
+		if (isBlurOn)
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
 		if (ImGui::Button((brushData.heightMapPositiveDir) ? "Height -VE" : "Height +VE", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-			brushData.heightMapPositiveDir = !brushData.heightMapPositiveDir;
+			brushData.heightMapPositiveDir = (isBlurOn) ? brushData.heightMapPositiveDir : !brushData.heightMapPositiveDir;
+		if (isBlurOn)
+			ImGui::PopStyleVar();
 
 		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 1.0f, 100.0f, "%.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
 		static BrushData bCopy = BrushData();
 		if (bCopy != brushData)
-		{
 			bCopy = brushData;
-		}
 
 		if (brushData.brushMinHeight > brushData.brushMaxHeight)
 			brushData.brushMinHeight = brushData.brushMaxHeight;
@@ -668,12 +673,12 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 
 	if (!greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-	if(ImGui::Button("G", ImVec2(width, 40))) { greenChannelActive = !greenChannelActive; } ImGui::SameLine();
+	if (ImGui::Button("G", ImVec2(width, 40))) { greenChannelActive = !greenChannelActive; } ImGui::SameLine();
 	ImGui::PopStyleColor();
 
 	if (!blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-	if(ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
+	if (ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
 	ImGui::PopStyleColor();
 }
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection)

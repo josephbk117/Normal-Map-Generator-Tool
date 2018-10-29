@@ -9,7 +9,7 @@ struct BrushData
 	float brushRate = 0.0f;
 	bool heightMapPositiveDir = false;
 
-	bool operator!= (const BrushData bD)
+	bool operator!= (const BrushData &bD)
 	{
 		if (brushScale != bD.brushScale || brushOffset != bD.brushOffset ||
 			brushStrength != bD.brushStrength || brushMinHeight != bD.brushMinHeight ||
