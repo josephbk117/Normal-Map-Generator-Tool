@@ -67,9 +67,10 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour);
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
+inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 void drawLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
@@ -575,41 +576,9 @@ int main(void)
 		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
 		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
 		ImGui::PopStyleColor();
-
 		ImGui::PopStyleVar();
-		ImGui::Text("BRUSH SETTINGS");
-		ImGui::Separator();
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		ImGui::Spacing();
-		ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
 
-		if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
-			isBlurOn = !isBlurOn;
-		ImGui::SameLine();
-
-		if (isBlurOn)
-			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-
-		if (ImGui::Button((brushData.heightMapPositiveDir) ? "Height -VE" : "Height +VE", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-			brushData.heightMapPositiveDir = (isBlurOn) ? brushData.heightMapPositiveDir : !brushData.heightMapPositiveDir;
-		if (isBlurOn)
-			ImGui::PopStyleVar();
-
-		if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-		if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
-		static BrushData bCopy = BrushData();
-		if (bCopy != brushData)
-			bCopy = brushData;
-
-		if (brushData.brushMinHeight > brushData.brushMaxHeight)
-			brushData.brushMinHeight = brushData.brushMaxHeight;
-		else if (brushData.brushMaxHeight < brushData.brushMinHeight)
-			brushData.brushMaxHeight = brushData.brushMinHeight;
+		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
 		if (mapViewMode < 3)
 		{
@@ -658,6 +627,42 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
+inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData)
+{
+	ImGui::Text("BRUSH SETTINGS");
+	ImGui::Separator();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+	ImGui::Spacing();
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+
+	if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
+		isBlurOn = !isBlurOn;
+	ImGui::SameLine();
+
+	if (isBlurOn)
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+
+	if (ImGui::Button((brushData.heightMapPositiveDir) ? "Height -VE" : "Height +VE", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+		brushData.heightMapPositiveDir = (isBlurOn) ? brushData.heightMapPositiveDir : !brushData.heightMapPositiveDir;
+	if (isBlurOn)
+		ImGui::PopStyleVar();
+
+	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
+	static BrushData bCopy = BrushData();
+	if (bCopy != brushData)
+		bCopy = brushData;
+
+	if (brushData.brushMinHeight > brushData.brushMaxHeight)
+		brushData.brushMinHeight = brushData.brushMaxHeight;
+	else if (brushData.brushMaxHeight < brushData.brushMinHeight)
+		brushData.brushMaxHeight = brushData.brushMinHeight;
+}
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive)
 {
 	ImGui::Text("NORMAL SETTINGS");
@@ -696,7 +701,7 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.0f, 180.0f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour)
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
