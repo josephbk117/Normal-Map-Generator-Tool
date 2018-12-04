@@ -271,8 +271,8 @@ int main(void)
 	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
 	int mapViewMode = 1;
-	float widthRes = texData.getWidth();
-	float heightRes = texData.getHeight();
+	const float widthRes = texData.getWidth();
+	const float heightRes = texData.getHeight();
 	bool flipX_Ydir = false;
 	bool redChannelActive = true;
 	bool greenChannelActive = true;
@@ -915,7 +915,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				int xPos, yPos;
 				glfwGetWindowPos(window, &xPos, &yPos);
 				glfwSetWindowPos(window, xPos + currentPos.x, yPos);
-				glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
+				const glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
 				glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
 			}
 		}
@@ -955,7 +955,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			glm::vec2 currentPos(x, y);
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
-				glm::vec2 diff = currentPos - initPos;
+				const glm::vec2 diff = currentPos - initPos;
 				glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
 			}
 		}
@@ -1045,7 +1045,7 @@ void plotLineLow(int x0, int y0, int x1, int y1)
 void plotLineHigh(int x0, int y0, int x1, int y1)
 {
 	int dx = x1 - x0;
-	int	dy = y1 - y0;
+	const int	dy = y1 - y0;
 	int	xi = 1;
 	if (dx < 0)
 	{
@@ -1075,10 +1075,10 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	ColourData colData;
 	float rVal;
 	float distance;
-	glm::vec2 pixelPos(xpos, ypos);
-	float px_width = inputTexData.getWidth();
-	float px_height = inputTexData.getHeight();
-	float distanceRemap = brushData.brushScale / px_height;
+	const glm::vec2 pixelPos(xpos, ypos);
+	const float px_width = inputTexData.getWidth();
+	const float px_height = inputTexData.getHeight();
+	const float distanceRemap = brushData.brushScale / px_height;
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
@@ -1103,14 +1103,14 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	float rVal;
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);
-	float px_width = inputTexData.getWidth();
-	float px_height = inputTexData.getHeight();
+	const float px_width = inputTexData.getWidth();
+	const float px_height = inputTexData.getHeight();
 	float distanceRemap = brushData.brushScale / px_height;
 
 	//Temp allocation of image section
-	int _width = endX - startX;
-	int _height = endY - startY;
-	int totalPixelCount = _width * _height;
+	const int _width = endX - startX;
+	const int _height = endY - startY;
+	const int totalPixelCount = _width * _height;
 	ColourData *tempPixelData = new ColourData[totalPixelCount];
 
 	for (int i = startX; i < endX; i++)
@@ -1149,7 +1149,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 
 				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
-				for (int i = 0; i < 8; i++)
+				for (unsigned int i = 0; i < 8; i++)
 					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
 				float finalColor = (1.0f - brushData.brushStrength)*tempPixelData[index].getColourIn_0_1_Range().r + brushData.brushStrength * avg;
 				ColourData colData;
@@ -1165,11 +1165,11 @@ inline void SetBrushPixelValues(TextureData& inputTexData, int startX, int width
 {
 	ColourData colData;
 	float rVal;
-	float distance;
-	glm::vec2 pixelPos(xpos, ypos);
-	float px_width = inputTexData.getWidth();
-	float px_height = inputTexData.getHeight();
-	float distanceRemap = 0.5f;
+	float distance = 0;
+	const glm::vec2 pixelPos(xpos, ypos);
+	const float px_width = inputTexData.getWidth();
+	const float px_height = inputTexData.getHeight();
+	const float distanceRemap = 0.5f;
 	for (int i = startX; i < width; i++)
 	{
 		for (int j = startY; j < height; j++)
@@ -1235,7 +1235,7 @@ bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h)
 	//fbs.BindBufferTexture();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	int nSize = w * h * 3;
+	const int nSize = w * h * 3;
 	// First let's create our buffer, 3 channels per Pixel
 	char* dataBuffer = new char[nSize];
 
