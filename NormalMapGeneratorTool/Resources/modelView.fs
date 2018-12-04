@@ -6,11 +6,14 @@ in vec3 Normal;
 in vec2 TexCoords;
 uniform sampler2D inTexture;
 uniform vec3 diffuseColour;
+uniform vec3 ambientColour;
+uniform vec3 lightColour;
 uniform vec3 lightDir;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
 uniform float _Specularity;
+uniform float _SpecularStrength;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 uniform bool _flipX_Ydir;
@@ -20,7 +23,7 @@ void main()
 	 if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
 		vec3 norm = vec3(0.5,0.5,1.0);
-		float me = texture(inTexture,TexCoords).x;
+		float currentPx = texture(inTexture,TexCoords).x;
 		float n = texture(inTexture,vec2(TexCoords.x,TexCoords.y + 1.0/512.0/*_HeightmapDimY*/)).x;
 		float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - 1.0/512.0/*_HeightmapDimY*/)).x;
 		float e = texture(inTexture,vec2(TexCoords.x - 1.0/512.0/*_HeightmapDimX*/, TexCoords.y)).x;
@@ -29,11 +32,12 @@ void main()
 		vec3 temp = norm;
 		if(norm.x==1) temp.y += 0.5;
 		else temp.x += 0.5;
+		temp = normalize(temp);
 		//form a basis with norm being one of the axes:
 		vec3 perp1 = normalize(cross(norm,temp));
 		vec3 perp2 = normalize(cross(norm,perp1));
 		//use the basis to move the normal in its own space by the offset
-		vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
+		vec3 normalOffset = -_HeightmapStrength * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
 		norm += normalOffset;
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
@@ -50,13 +54,15 @@ void main()
 			// specular
 			vec3 viewDir = normalize(vec3(0,0,-2.4) - FragPos);
 			vec3 reflectDir = reflect(-_lightDir, _norm);
-			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 20);
-			vec3 specular = vec3(1.0,1.0,1.0) * (spec * _Specularity);
-        
-			vec3 result = vec3(0.14,0.14,0.14) + diffuse + specular;
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity);
+			vec3 specular = lightColour * (spec * _SpecularStrength);
+			vec3 result = (diffuse + specular);
+			result += ambientColour;
+
 			result.x = pow(result.x, 1.0/2.4);
 			result.y = pow(result.y, 1.0/2.4);
 			result.z = pow(result.z, 1.0/2.4);
+
 			FragColor = vec4(result, 1.0);
 		}
         else

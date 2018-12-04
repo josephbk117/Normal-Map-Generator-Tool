@@ -67,8 +67,8 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour);
-inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection);
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
+inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength,glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 void drawLine(int x0, int y0, int x1, int y1);
@@ -238,6 +238,7 @@ int main(void)
 	int widthUniform = normalmapShader.getUniformLocation("_HeightmapDimX");
 	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
 	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
+	int specularityStrengthUniform = normalmapShader.getUniformLocation("_SpecularStrength");
 	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
 	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
 	int RedChannelUniform = normalmapShader.getUniformLocation("_Channel_R");
@@ -257,11 +258,15 @@ int main(void)
 	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
 	int modelLightSpecularityUniform = modelViewShader.getUniformLocation("_Specularity");
+	int modelLightSpecularityStrengthUniform = modelViewShader.getUniformLocation("_SpecularStrength");
 	int modelLightDirectionUniform = modelViewShader.getUniformLocation("lightDir");
+	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
+	int modelAmbientColourUniform = modelViewShader.getUniformLocation("ambientColour");
 
 	float normalMapStrength = 10.0f;
-	float specularity = 0.5f;
+	float specularity = 10.0f;
+	float specularityStrength = 0.5f;
 	float lightIntensity = 0.5f;
 	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
@@ -405,6 +410,7 @@ int main(void)
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
+		normalmapShader.applyShaderFloat(specularityStrengthUniform, specularityStrength);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
@@ -457,9 +463,14 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
+		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, specularityStrength);
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
+		static glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
+		static glm::vec3 lightColour = glm::vec3(1, 1, 1);
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
+		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
+		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
 		glBindTexture(GL_TEXTURE_2D, texId);
 		cubeObject.draw();
 
@@ -584,7 +595,7 @@ int main(void)
 		{
 			DisplayNormalSettingsUserInterface(normalMapStrength, flipX_Ydir, redChannelActive, greenChannelActive, blueChannelActive);
 			if (mapViewMode == 2)
-				DisplayLightSettingsUserInterface(lightIntensity, specularity, lightDirection);
+				DisplayLightSettingsUserInterface(lightIntensity, specularity,specularityStrength, lightDirection);
 		}
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
@@ -596,7 +607,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		DisplayPreview(p_open, window_flags, diffuseColour);
+		DisplayPreview(p_open, window_flags, diffuseColour, ambientColour, lightColour);
 		fileExplorer.display();
 		ImGui::Render();
 
@@ -686,22 +697,23 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 	if (ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
 	ImGui::PopStyleColor();
 }
-inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, glm::vec3 &lightDirection)
+inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity,float &specularityStrength,glm::vec3 &lightDirection)
 {
 	ImGui::Text("LIGHT SETTINGS");
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity", &specularity, 0.0f, 1.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &specularity, 0.01f, 10.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 1.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
-	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.0f, 180.0f, "X:%.2f")) {}
+	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.01f, 179.99f, "X:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.0f, 180.0f, "Y:%.2f")) {}
+	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.01f, 179.99f, "Y:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.0f, 180.0f, "Z:%.2f")) {}
+	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 179.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour)
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
@@ -712,7 +724,9 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-	ImGui::ColorEdit3("##Diffuse Color", &diffuseColour[0]);
+	ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
+	ImGui::ColorEdit3("Ambient Color", &ambientColour[0]);
+	ImGui::ColorEdit3("Light Color", &lightColour[0]);
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::End();

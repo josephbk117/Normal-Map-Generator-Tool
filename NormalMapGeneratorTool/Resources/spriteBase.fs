@@ -8,6 +8,7 @@ uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
 uniform float _Specularity;
+uniform float _SpecularStrength;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 uniform bool _flipX_Ydir;
@@ -19,48 +20,45 @@ void main()
 {
     if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
-        vec3 normal = vec3(0.5,0.5,1.0);
-        float me = texture(textureOne,textureUV).x;
+        float currentPx = texture(textureOne,textureUV).x;
         float n = texture(textureOne,vec2(textureUV.x,textureUV.y + 1.0/_HeightmapDimY)).x;
         float s = texture(textureOne,vec2(textureUV.x, textureUV.y - 1.0/_HeightmapDimY)).x;
         float e = texture(textureOne,vec2(textureUV.x - 1.0/_HeightmapDimX, textureUV.y)).x;
         float w = texture(textureOne,vec2(textureUV.x + 1.0/_HeightmapDimX, textureUV.y)).x;
 
-        vec3 norm = normal;
+        vec3 norm = normalize(vec3(0.5, 0.5, 1.0));
         vec3 temp = norm;
         if(norm.x==1) temp.y += 0.5;
         else temp.x += 0.5;
+		temp = normalize(temp);
         //form a basis with norm being one of the axes:
         vec3 perp1 = normalize(cross(norm,temp));
         vec3 perp2 = normalize(cross(norm,perp1));
         //use the basis to move the normal in its own space by the offset
-        vec3 normalOffset = -_HeightmapStrength * ( ( (n-me) - (s-me) ) * perp1 + ( ( e - me ) - ( w - me ) ) * perp2 );
+        vec3 normalOffset = -_HeightmapStrength * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
         norm += normalOffset;
         norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
-		norm = (2.0 * norm) - 1.0;
-        float light = (dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity;
+		norm = (2.0 * norm) - 1.0; // from -1.0 to +1.0 range
+        float light = max((dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity, 0.0);
         vec3 LightReflect = normalize(reflect(lightDir, norm));
         vec3 worldEyePos = worldPos - vec3(0.0,0.0,10.0);
-        float SpecularFactor = (dot(worldEyePos, LightReflect) + 1.0)*0.5 * _Specularity;
+        float SpecularFactor = (dot(worldEyePos, LightReflect) + 1.0)*0.5 * _SpecularStrength;
 
         if(_normalMapModeOn == 2)
 		{
 			if(SpecularFactor > 0)
-				SpecularFactor *= SpecularFactor;
+				SpecularFactor = pow(SpecularFactor, _Specularity);
 			else
 				SpecularFactor = 0;
-			float gammaCorrected = pow(SpecularFactor + light, 1.0/2.4);
+			float gammaCorrected = min(pow(SpecularFactor + light, 1.0/2.4), 1.0);
             color = vec4(gammaCorrected, gammaCorrected, gammaCorrected, 1.0);
 		}
         else
 		{
             color = vec4((norm+1.0)*0.5,1.0);
-			color.r *= _Channel_R;
-			color.g *= _Channel_G;
-			color.b *= _Channel_B;
-			//color = vec4(color.r, color.g, 0, 1);
+			color.rgb *= vec3(_Channel_R, _Channel_G, _Channel_B);
 		}
     }
     else
