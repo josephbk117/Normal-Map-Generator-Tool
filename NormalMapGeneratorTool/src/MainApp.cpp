@@ -721,8 +721,11 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::Text("Diffuse Colour");
 	ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
+	ImGui::Text("Ambient Colour");
 	ImGui::ColorEdit3("Ambient Color", &ambientColour[0]);
+	ImGui::Text("Light Colour");
 	ImGui::ColorEdit3("Light Color", &lightColour[0]);
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::PopItemWidth();
