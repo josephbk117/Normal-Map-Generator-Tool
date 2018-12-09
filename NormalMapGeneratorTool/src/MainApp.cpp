@@ -29,7 +29,7 @@
 //TODO : Add detail value in normal settings, Sampling rate in shader
 //TODO : MAke camera move around instead of model
 //TODO : Implement modal dialouges
-//TODO : Additional texture on top
+//TODO : Additional texture on top of model view
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
@@ -71,9 +71,6 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
-void drawLine(int x0, int y0, int x1, int y1);
-void plotLineLow(int x0, int y0, int x1, int y1);
-void plotLineHigh(int x0, int y0, int x1, int y1);
 
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
@@ -823,13 +820,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		glm::vec2 windowNormalizedCurrentMouseCoord = glm::vec2(currentMouseCoord.x / windowWidth, currentMouseCoord.y / windowHeight);
 		glm::vec2 windowNormalizedPrevMouseCoord = glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight);
 		float minDistThresholdForDraw = (brushData.brushRate / texData.getWidth()) * zoomLevel;
+		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
 
-		if (currentMouseCoord != prevMouseCoord &&
-			glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord) > minDistThresholdForDraw)
+		if (currentMouseCoord != prevMouseCoord && distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
 		{
-			float dist = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
-			std::cout << "Distance = " << dist << std::endl;
-
 			xpos = xpos / windowWidth; // window size normalized width
 			ypos = 1.0f - (ypos / windowHeight); // window size normalized height
 
@@ -853,7 +847,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 				if (!isBlurOn)
 				{
-					if (dist > 0.02f)
+					if (distOfPrevAndCurrentMouseCoord > 0.02f)
 					{
 						prevX = ((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 						prevY = ((prevY - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
@@ -861,9 +855,9 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						glm::vec2 toPoint(xpos, ypos);
 						glm::vec2 curPoint = prevPoint;
 
-						dist = glm::min(dist, 0.05f);
+						distOfPrevAndCurrentMouseCoord = glm::min(distOfPrevAndCurrentMouseCoord, 0.05f);
 
-						int numberOfPoints = (dist / 0.05f) * 5;
+						int numberOfPoints = (distOfPrevAndCurrentMouseCoord / 0.05f) * 5;
 						glm::vec2 incValue = (prevPoint - toPoint) * (1.0f / numberOfPoints);
 
 						for (int i = 0; i < numberOfPoints; i++)
