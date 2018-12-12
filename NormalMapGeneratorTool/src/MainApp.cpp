@@ -309,7 +309,6 @@ int main(void)
 
 	while (!glfwWindowShouldClose(window))
 	{
-
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
@@ -540,8 +539,7 @@ int main(void)
 		}
 		if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 		{
-			normalmapPanel.getTransform()->setPosition(0, 0);
-			normalmapPanel.getTransform()->setRotation(0);
+			frameDrawingPanel.getTransform()->setPosition(0, 0);
 			zoomLevel = 1;
 		}
 		ImGui::Spacing();
@@ -888,8 +886,14 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
 					}
 				}
-				else if (isBlurOn && (left >= 0 && right < (int)maxWidth && top >= 0 && top < (int)maxWidth && bottom >= 0 && bottom < (int)maxWidth))
+				else if (isBlurOn)
+				{
+					left = glm::clamp(left, 0.0f, maxWidth);
+					right = glm::clamp(right, 0.0f, maxWidth);
+					bottom = glm::clamp(bottom, 0.0f, maxWidth);
+					top = glm::clamp(top, 0.0f, maxWidth);
 					SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+				}
 
 				GLenum format = TextureManager::getTextureFormatFromData(4);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(), texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
@@ -1007,7 +1011,7 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		glm::vec2 currentPos(x, y);
-		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * (1.0f + zoomLevel) * (float)deltaTime;
+		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowWidth, 1.0f / windowHeight) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
 	}
@@ -1099,8 +1103,12 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (unsigned int i = 0; i < 8; i++)
-					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0;
-				float finalColor = (1.0f - brushData.brushStrength)*tempPixelData[index].getColourIn_0_1_Range().r + brushData.brushStrength * avg;
+					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0.01f;
+				float pixelCol = tempPixelData[index].getColourIn_0_1_Range().r;
+				float finalColor = 0.0025f * pixelCol;
+				finalColor += avg;
+				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
+				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
 				ColourData colData;
 				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
 				inputTexData.setTexelColor(colData, i, j);
@@ -1159,17 +1167,15 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	if (width < WINDOW_SIZE_MIN)
-		glfwSetWindowSize(window, WINDOW_SIZE_MIN, height);
-	if (height < WINDOW_SIZE_MIN)
-		glfwSetWindowSize(window, width, WINDOW_SIZE_MIN);
 	width = glm::clamp(width, WINDOW_SIZE_MIN, maxWindowWidth);
 	height = glm::clamp(height, WINDOW_SIZE_MIN, maxWindowHeight);
 
+	glfwSetWindowSize(window, width, height);
+
 	windowWidth = width;
 	windowHeight = height;
-	glViewport(0, 0, width, height);
 	fbs.updateTextureDimensions(windowWidth, windowHeight);
+	glViewport(0, 0, width, height);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
