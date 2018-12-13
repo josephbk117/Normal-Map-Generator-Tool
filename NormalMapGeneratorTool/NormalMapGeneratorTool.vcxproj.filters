@@ -196,6 +196,9 @@
     <Image Include="Nora.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\Penguins.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

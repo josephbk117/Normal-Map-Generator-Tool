@@ -205,6 +205,7 @@
       <FileType>Image</FileType>
     </Image>
     <Image Include="Resources\goli.png" />
+    <Image Include="Resources\Penguins.jpg" />
     <Image Include="Resources\test2.png" />
     <Image Include="Resources\test3.png" />
     <Image Include="Resources\UI\closeIcon.png" />

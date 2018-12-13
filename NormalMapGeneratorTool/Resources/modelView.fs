@@ -1,10 +1,11 @@
 #version 140
 out vec4 FragColor;
 
-in vec3 FragPos;  
-in vec3 Normal;  
+in vec3 FragPos;
+in vec3 Normal;
 in vec2 TexCoords;
 uniform sampler2D inTexture;
+uniform sampler2D inTexture2;
 uniform vec3 diffuseColour;
 uniform vec3 ambientColour;
 uniform vec3 lightColour;
@@ -20,7 +21,7 @@ uniform bool _flipX_Ydir;
 
 void main()
 {
-	 if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
+	 if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
     {
 		vec3 norm = vec3(0.5,0.5,1.0);
 		float currentPx = texture(inTexture,TexCoords).x;
@@ -42,7 +43,7 @@ void main()
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
-        if(_normalMapModeOn == 2)
+        if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
 			// diffuse 
 			norm = (2.0 * norm)-1.0;
@@ -59,6 +60,12 @@ void main()
 			vec3 result = (diffuse + specular);
 			result += ambientColour;
 
+			if(_normalMapModeOn == 4)
+			{
+				vec3 inTexCol = texture(inTexture2,TexCoords).rgb;
+				result = inTexCol * result;
+			}
+
 			result.x = pow(result.x, 1.0/2.4);
 			result.y = pow(result.y, 1.0/2.4);
 			result.z = pow(result.z, 1.0/2.4);
@@ -70,7 +77,7 @@ void main()
             FragColor = vec4(norm,1.0);
 		}
     }
-    else
+    else if(_normalMapModeOn == 3)
     {
         FragColor = texture(inTexture,TexCoords);
     }

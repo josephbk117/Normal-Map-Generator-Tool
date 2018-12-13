@@ -67,7 +67,7 @@ void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &wi
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(char  saveLocation[500]);
 void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
@@ -200,14 +200,15 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
-	unsigned int closeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
-	unsigned int restoreTexture = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
-	unsigned int minimizeTexture = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
-	unsigned int logoTexture = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
+	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
+	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
+	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
+	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
+	unsigned int penguinTextureId = TextureManager::loadTextureFromFile("Resources\\Penguins.jpg", "penguin", false);
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
-	unsigned int texId = TextureManager::loadTextureFromData(texData, false);
-	normalmapPanel.setTextureID(texId);
+	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
+	normalmapPanel.setTextureID(heightmapTexId);
 
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
@@ -260,6 +261,8 @@ int main(void)
 	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
 	int modelAmbientColourUniform = modelViewShader.getUniformLocation("ambientColour");
+	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
+	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
@@ -267,7 +270,8 @@ int main(void)
 	float lightIntensity = 0.5f;
 	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
-	int mapViewMode = 1;
+	int mapDrawViewMode = 1;
+	int modelViewMode = 1;
 	const float widthRes = texData.getWidth();
 	const float heightRes = texData.getHeight();
 	bool flipX_Ydir = false;
@@ -332,15 +336,15 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
-		glBindTexture(GL_TEXTURE_2D, texId);
+		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		normalmapShader.use();
 
 		if (isKeyPressed(GLFW_KEY_J))
-			mapViewMode = 1;
+			mapDrawViewMode = 1;
 		if (isKeyPressed(GLFW_KEY_K))
-			mapViewMode = 2;
+			mapDrawViewMode = 2;
 		if (isKeyPressed(GLFW_KEY_L))
-			mapViewMode = 3;
+			mapDrawViewMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
 			frameDrawingPanel.getTransform()->translate(-1 * deltaTime, 0);
@@ -411,7 +415,7 @@ int main(void)
 		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
 		normalmapShader.applyShaderFloat(widthUniform, widthRes);
 		normalmapShader.applyShaderFloat(heightUniform, heightRes);
-		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapViewMode);
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapDrawViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapShader.applyShaderBool(RedChannelUniform, redChannelActive);
 		normalmapShader.applyShaderBool(GreenChannelUniform, greenChannelActive);
@@ -455,20 +459,27 @@ int main(void)
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(1.0f, 0.2f, 1.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		modelViewShader.applyShaderInt(modelNormalMapModeUniform, mapViewMode);
+		modelViewShader.applyShaderInt(modelNormalMapModeUniform, modelViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, specularityStrength);
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
+		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
+		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
 		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
 		static glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
 		static glm::vec3 lightColour = glm::vec3(1, 1, 1);
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
 		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
-		glBindTexture(GL_TEXTURE_2D, texId);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
 		cubeObject.draw();
+		glActiveTexture(GL_TEXTURE0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -499,7 +510,7 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		WindowTopBarSetUp(minimizeTexture, restoreTexture, isMaximized, closeTexture);
+		WindowTopBarSetUp(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
 
 		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
@@ -566,30 +577,30 @@ int main(void)
 		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 		ImGui::Spacing();
 
-		if (mapViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 3; }
+		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
 		ImGui::PopStyleColor();
 
 		ImGui::SameLine(0, 5);
-		if (mapViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapViewMode = 1; }
+		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
 		ImGui::PopStyleColor();
 
 		ImGui::SameLine(0, 5);
-		if (mapViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+		if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapViewMode = 2; }
+		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
-		if (mapViewMode < 3)
+		if (mapDrawViewMode < 3)
 		{
 			DisplayNormalSettingsUserInterface(normalMapStrength, flipX_Ydir, redChannelActive, greenChannelActive, blueChannelActive);
-			if (mapViewMode == 2)
+			if (mapDrawViewMode == 2)
 				DisplayLightSettingsUserInterface(lightIntensity, specularity, specularityStrength, lightDirection);
 		}
 		ImGui::PopStyleColor();
@@ -602,7 +613,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		DisplayPreview(p_open, window_flags, diffuseColour, ambientColour, lightColour);
+		DisplayPreview(p_open, window_flags, modelViewMode, diffuseColour, ambientColour, lightColour);
 		fileExplorer.display();
 		ImGui::Render();
 
@@ -613,8 +624,8 @@ int main(void)
 		if (path != prevPath)
 		{
 			TextureManager::getTextureDataFromFile(path, texData);
-			texId = TextureManager::loadTextureFromData(texData, false);
-			normalmapPanel.setTextureID(texId);
+			heightmapTexId = TextureManager::loadTextureFromData(texData, false);
+			normalmapPanel.setTextureID(heightmapTexId);
 			for (int i = 0; i < path.length(); i++)
 				imageLoadLocation[i] = path[i];
 			updateImageLocation = false;
@@ -708,7 +719,7 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 179.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
+inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
@@ -718,6 +729,41 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
+
+
+	ImGui::Spacing();
+	ImGui::Text("VIEW MODE");
+	ImGui::Separator();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 4.0f);
+	ImGui::Spacing();
+
+	if (modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 3; }
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine(0, 5);
+	if (modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 1; }
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine(0, 5);
+	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine(0, 5);
+	if (modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { modelViewMode = 4; }
+	ImGui::PopStyleColor();
+
+	ImGui::PopStyleVar();
+
+
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::Text("Diffuse Colour");
 	ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
@@ -728,6 +774,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::End();
+
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
