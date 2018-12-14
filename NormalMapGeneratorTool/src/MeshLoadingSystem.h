@@ -680,7 +680,7 @@ namespace MeshLoadingSystem
 			}
 		}
 
-		void CreateModelFromFile(const std::string& Path, ModelObject& modelObject)
+		ModelObject* CreateModelFromFile(const std::string& Path)
 		{
 			LoadFile(Path);
 
@@ -688,7 +688,7 @@ namespace MeshLoadingSystem
 			float *vertexDataArray = new float[resourceObjvertices.size() * 8];
 			std::vector<unsigned int> indices = LoadedIndices;
 			int counter = 0;
-			for (int i = 0; i < resourceObjvertices.size(); i++)
+			for (unsigned int i = 0; i < resourceObjvertices.size(); i++)
 			{
 				vertexDataArray[counter] = resourceObjvertices[i].Position.X;
 				vertexDataArray[counter + 1] = resourceObjvertices[i].Position.Y;
@@ -702,9 +702,11 @@ namespace MeshLoadingSystem
 				vertexDataArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
 
 				counter += 8;
-			}			
-			modelObject.UpdateMeshData(vertexDataArray, resourceObjvertices.size(), &indices[0], indices.size());
+			}
+			ModelObject* modelObj = new ModelObject();
+			modelObj->UpdateMeshData(vertexDataArray, resourceObjvertices.size(), &indices[0], indices.size());
 			delete[] vertexDataArray;
+			return modelObj;
 		}
 		// Loaded Mesh Objects
 		std::vector<Mesh> LoadedMeshes;

@@ -85,7 +85,7 @@ bool isUsingCustomTheme = false;
 
 TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
-ModelObject modelPreviewObj;
+ModelObject *modelPreviewObj = nullptr;
 
 int main(void)
 {
@@ -129,9 +129,8 @@ int main(void)
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
-	modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH, modelPreviewObj);
-	modelLoader.CreateModelFromFile(CUBE_MODEL_PATH, modelPreviewObj);
-	modelLoader.CreateModelFromFile(TORUS_MODEL_PATH, modelPreviewObj);
+	
+	
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -142,11 +141,16 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
+	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
+
+
 	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
 	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
 	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
 	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
 	unsigned int penguinTextureId = TextureManager::loadTextureFromFile("Resources\\Penguins.jpg", "penguin", false);
+
+
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
@@ -206,6 +210,9 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 
+	
+
+
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
 	float specularityStrength = 0.5f;
@@ -253,6 +260,7 @@ int main(void)
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 
+
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -289,13 +297,13 @@ int main(void)
 			mapDrawViewMode = 3;
 
 		if (isKeyPressed(GLFW_KEY_LEFT))
-			frameDrawingPanel.getTransform()->translate(-1 * deltaTime, 0);
+			frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
 		if (isKeyPressed(GLFW_KEY_RIGHT))
-			frameDrawingPanel.getTransform()->translate(1 * deltaTime, 0);
+			frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
 		if (isKeyPressed(GLFW_KEY_UP))
-			frameDrawingPanel.getTransform()->translate(0, 1 * deltaTime);
+			frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
 		if (isKeyPressed(GLFW_KEY_DOWN))
-			frameDrawingPanel.getTransform()->translate(0, -1 * deltaTime);
+			frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
 		if (isKeyPressed(GLFW_KEY_8))
 			frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
 		if (isKeyPressed(GLFW_KEY_V))
@@ -379,6 +387,7 @@ int main(void)
 			shouldSaveNormalMap = true;
 			changeSize = true;
 		}
+		
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -421,7 +430,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
-		modelPreviewObj.draw();
+		modelPreviewObj->draw();
 		glActiveTexture(GL_TEXTURE0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -684,20 +693,21 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 			if (ImGui::Selectable(items[n], is_selected))
 			{
 				current_item = items[n];
-				std::cout << "Selected : " << current_item;
+				delete modelPreviewObj;
+				modelPreviewObj = nullptr;
 				switch (n)
 				{
 				case 0:
-					modelLoader.CreateModelFromFile(CUBE_MODEL_PATH, modelPreviewObj);
+					modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 					break;
 				case 1:
-					modelLoader.CreateModelFromFile(CYLINDER_MODEL_PATH, modelPreviewObj);
+					modelPreviewObj = modelLoader.CreateModelFromFile(CYLINDER_MODEL_PATH);
 					break;
 				case 2:
-					modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH, modelPreviewObj);
+					modelPreviewObj = modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH);
 					break;
 				case 3:
-					modelLoader.CreateModelFromFile(TORUS_MODEL_PATH, modelPreviewObj);
+					modelPreviewObj = modelLoader.CreateModelFromFile(TORUS_MODEL_PATH);
 					break;
 				default:
 					break;
