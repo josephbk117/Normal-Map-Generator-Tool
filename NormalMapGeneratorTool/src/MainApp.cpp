@@ -123,73 +123,28 @@ int main(void)
 	if (objLoader.LoadFile("Resources\\3D Models\\Cube\\Cube.obj"))
 		std::cout << "\nModel is loaded";
 	std::vector<objl::Vertex> resourceObjvertices = objLoader.LoadedVertices;
+	std::cout << "Loaded Vertices :\n";
 
-	//float *objVerticesArray = new float[resourceObjvertices.size() * 8];
-	float objVerticesArray[] =
+	float *cubeObjArray = new float[resourceObjvertices.size() * 8];
+	std::vector<unsigned int> indices = objLoader.LoadedIndices;
+	int counter = 0;
+	for (int i = 0; i < resourceObjvertices.size(); i++)
 	{
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		cubeObjArray[counter] = resourceObjvertices[i].Position.X * 0.5f;
+		cubeObjArray[counter + 1] = resourceObjvertices[i].Position.Y * 0.5f;
+		cubeObjArray[counter + 2] = resourceObjvertices[i].Position.Z * 0.5f;
 
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		cubeObjArray[counter + 3] = resourceObjvertices[i].Normal.X;
+		cubeObjArray[counter + 4] = resourceObjvertices[i].Normal.Y;
+		cubeObjArray[counter + 5] = resourceObjvertices[i].Normal.Z;
 
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		cubeObjArray[counter + 6] = resourceObjvertices[i].TextureCoordinate.X;
+		cubeObjArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-	};
-
-	/*int counter = 0;
-	for (int i = 0; i < resourceObjvertices.size(); i ++)
-	{
-		std::cout << "\n_____\n Position: " << resourceObjvertices[i].Position.X << " ," << resourceObjvertices[i].Position.Y << " ," << resourceObjvertices[i].Position.Z;
-		std::cout << "\n Normal: " << resourceObjvertices[i].Normal.X << " ," << resourceObjvertices[i].Normal.Y << " ," << resourceObjvertices[i].Normal.Z;
-		std::cout << "\n UV: " << resourceObjvertices[i].TextureCoordinate.X << " ," << resourceObjvertices[i].TextureCoordinate.Y;
-		objVerticesArray[counter] = resourceObjvertices[i].Position.X;
-		objVerticesArray[counter + 1] = resourceObjvertices[i].Position.Y;
-		objVerticesArray[counter + 2] = resourceObjvertices[i].Position.Z;
-
-		objVerticesArray[counter + 3] = resourceObjvertices[i].Normal.X;
-		objVerticesArray[counter + 4] = resourceObjvertices[i].Normal.Y;
-		objVerticesArray[counter + 5] = resourceObjvertices[i].Normal.Z;
-
-		objVerticesArray[counter + 6] = resourceObjvertices[i].TextureCoordinate.X;
-		objVerticesArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
 		counter += 8;
-	}*/
+	}
 
-	ModelObject cubeObject(objVerticesArray, sizeof(objVerticesArray));
+	ModelObject cubeObject(cubeObjArray, resourceObjvertices.size(), &indices[0], indices.size());
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -452,11 +407,12 @@ int main(void)
 
 		previewFbs.BindFrameBuffer();
 		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		static float rot = 0;
 		rot += 0.1f;
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(1.0f, 0.2f, 1.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, modelViewMode);
