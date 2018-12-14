@@ -686,8 +686,10 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
-
-
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
+	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
+	ImGui::PopItemWidth();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
 	ImGui::Separator();
@@ -720,17 +722,17 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 
 	ImGui::PopStyleVar();
 
-
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-	ImGui::Text("Diffuse Colour");
-	ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
-	ImGui::Text("Ambient Colour");
-	ImGui::ColorEdit3("Ambient Color", &ambientColour[0]);
-	ImGui::Text("Light Colour");
-	ImGui::ColorEdit3("Light Color", &lightColour[0]);
-	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
-	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
-	ImGui::PopItemWidth();
+	if (modelViewMode == 2 || modelViewMode == 4)
+	{
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+		ImGui::Text("Diffuse Colour");
+		ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
+		ImGui::Text("Ambient Colour");
+		ImGui::ColorEdit3("Ambient Color", &ambientColour[0]);
+		ImGui::Text("Light Colour");
+		ImGui::ColorEdit3("Light Color", &lightColour[0]);
+		ImGui::PopItemWidth();
+	}
 	ImGui::End();
 
 	ImGui::PopStyleColor();
