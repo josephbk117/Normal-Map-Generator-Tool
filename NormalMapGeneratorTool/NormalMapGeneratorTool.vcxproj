@@ -143,7 +143,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\MeshLoader.cpp" />
     <ClCompile Include="src\ModelObject.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\FileExplorer.cpp" />
@@ -163,10 +162,9 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\MeshLoader.h" />
     <ClInclude Include="src\ModelObject.h" />
     <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\OBJ_Loader.h" />
+    <ClInclude Include="src\MeshLoadingSystem.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\FileExplorer.h" />
     <ClInclude Include="src\FrameBufferSystem.h" />

@@ -1,34 +1,15 @@
-// OBJ_Loader.h - A Single Header OBJ Model Loader
-
 #pragma once
-
-// Iostream - STD I/O Library
 #include <iostream>
-
-// Vector - STD Vector/Array Library
 #include <vector>
-
-// String - STD String Library
 #include <string>
-
-// fStream - STD File I/O Library
 #include <fstream>
-
-// Math.h - STD math Library
 #include <math.h>
+#include "ModelObject.h"
 
 // Print progress to console while loading (large models)
-#define OBJL_CONSOLE_OUTPUT
-
-// Namespace: OBJL
-//
-// Description: The namespace that holds eveyrthing that
-//	is needed and used for the OBJ Model Loader
-namespace objl
+#define MESH_LOADER_CONSOLE_OUTPUT
+namespace MeshLoadingSystem
 {
-	// Structure: Vector2
-	//
-	// Description: A 2D Vector that Holds Positional Data
 	struct Vector2
 	{
 		// Default Constructor
@@ -74,9 +55,6 @@ namespace objl
 		float Y;
 	};
 
-	// Structure: Vector3
-	//
-	// Description: A 3D Vector that Holds Positional Data
 	struct Vector3
 	{
 		// Default Constructor
@@ -214,11 +192,6 @@ namespace objl
 		// Material
 		Material MeshMaterial;
 	};
-
-	// Namespace: Math
-	//
-	// Description: The namespace that holds all of the math
-	//	functions need for OBJL
 	namespace math
 	{
 		// Vector3 Cross Product
@@ -256,11 +229,6 @@ namespace objl
 			return bn * DotV3(a, bn);
 		}
 	}
-
-	// Namespace: Algorithm
-	//
-	// Description: The namespace that holds all of the
-	// Algorithms needed for OBJL
 	namespace algorithm
 	{
 		// Vector3 Multiplication Opertor Overload
@@ -409,15 +377,15 @@ namespace objl
 	// Class: Loader
 	//
 	// Description: The OBJ Model Loader
-	class Loader
+	class MeshLoader
 	{
 	public:
 		// Default Constructor
-		Loader()
+		MeshLoader()
 		{
 
 		}
-		~Loader()
+		~MeshLoader()
 		{
 			LoadedMeshes.clear();
 		}
@@ -428,7 +396,7 @@ namespace objl
 		//
 		// If the file is unable to be found
 		// or unable to be loaded return false
-		bool LoadFile(std::string Path)
+		bool LoadFile(const std::string& Path)
 		{
 			// If the file is not an .obj file return false
 			if (Path.substr(Path.size() - 4, 4) != ".obj")
@@ -458,7 +426,7 @@ namespace objl
 
 			Mesh tempMesh;
 
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 			const unsigned int outputEveryNth = 1000;
 			unsigned int outputIndicator = outputEveryNth;
 #endif
@@ -466,7 +434,7 @@ namespace objl
 			std::string curline;
 			while (std::getline(file, curline))
 			{
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 				if ((outputIndicator = ((outputIndicator + 1) % outputEveryNth)) == 1)
 				{
 					if (!meshname.empty())
@@ -530,7 +498,7 @@ namespace objl
 							}
 						}
 					}
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 					std::cout << std::endl;
 					outputIndicator = 0;
 #endif
@@ -632,7 +600,7 @@ namespace objl
 						Indices.clear();
 					}
 
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 					outputIndicator = 0;
 #endif
 				}
@@ -658,7 +626,7 @@ namespace objl
 
 					pathtomat += algorithm::tail(curline);
 
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 					std::cout << std::endl << "- find materials in: " << pathtomat << std::endl;
 #endif
 
@@ -667,7 +635,7 @@ namespace objl
 				}
 			}
 
-#ifdef OBJL_CONSOLE_OUTPUT
+#ifdef MESH_LOADER_CONSOLE_OUTPUT
 			std::cout << std::endl;
 #endif
 
@@ -712,6 +680,32 @@ namespace objl
 			}
 		}
 
+		void CreateModelFromFile(const std::string& Path, ModelObject& modelObject)
+		{
+			LoadFile(Path);
+
+			std::vector<Vertex> resourceObjvertices = LoadedVertices;
+			float *vertexDataArray = new float[resourceObjvertices.size() * 8];
+			std::vector<unsigned int> indices = LoadedIndices;
+			int counter = 0;
+			for (int i = 0; i < resourceObjvertices.size(); i++)
+			{
+				vertexDataArray[counter] = resourceObjvertices[i].Position.X;
+				vertexDataArray[counter + 1] = resourceObjvertices[i].Position.Y;
+				vertexDataArray[counter + 2] = resourceObjvertices[i].Position.Z;
+
+				vertexDataArray[counter + 3] = resourceObjvertices[i].Normal.X;
+				vertexDataArray[counter + 4] = resourceObjvertices[i].Normal.Y;
+				vertexDataArray[counter + 5] = resourceObjvertices[i].Normal.Z;
+
+				vertexDataArray[counter + 6] = resourceObjvertices[i].TextureCoordinate.X;
+				vertexDataArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
+
+				counter += 8;
+			}			
+			modelObject.UpdateMeshData(vertexDataArray, resourceObjvertices.size(), &indices[0], indices.size());
+			delete[] vertexDataArray;
+		}
 		// Loaded Mesh Objects
 		std::vector<Mesh> LoadedMeshes;
 		// Loaded Vertex Objects

@@ -22,7 +22,7 @@
 #include "ModelObject.h"
 
 #include "stb_image_write.h"
-#include "OBJ_Loader.h"
+#include "MeshLoadingSystem.h"
 
 //Add PNG & BMP, TGA Exprt support
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
@@ -41,6 +41,12 @@ const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f
 const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
 const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
+const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
+
+const std::string CUBE_MODEL_PATH = MODELS_PATH + "Cube.obj";
+const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
+const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
+const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 720;
 
@@ -75,15 +81,18 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
-TextureData texData;
 bool isUsingCustomTheme = false;
+
+TextureData texData;
+MeshLoadingSystem::MeshLoader modelLoader;
+ModelObject modelPreviewObj;
 
 int main(void)
 {
 	if (!glfwInit())
 		return -1;
 	glfwWindowHint(GLFW_DECORATED, false);
-	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.75 alpha", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
 	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -120,32 +129,9 @@ int main(void)
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
-	objl::Loader objLoader;
-	if (objLoader.LoadFile("Resources\\3D Models\\Primitives\\Torus.obj"))
-		std::cout << "\nModel is loaded";
-	std::vector<objl::Vertex> resourceObjvertices = objLoader.LoadedVertices;
-	std::cout << "Loaded Vertices :\n";
-
-	float *cubeObjArray = new float[resourceObjvertices.size() * 8];
-	std::vector<unsigned int> indices = objLoader.LoadedIndices;
-	int counter = 0;
-	for (int i = 0; i < resourceObjvertices.size(); i++)
-	{
-		cubeObjArray[counter] = resourceObjvertices[i].Position.X;
-		cubeObjArray[counter + 1] = resourceObjvertices[i].Position.Y;
-		cubeObjArray[counter + 2] = resourceObjvertices[i].Position.Z;
-
-		cubeObjArray[counter + 3] = resourceObjvertices[i].Normal.X;
-		cubeObjArray[counter + 4] = resourceObjvertices[i].Normal.Y;
-		cubeObjArray[counter + 5] = resourceObjvertices[i].Normal.Z;
-
-		cubeObjArray[counter + 6] = resourceObjvertices[i].TextureCoordinate.X;
-		cubeObjArray[counter + 7] = resourceObjvertices[i].TextureCoordinate.Y;
-
-		counter += 8;
-	}
-
-	ModelObject cubeObject(cubeObjArray, resourceObjvertices.size(), &indices[0], indices.size());
+	modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH, modelPreviewObj);
+	modelLoader.CreateModelFromFile(CUBE_MODEL_PATH, modelPreviewObj);
+	modelLoader.CreateModelFromFile(TORUS_MODEL_PATH, modelPreviewObj);
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -435,7 +421,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
-		cubeObject.draw();
+		modelPreviewObj.draw();
 		glActiveTexture(GL_TEXTURE0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -686,6 +672,43 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
+
+	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS" };
+	static const char* current_item = NULL;
+
+	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+	{
+		for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+		{
+			bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+			if (ImGui::Selectable(items[n], is_selected))
+			{
+				current_item = items[n];
+				std::cout << "Selected : " << current_item;
+				switch (n)
+				{
+				case 0:
+					modelLoader.CreateModelFromFile(CUBE_MODEL_PATH, modelPreviewObj);
+					break;
+				case 1:
+					modelLoader.CreateModelFromFile(CYLINDER_MODEL_PATH, modelPreviewObj);
+					break;
+				case 2:
+					modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH, modelPreviewObj);
+					break;
+				case 3:
+					modelLoader.CreateModelFromFile(TORUS_MODEL_PATH, modelPreviewObj);
+					break;
+				default:
+					break;
+				}
+			}
+			if (is_selected)
+				ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+		}
+		ImGui::EndCombo();
+	}
+
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");

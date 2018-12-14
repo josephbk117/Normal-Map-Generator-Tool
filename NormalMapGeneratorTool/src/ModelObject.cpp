@@ -1,6 +1,11 @@
 #include "ModelObject.h"
 #include <GL\glew.h>
+#include <iostream>
 
+ModelObject::ModelObject()
+{
+
+}
 ModelObject::ModelObject(float vertexData[], int vertexDataCount)
 {
 	usesElementBuffer = false;
@@ -21,9 +26,23 @@ ModelObject::ModelObject(float vertexData[], int vertexDataCount)
 
 ModelObject::ModelObject(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount)
 {
+	UpdateMeshData(vertexData, vertexDataCount, indices, indicesCount);
+}
+
+void ModelObject::UpdateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount)
+{
+	std::cout<<"\nUpdated Mesh";
 	usesElementBuffer = true;
 	this->vertexDataCount = vertexDataCount * 32;
 	this->indicesCount = indicesCount;
+
+	if (VAO != 0)
+	{
+		std::cout << "\nPrevious deleted\n";
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &EBO);
+	}
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -42,6 +61,7 @@ ModelObject::ModelObject(float vertexData[], int vertexDataCount, unsigned int i
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+	glBindVertexArray(0);
 }
 
 void ModelObject::draw()
@@ -51,8 +71,7 @@ void ModelObject::draw()
 		glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, (void *)0);
 	else
 		glDrawArrays(GL_TRIANGLES, 0, vertexDataCount);
+	glBindVertexArray(0);
 }
 
-ModelObject::~ModelObject()
-{
-}
+ModelObject::~ModelObject() {}
