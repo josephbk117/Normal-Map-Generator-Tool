@@ -24,16 +24,13 @@
 #include "stb_image_write.h"
 #include "MeshLoadingSystem.h"
 
-//Add PNG & BMP, TGA Exprt support
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
 //TODO : Add detail value in normal settings, Sampling rate in shader
 //TODO : MAke camera move around instead of model
 //TODO : Implement modal dialouges
-//TODO : Additional texture on top of model view
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
-//TODO : Custom Model Import To View With Normals
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
@@ -41,8 +38,8 @@ const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f
 const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
 const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
-const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
 
+const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
 const std::string CUBE_MODEL_PATH = MODELS_PATH + "Cube.obj";
 const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
 const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
@@ -129,8 +126,7 @@ int main(void)
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 
-	
-	
+	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -141,16 +137,11 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
-	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
-
-
 	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
 	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
 	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
 	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
 	unsigned int penguinTextureId = TextureManager::loadTextureFromFile("Resources\\Penguins.jpg", "penguin", false);
-
-
 
 	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
 	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
@@ -683,7 +674,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 
 	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS" };
-	static const char* current_item = NULL;
+	static const char* current_item = items[0];
 
 	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
 	{
