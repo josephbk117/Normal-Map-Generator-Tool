@@ -74,6 +74,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
+float modelPreviewZoomLevel = -5.0f;
 TextureData texData;
 bool isUsingCustomTheme = false;
 
@@ -120,7 +121,7 @@ int main(void)
 	IM_ASSERT(font != NULL);
 
 	objl::Loader objLoader;
-	if (objLoader.LoadFile("Resources\\3D Models\\Cube\\Cube.obj"))
+	if (objLoader.LoadFile("Resources\\3D Models\\Primitives\\Torus.obj"))
 		std::cout << "\nModel is loaded";
 	std::vector<objl::Vertex> resourceObjvertices = objLoader.LoadedVertices;
 	std::cout << "Loaded Vertices :\n";
@@ -130,9 +131,9 @@ int main(void)
 	int counter = 0;
 	for (int i = 0; i < resourceObjvertices.size(); i++)
 	{
-		cubeObjArray[counter] = resourceObjvertices[i].Position.X * 0.5f;
-		cubeObjArray[counter + 1] = resourceObjvertices[i].Position.Y * 0.5f;
-		cubeObjArray[counter + 2] = resourceObjvertices[i].Position.Z * 0.5f;
+		cubeObjArray[counter] = resourceObjvertices[i].Position.X;
+		cubeObjArray[counter + 1] = resourceObjvertices[i].Position.Y;
+		cubeObjArray[counter + 2] = resourceObjvertices[i].Position.Z;
 
 		cubeObjArray[counter + 3] = resourceObjvertices[i].Normal.X;
 		cubeObjArray[counter + 4] = resourceObjvertices[i].Normal.Y;
@@ -413,7 +414,7 @@ int main(void)
 		rot += 0.1f;
 		modelViewShader.use();
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, -2.4f)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, modelViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
@@ -728,6 +729,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Text("Light Colour");
 	ImGui::ColorEdit3("Light Color", &lightColour[0]);
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
+	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::End();
 

@@ -66,6 +66,9 @@
     <ClCompile Include="src\ModelObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MeshLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h">
@@ -140,6 +143,9 @@
     <ClInclude Include="src\ModelObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\MeshLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\arial.ttf">
@@ -165,8 +171,13 @@
     <None Include="Resources\3dmodel.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\modelView.vs" />
-    <None Include="Resources\modelView.fs" />
+    <None Include="Resources\modelView.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\modelView.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="glew32.dll" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\goli.png">

@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MeshLoader.cpp" />
     <ClCompile Include="src\ModelObject.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\FileExplorer.cpp" />
@@ -162,6 +163,7 @@
     <ClCompile Include="src\TextureData.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MeshLoader.h" />
     <ClInclude Include="src\ModelObject.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\OBJ_Loader.h" />
@@ -191,6 +193,7 @@
     <Font Include="Resources\arial.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="glew32.dll" />
     <None Include="Resources\3dmodel.vs" />
     <None Include="Resources\brushPreview.fs" />
     <None Include="Resources\frameBuffer.fs" />
