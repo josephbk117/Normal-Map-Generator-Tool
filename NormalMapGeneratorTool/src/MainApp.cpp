@@ -47,8 +47,8 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 640;
 
-int windowWidth = 1920; //Temporary Hack, Max resoltion will not face issues
-int windowHeight = 1080;
+int windowWidth = 1600; //Temporary Hack, Max resoltion will not face issues
+int windowHeight = 800;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
 
@@ -286,8 +286,8 @@ int main(void)
 		else
 			aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1);
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * zoomLevel);
-		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.9f));
-		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
+		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.5f));
+		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
 		int leftMouseButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -314,7 +314,7 @@ int main(void)
 			normalmapPanel.getTransform()->setY(normalmapPanel.getTransform()->getPosition().y + 0.01f);
 		}*/
 		normalmapPanel.getTransform()->update();
-		//---- Applying Normal Map Shader Uniforms---// **
+		//---- Applying Normal Map Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
@@ -891,14 +891,25 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 			xpos = xpos / windowWidth; // window size normalized width
 			ypos = 1.0f - (ypos / windowHeight); // window size normalized height
 
-			if (true/*normalmapPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
+			std::cout << "\nCursor pos : " << xpos << ", " << ypos;
+			/*glm::vec4 wD = frameBufferPanel.getPanelWorldDimension();
+			std::cout << "\nLeft side loc bound : " << wD.x;*/
+			float leftBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f - 0.25f;
+			float rightBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f + 0.25f;
+			float topBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f + 0.25f;
+			float bottomBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f - 0.25f;
+			std::cout << "\nLeft bound = " << leftBound << " Right bound = " << rightBound
+				<< " Top bound = " << topBound << " Bottom bound = " << bottomBound;
+
+			if (xpos >= leftBound && xpos <= rightBound /*&& ypos >= bottomBound && ypos <= topBound*//*frameBufferPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
 			{
+				std::cout << "\nIs inside";
 				float prevX = prevMouseCoord.x / windowWidth;
 				float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
 				glm::vec4 worldDimensions = frameBufferPanel.getPanelWorldDimension();
 
-				xpos = ((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+				xpos = (xpos - leftBound) / (rightBound - leftBound);//((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
 				const float maxWidth = texData.getWidth();
@@ -913,7 +924,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				{
 					if (distOfPrevAndCurrentMouseCoord > 0.02f)
 					{
-						prevX = ((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+						prevX = (prevX - leftBound) / (rightBound - leftBound);//((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 						prevY = ((prevY - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 						glm::vec2 prevPoint(prevX, prevY);
 						glm::vec2 toPoint(xpos, ypos);

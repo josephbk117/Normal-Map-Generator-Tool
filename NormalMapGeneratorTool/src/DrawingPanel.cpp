@@ -110,10 +110,12 @@ glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
 	float top = (transform.getScale().y * 0.5f) + 0.5f;
 	float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
 	return glm::vec4
-	(left + transform.getPosition().x,
-	right + transform.getPosition().x,
-	top + transform.getPosition().y,
-	bottom + transform.getPosition().y);
+	(
+		left + transform.getPosition().x,
+		right + transform.getPosition().x,
+		top + transform.getPosition().y,
+		bottom + transform.getPosition().y
+	);
 }
 
 void DrawingPanel::draw()noexcept
@@ -122,4 +124,5 @@ void DrawingPanel::draw()noexcept
 	glBindVertexArray(vaoID);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
