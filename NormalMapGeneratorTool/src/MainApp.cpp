@@ -74,9 +74,10 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
-void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
+inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
+inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag);
-
 void SetupImGui();
 
 float zoomLevel = 1;
@@ -114,9 +115,7 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
-	// Setup Dear ImGui binding
 	SetupImGui();
-
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
@@ -262,7 +261,6 @@ int main(void)
 		HandleKeyboardInput(normalMapStrength, deltaTime, mapDrawViewMode, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
-
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -404,7 +402,6 @@ int main(void)
 
 		WindowTopBarSetUp(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
 
-		bool *opn = NULL;
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
@@ -416,77 +413,9 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = NULL;
 
-		ImGui::SetNextWindowPos(ImVec2(0, windowHeight - 25), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
-		ImGui::Begin("Bottom_Bar", p_open, window_flags);
-		ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
-		ImGui::Text("v0.8 - Alpha");
-		ImGui::End();
-
-		ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
-		ImGui::Begin("Side_Bar", p_open, window_flags);
-		ImGui::End();
-
-		ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
-		ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 67), ImGuiSetCond_Always);
-		ImGui::Begin("Settings", p_open, window_flags);
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
-		if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-		{
-			if (!isFullscreen)
-				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
-			else
-				glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
-			isFullscreen = !isFullscreen;
-		}
-		if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-		{
-			frameDrawingPanel.getTransform()->setPosition(0, 0);
-			zoomLevel = 1;
-		}
-		ImGui::Spacing();
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
-		ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
-		ImGui::PopItemWidth();
-		ImGui::SameLine(0, 5);
-		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
-		{
-			fileExplorer.displayDialog(&path, FileType::IMAGE);
-			updateImageLocation = true;
-		}
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
-		ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
-		ImGui::PopItemWidth();
-		ImGui::SameLine(0, 5);
-		if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
-		ImGui::PopStyleVar();
-		ImGui::Spacing();
-		ImGui::Text("VIEW MODE");
-		ImGui::Separator();
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-		int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
-		ImGui::Spacing();
-
-		if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(0, 5);
-		if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
-		ImGui::PopStyleColor();
-
-		ImGui::SameLine(0, 5);
-		if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-		else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
-		if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
-		ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
-
+		BottomBarDisplay(p_open, window_flags);
+		SideBarDisplay(p_open, window_flags, isFullscreen, mode, frameDrawingPanel, imageLoadLocation, 
+			fileExplorer, path, updateImageLocation, saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
 		if (mapDrawViewMode < 3)
@@ -495,6 +424,7 @@ int main(void)
 			if (mapDrawViewMode == 2)
 				DisplayLightSettingsUserInterface(lightIntensity, specularity, specularityStrength, lightDirection);
 		}
+
 		ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
@@ -535,6 +465,82 @@ int main(void)
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+{
+	ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::Begin("Side_Bar", p_open, window_flags);
+	ImGui::End();
+
+	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::Begin("Settings", p_open, window_flags);
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
+
+	if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+	{
+		if (!isFullscreen)
+			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+		else
+			glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
+		isFullscreen = !isFullscreen;
+	}
+	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+	{
+		frameDrawingPanel.getTransform()->setPosition(0, 0);
+		zoomLevel = 1;
+	}
+	ImGui::Spacing();
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
+	ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
+	ImGui::PopItemWidth();
+	ImGui::SameLine(0, 5);
+	if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
+	{
+		fileExplorer.displayDialog(&path, FileType::IMAGE);
+		updateImageLocation = true;
+	}
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
+	ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
+	ImGui::PopItemWidth();
+	ImGui::SameLine(0, 5);
+	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
+	ImGui::PopStyleVar();
+	ImGui::Spacing();
+	ImGui::Text("VIEW MODE");
+	ImGui::Separator();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
+	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
+	ImGui::Spacing();
+
+	if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine(0, 5);
+	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
+	ImGui::PopStyleColor();
+
+	ImGui::SameLine(0, 5);
+	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
+	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar();
+}
+void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags)
+{
+	ImGui::SetNextWindowPos(ImVec2(0, windowHeight - 25), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
+	ImGui::Begin("Bottom_Bar", p_open, window_flags);
+	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
+	ImGui::Text("v0.8 - Alpha");
+	ImGui::End();
 }
 void SetupImGui()
 {
