@@ -74,6 +74,7 @@ void ModelObject::draw()
 		glDrawElements(GL_TRIANGLES, indicesCount, GL_UNSIGNED_INT, (void *)0);
 	else
 		glDrawArrays(GL_TRIANGLES, 0, vertexDataCount);
+
 	glBindVertexArray(0);
 }
 

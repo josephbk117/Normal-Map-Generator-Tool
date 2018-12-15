@@ -45,7 +45,7 @@ const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
 const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
 const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
-const int WINDOW_SIZE_MIN = 720;
+const int WINDOW_SIZE_MIN = 640;
 
 int windowWidth = 1600;
 int windowHeight = 800;
@@ -69,7 +69,7 @@ void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoo
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(char  saveLocation[500]);
-void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
+void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
@@ -247,6 +247,7 @@ int main(void)
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
+		glViewport(0, 0, windowWidth, windowHeight);
 		if (shouldSaveNormalMap)
 		{
 			int retflag;
@@ -263,7 +264,6 @@ int main(void)
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
@@ -297,7 +297,24 @@ int main(void)
 		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
 		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
-		//---- Applying Normal Map Shader Uniforms---//
+		if (isKeyPressed(GLFW_KEY_C))
+		{
+			normalmapPanel.getTransform()->setX(normalmapPanel.getTransform()->getPosition().x + 0.01f);
+		}
+		else if (isKeyPressed(GLFW_KEY_X))
+		{
+			normalmapPanel.getTransform()->setX(normalmapPanel.getTransform()->getPosition().x - 0.01f);
+		}
+		else if (isKeyPressed(GLFW_KEY_F))
+		{
+			normalmapPanel.getTransform()->setY(normalmapPanel.getTransform()->getPosition().y - 0.01f);
+		}
+		else if (isKeyPressed(GLFW_KEY_G))
+		{
+			normalmapPanel.getTransform()->setY(normalmapPanel.getTransform()->getPosition().y + 0.01f);
+		}
+		normalmapPanel.getTransform()->update();
+		//---- Applying Normal Map Shader Uniforms---// **
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
@@ -400,7 +417,7 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		WindowTopBarSetUp(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
+		WindowTopBarDisplay(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
 
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -777,7 +794,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-inline void WindowTopBarSetUp(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
+inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
@@ -1217,11 +1234,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	height = glm::clamp(height, WINDOW_SIZE_MIN, maxWindowHeight);
 
 	glfwSetWindowSize(window, width, height);
-
 	windowWidth = width;
 	windowHeight = height;
 	fbs.updateTextureDimensions(windowWidth, windowHeight);
-	glViewport(0, 0, width, height);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

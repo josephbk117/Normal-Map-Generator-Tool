@@ -45,6 +45,7 @@ void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeigh
 {
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
