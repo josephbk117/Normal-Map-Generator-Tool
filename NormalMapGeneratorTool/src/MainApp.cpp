@@ -74,6 +74,10 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
+void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
+void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag);
+
+void SetupImGui();
 
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
@@ -111,22 +115,12 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	// Setup Dear ImGui binding
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL2_Init();
-
-	// Setup style
-	CustomColourImGuiTheme();
+	SetupImGui();
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
-	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
-	IM_ASSERT(font != NULL);
-
-	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
+	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -201,9 +195,6 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 
-	
-
-
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
 	float specularityStrength = 0.5f;
@@ -259,15 +250,16 @@ int main(void)
 
 		if (shouldSaveNormalMap)
 		{
-			glViewport(0, 0, texData.getWidth(), texData.getHeight());
-			if (changeSize)
-			{
-				prevWindowSize = glm::vec2(windowWidth, windowHeight);
-				glfwSetWindowSize(window, texData.getWidth() + 100, texData.getHeight() + 100);
-				changeSize = false;
-				continue;
-			}
+			int retflag;
+			SetStatesForSavingNormalMap(changeSize, prevWindowSize, retflag);
+			if (retflag == 3) continue;
 		}
+		static glm::vec2 initPos = glm::vec2(-1000, -1000);
+		static WindowSide windowSideAtInitPos = WindowSide::NONE;
+		double x, y;
+		glfwGetCursorPos(window, &x, &y);
+		glm::vec2 mouseCoord = glm::vec2(x, y);
+		HandleKeyboardInput(normalMapStrength, deltaTime, mapDrawViewMode, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
 
@@ -279,36 +271,6 @@ int main(void)
 
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		normalmapShader.use();
-
-		if (isKeyPressed(GLFW_KEY_J))
-			mapDrawViewMode = 1;
-		if (isKeyPressed(GLFW_KEY_K))
-			mapDrawViewMode = 2;
-		if (isKeyPressed(GLFW_KEY_L))
-			mapDrawViewMode = 3;
-
-		if (isKeyPressed(GLFW_KEY_LEFT))
-			frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
-		if (isKeyPressed(GLFW_KEY_RIGHT))
-			frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
-		if (isKeyPressed(GLFW_KEY_UP))
-			frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
-		if (isKeyPressed(GLFW_KEY_DOWN))
-			frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
-		if (isKeyPressed(GLFW_KEY_8))
-			frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
-		if (isKeyPressed(GLFW_KEY_V))
-		{
-			glfwSetWindowSize(window, 800, 800);
-			isMaximized = false;
-		}
-
-		static glm::vec2 initPos = glm::vec2(-1000, -1000);
-		static WindowSide windowSideAtInitPos = WindowSide::NONE;
-
-		double x, y;
-		glfwGetCursorPos(window, &x, &y);
-		glm::vec2 mouseCoord = glm::vec2(x, y);
 
 		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
@@ -330,24 +292,14 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -0.8f, 0.8f));
 		frameDrawingPanel.getTransform()->update();
 
-		int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-		HandleLeftMouseButtonInput_UI(state, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
-		HandleLeftMouseButtonInput_NormalMapInteraction(state, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
-		state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-		HandleMiddleMouseButtonInput(state, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
+		int leftMouseButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+		int middleMouseButtonState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
 
-		if (isKeyPressed(GLFW_KEY_A))
-			normalMapStrength += 2.5f * deltaTime;
-		if (isKeyPressed(GLFW_KEY_D))
-			normalMapStrength -= 2.5f * deltaTime;
-		if (isKeyPressed(GLFW_KEY_W))
-			zoomLevel += zoomLevel * 1.5f * deltaTime;
-		if (isKeyPressed(GLFW_KEY_S))
-			zoomLevel -= zoomLevel * 1.5f * deltaTime;
-		zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
+		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, x, y, isMaximized, prevGlobalFirstMouseCoord);
+		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
+		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
-
-		//---- Applying Shader Uniforms---//
+		//---- Applying Normal Map Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
 		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
 		normalmapShader.applyShaderFloat(specularityUniform, specularity);
@@ -373,13 +325,13 @@ int main(void)
 			shouldSaveNormalMap = false;
 			continue;
 		}
+
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
 		}
 		
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
@@ -389,14 +341,14 @@ int main(void)
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
 		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
 		frameDrawingPanel.draw();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		previewFbs.BindFrameBuffer();
 		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		static float rot = 0;
+		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
+		static glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
+		static glm::vec3 lightColour = glm::vec3(1, 1, 1);
 		rot += 0.1f;
 		modelViewShader.use();
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
@@ -410,9 +362,7 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
-		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
-		static glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
-		static glm::vec3 lightColour = glm::vec3(1, 1, 1);
+		
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
 		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
@@ -423,7 +373,6 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
 		modelPreviewObj->draw();
 		glActiveTexture(GL_TEXTURE0);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (windowWidth < windowHeight)
@@ -471,7 +420,7 @@ int main(void)
 		ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
 		ImGui::Begin("Bottom_Bar", p_open, window_flags);
 		ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
-		ImGui::Text("v0.75 - Alpha");
+		ImGui::Text("v0.8 - Alpha");
 		ImGui::End();
 
 		ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
@@ -587,6 +536,66 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
+void SetupImGui()
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL2_Init();
+	// Setup ImGui Theme
+	CustomColourImGuiTheme();
+	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
+	IM_ASSERT(font != NULL);
+}
+void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag)
+{
+	retflag = 1;
+	glViewport(0, 0, texData.getWidth(), texData.getHeight());
+	if (changeSize)
+	{
+		prevWindowSize = glm::vec2(windowWidth, windowHeight);
+		glfwSetWindowSize(window, texData.getWidth() + 100, texData.getHeight() + 100);
+		changeSize = false;
+		{ retflag = 3; return; };
+	}
+}
+void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized)
+{
+	if (isKeyPressed(GLFW_KEY_A))
+		normalMapStrength += 2.5f * deltaTime;
+	if (isKeyPressed(GLFW_KEY_D))
+		normalMapStrength -= 2.5f * deltaTime;
+	if (isKeyPressed(GLFW_KEY_W))
+		zoomLevel += zoomLevel * 1.5f * deltaTime;
+	if (isKeyPressed(GLFW_KEY_S))
+		zoomLevel -= zoomLevel * 1.5f * deltaTime;
+	zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
+
+	if (isKeyPressed(GLFW_KEY_J))
+		mapDrawViewMode = 1;
+	if (isKeyPressed(GLFW_KEY_K))
+		mapDrawViewMode = 2;
+	if (isKeyPressed(GLFW_KEY_L))
+		mapDrawViewMode = 3;
+
+	if (isKeyPressed(GLFW_KEY_LEFT))
+		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
+	if (isKeyPressed(GLFW_KEY_RIGHT))
+		frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
+	if (isKeyPressed(GLFW_KEY_UP))
+		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
+	if (isKeyPressed(GLFW_KEY_DOWN))
+		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
+	if (isKeyPressed(GLFW_KEY_8))
+		frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
+
+	if (isKeyPressed(GLFW_KEY_V))
+	{
+		glfwSetWindowSize(window, 1600, 800);
+		isMaximized = false;
+	}
+}
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData)
 {
 	ImGui::Text("BRUSH SETTINGS");
@@ -675,6 +684,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 
 	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS" };
 	static const char* current_item = items[0];
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 
 	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
 	{
@@ -710,7 +720,6 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		ImGui::EndCombo();
 	}
 
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::PopItemWidth();
