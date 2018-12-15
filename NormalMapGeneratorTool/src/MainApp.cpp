@@ -393,14 +393,14 @@ int main(void)
 		if (windowWidth < windowHeight)
 		{
 			float scale = 1.0f;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * zoomLevel * 2.0f);
 		}
 		else
 		{
 			float scale = (float)1;
 			if (windowHeight < texData.getHeight())
 				scale = 1;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * zoomLevel * 2.0f);
 		}
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -483,7 +483,7 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
 {
 	ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
