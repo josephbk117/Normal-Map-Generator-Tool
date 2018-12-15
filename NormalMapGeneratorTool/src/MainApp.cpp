@@ -47,7 +47,7 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 640;
 
-int windowWidth = 1920; //Temporary Hack
+int windowWidth = 1920; //Temporary Hack, Max resoltion will not face issues
 int windowHeight = 1080;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
@@ -95,13 +95,13 @@ int main(void)
 		return -1;
 	glfwWindowHint(GLFW_DECORATED, false);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
-	glfwSetWindowPos(window, 200, 200);
 
 	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowWidth = mode->width;
 	maxWindowHeight = mode->height;
 	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowWidth, maxWindowHeight);
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+	glfwSetWindowPos(window, 0, 0);
 
 	if (!window)
 	{
@@ -346,7 +346,7 @@ int main(void)
 			shouldSaveNormalMap = true;
 			changeSize = true;
 		}
-		
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
@@ -377,7 +377,7 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
-		
+
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
 		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
@@ -431,7 +431,7 @@ int main(void)
 		bool *p_open = NULL;
 
 		BottomBarDisplay(p_open, window_flags);
-		SideBarDisplay(p_open, window_flags, isFullscreen, mode, frameDrawingPanel, imageLoadLocation, 
+		SideBarDisplay(p_open, window_flags, isFullscreen, mode, frameDrawingPanel, imageLoadLocation,
 			fileExplorer, path, updateImageLocation, saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
