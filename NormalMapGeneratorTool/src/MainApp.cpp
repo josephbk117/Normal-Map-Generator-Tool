@@ -47,8 +47,8 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 640;
 
-int windowWidth = 1600;
-int windowHeight = 800;
+int windowWidth = 1920; //Temporary Hack
+int windowHeight = 1080;
 int maxWindowWidth = -1;
 int maxWindowHeight = -1;
 
@@ -297,7 +297,7 @@ int main(void)
 		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
 		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
-		if (isKeyPressed(GLFW_KEY_C))
+		/*if (isKeyPressed(GLFW_KEY_C))
 		{
 			normalmapPanel.getTransform()->setX(normalmapPanel.getTransform()->getPosition().x + 0.01f);
 		}
@@ -312,7 +312,7 @@ int main(void)
 		else if (isKeyPressed(GLFW_KEY_G))
 		{
 			normalmapPanel.getTransform()->setY(normalmapPanel.getTransform()->getPosition().y + 0.01f);
-		}
+		}*/
 		normalmapPanel.getTransform()->update();
 		//---- Applying Normal Map Shader Uniforms---// **
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());

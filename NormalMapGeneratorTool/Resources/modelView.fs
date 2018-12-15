@@ -38,7 +38,7 @@ void main()
 		vec3 perp1 = normalize(cross(norm,temp));
 		vec3 perp2 = normalize(cross(norm,perp1));
 		//use the basis to move the normal in its own space by the offset
-		vec3 normalOffset = -_HeightmapStrength * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
+		vec3 normalOffset = -_HeightmapStrength * currentPx * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
 		norm += normalOffset;
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
