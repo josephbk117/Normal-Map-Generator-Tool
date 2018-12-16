@@ -2,9 +2,10 @@
 class FrameBufferSystem
 {
 private:
-	unsigned int framebuffer;
-	unsigned int textureColorbuffer;
-	unsigned int textureDepthBuffer;
+	unsigned int framebuffer = 0;
+	unsigned int textureColorbuffer = 0;
+	unsigned int textureDepthBuffer = 0;
+	static unsigned int currentlyBoundFBO;
 public:
 	FrameBufferSystem();
 	void init(int windowWidth, int windowHeight);
@@ -12,6 +13,7 @@ public:
 	void BindBufferTexture();
 	unsigned int getBufferTexture();
 	void updateTextureDimensions(int windowWidth, int windowHeight);
+	static int GetCurrentlyBoundFBO();
 	~FrameBufferSystem();
 };
 

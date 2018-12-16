@@ -891,25 +891,24 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 			xpos = xpos / windowWidth; // window size normalized width
 			ypos = 1.0f - (ypos / windowHeight); // window size normalized height
 
-			std::cout << "\nCursor pos : " << xpos << ", " << ypos;
+			//std::cout << "\nCursor pos : " << xpos << ", " << ypos;
 			/*glm::vec4 wD = frameBufferPanel.getPanelWorldDimension();
 			std::cout << "\nLeft side loc bound : " << wD.x;*/
 			float leftBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f - 0.25f;
 			float rightBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f + 0.25f;
 			float topBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f + 0.25f;
 			float bottomBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f - 0.25f;
-			std::cout << "\nLeft bound = " << leftBound << " Right bound = " << rightBound
-				<< " Top bound = " << topBound << " Bottom bound = " << bottomBound;
+			//std::cout << "\nLeft bound = " << leftBound << " Right bound = " << rightBound
+				//<< " Top bound = " << topBound << " Bottom bound = " << bottomBound;
 
 			if (xpos >= leftBound && xpos <= rightBound /*&& ypos >= bottomBound && ypos <= topBound*//*frameBufferPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
 			{
-				std::cout << "\nIs inside";
 				float prevX = prevMouseCoord.x / windowWidth;
 				float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
 
 				glm::vec4 worldDimensions = frameBufferPanel.getPanelWorldDimension();
 
-				xpos = (xpos - leftBound) / (rightBound - leftBound);//((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+				xpos = /*(xpos - leftBound) / (rightBound - leftBound);*/((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
 				const float maxWidth = texData.getWidth();
@@ -924,7 +923,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				{
 					if (distOfPrevAndCurrentMouseCoord > 0.02f)
 					{
-						prevX = (prevX - leftBound) / (rightBound - leftBound);//((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
+						prevX = /*(prevX - leftBound) / (rightBound - leftBound);*/((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 						prevY = ((prevY - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 						glm::vec2 prevPoint(prevX, prevY);
 						glm::vec2 toPoint(xpos, ypos);
