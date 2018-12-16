@@ -224,7 +224,6 @@ int main(void)
 	brushData.brushMaxHeight = 1.0f;
 	brushData.brushRate = 0.0f;
 	brushData.heightMapPositiveDir = false;
-	double initTime = glfwGetTime();
 
 	fbs.init(windowWidth, windowHeight);
 	previewFbs.init(windowWidth, windowHeight);
@@ -241,7 +240,7 @@ int main(void)
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 
-
+	double initTime = glfwGetTime();
 	while (!glfwWindowShouldClose(window))
 	{
 		double deltaTime = glfwGetTime() - initTime;
@@ -1247,6 +1246,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	windowWidth = width;
 	windowHeight = height;
 	fbs.updateTextureDimensions(windowWidth, windowHeight);
+	previewFbs.updateTextureDimensions(windowWidth, windowHeight);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
