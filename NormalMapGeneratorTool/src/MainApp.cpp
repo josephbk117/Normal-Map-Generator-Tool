@@ -84,11 +84,12 @@ float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
 bool isUsingCustomTheme = false;
+bool isFullscreen = false;
 
 TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
 ModelObject *modelPreviewObj = nullptr;
-
+const GLFWvidmode * videoMode;
 int main(void)
 {
 	if (!glfwInit())
@@ -96,9 +97,9 @@ int main(void)
 	glfwWindowHint(GLFW_DECORATED, false);
 	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
 
-	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	maxWindowWidth = mode->width;
-	maxWindowHeight = mode->height;
+	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	maxWindowWidth = videoMode->width;
+	maxWindowHeight = videoMode->height;
 	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowWidth, maxWindowHeight);
 	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	glfwSetWindowPos(window, 0, 0);
@@ -212,7 +213,6 @@ int main(void)
 	glm::vec3 rotation = glm::vec3(0);
 	int k = 0;
 	bool showHeightMapInput = true;
-	bool isFullscreen = false;
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
@@ -430,7 +430,7 @@ int main(void)
 		bool *p_open = NULL;
 
 		BottomBarDisplay(p_open, window_flags);
-		SideBarDisplay(p_open, window_flags, isFullscreen, mode, frameDrawingPanel, imageLoadLocation,
+		SideBarDisplay(p_open, window_flags, isFullscreen, videoMode, frameDrawingPanel, imageLoadLocation,
 			fileExplorer, path, updateImageLocation, saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
@@ -499,7 +499,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		if (!isFullscreen)
 			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
 		else
-			glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.3f), (mode->height / 1.2f), 60);
+			glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.2f), (mode->height / 1.2f), 60);
 		isFullscreen = !isFullscreen;
 	}
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
@@ -843,7 +843,12 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
 		if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
 		{
-			if (!isMaximized)
+			if (!isFullscreen)
+				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, videoMode->width, videoMode->height, 60);
+			else
+				glfwSetWindowMonitor(window, NULL, 100, 100, (videoMode->width / 1.2f), (videoMode->height / 1.2f), 60);
+			isFullscreen = !isFullscreen;
+			/*if (!isMaximized)
 			{
 				glfwMaximizeWindow(window);
 				isMaximized = true;
@@ -852,7 +857,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			{
 				glfwSetWindowSize(window, 800, 800);
 				isMaximized = false;
-			}
+			}*/
 		}
 		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
 		ImGui::PopStyleColor();
