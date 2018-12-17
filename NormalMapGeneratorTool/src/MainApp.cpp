@@ -30,7 +30,13 @@
 //TODO : Implement modal dialouges
 //TODO : Rotation editor values
 //TODO : Distance based drawing
+//TODO : Add custom path for preview texture on model
+//TODO : Add custom model loading for preview model
+//TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
+
+/*Define For Enabling Custom Window Chrome*/
+//#define NORA_CUSTOM_WINDOW_CHROME
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
@@ -94,7 +100,9 @@ int main(void)
 {
 	if (!glfwInit())
 		return -1;
+#ifdef NORA_CUSTOM_WINDOW_CHROME
 	glfwWindowHint(GLFW_DECORATED, false);
+#endif
 	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
 
 	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
@@ -835,6 +843,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			break;
 		}
 		ImGui::PopStyleVar();
+#ifdef NORA_CUSTOM_WINDOW_CHROME
 		ImGui::Indent(windowWidth - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -848,22 +857,13 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			else
 				glfwSetWindowMonitor(window, NULL, 100, 100, (videoMode->width / 1.2f), (videoMode->height / 1.2f), 60);
 			isFullscreen = !isFullscreen;
-			/*if (!isMaximized)
-			{
-				glfwMaximizeWindow(window);
-				isMaximized = true;
-			}
-			else
-			{
-				glfwSetWindowSize(window, 800, 800);
-				isMaximized = false;
-			}*/
 		}
 		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
 		ImGui::PopStyleColor();
 		if (isUsingCustomTheme)
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
+#endif
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
