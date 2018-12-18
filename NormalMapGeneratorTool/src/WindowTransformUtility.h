@@ -5,6 +5,11 @@ class WindowTransformUtility
 public:
 	static const int BORDER_SIZE = 5;
 
+	static WindowSide GetWindowSideAtMouseCoord(const glm::vec2 &curPos, const glm::vec2 &winRes)
+	{
+		return GetWindowSideAtMouseCoord(curPos.x, curPos.y, winRes.x, winRes.y);
+	}
+
 	static WindowSide GetWindowSideAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
 	{
 		if (mouseX < BORDER_SIZE)

@@ -73,8 +73,8 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int 
 void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
-void SaveNormalMapToFile(char  saveLocation[500]);
-void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
+void SaveNormalMapToFile(const std::string &locationStr);
+inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
@@ -254,7 +254,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		normalmapShader.use();
 
-		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)curPos.x, (int)curPos.y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curPos, windowSys.GetWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -263,7 +263,7 @@ int main(void)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
-		float aspectRatio = (float)windowSys.GetWindowRes().x / (float)windowSys.GetWindowRes().y;
+		float aspectRatio = windowSys.GetAspectRatio();
 		glm::vec2 aspectRatioHolder;
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 			aspectRatioHolder = glm::vec2(1, aspectRatio);
@@ -837,9 +837,8 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
 }
-void SaveNormalMapToFile(char  saveLocation[500])
+void SaveNormalMapToFile(const std::string &locationStr)
 {
-	std::string locationStr = std::string(saveLocation);
 	if (locationStr.length() > 4)
 	{
 		fbs.BindBufferTexture();
