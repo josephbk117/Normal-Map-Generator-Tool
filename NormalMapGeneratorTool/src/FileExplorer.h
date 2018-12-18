@@ -15,7 +15,7 @@ public:
 	std::string path = "C:\\";
 	FileExplorer();
 	void display();
-	void displayDialog(std::string* pathOutput, FileType filter = FileType::NONE);
+	void displayDialog(std::string* pathOutput, FileType filter = FileType::NONE) noexcept;
 	std::string getOutputPath();
 	~FileExplorer();
 private:

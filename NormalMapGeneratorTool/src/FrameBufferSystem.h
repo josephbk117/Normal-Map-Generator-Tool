@@ -11,11 +11,11 @@ public:
 	FrameBufferSystem();
 	void init(const glm::vec2 &windowRes);
 	void init(int windowWidth, int windowHeight);
-	void BindFrameBuffer();
-	void BindBufferTexture();
-	unsigned int getBufferTexture();
-	void updateTextureDimensions(int windowWidth, int windowHeight);
-	static int GetCurrentlyBoundFBO();
+	void BindFrameBuffer() noexcept;
+	void BindBufferTexture() noexcept;
+	unsigned int getBufferTexture() noexcept;
+	void updateTextureDimensions(int windowWidth, int windowHeight) noexcept;
+	static int GetCurrentlyBoundFBO() noexcept;
 	~FrameBufferSystem();
 };
 

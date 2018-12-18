@@ -6,9 +6,9 @@ class DrawingPanel
 public:
 	DrawingPanel();
 	~DrawingPanel();
-	void init(float width, float height);
+	void init(float width, float height) noexcept;
 	Transform* getTransform() noexcept;
-	void setTextureID(unsigned int textureID);
+	void setTextureID(unsigned int textureID) noexcept;
 	unsigned int getTextureID()const noexcept;
 	bool isPointInPanel(float xpos, float ypos)noexcept;
 	glm::vec4 getPanelWorldDimension()noexcept;

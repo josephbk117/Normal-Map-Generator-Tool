@@ -10,7 +10,7 @@ public:
 	~Camera();
 	void init(const glm::vec2& screenDimensions)noexcept;
 	void init(float dimensionX, float dimensionY) noexcept;
-	void setScale(float newScale);
+	void setScale(float newScale)noexcept;
 	const float& getScale()const noexcept;
 	const glm::mat4& getOrthoMatrix()const noexcept;
 	bool isObjectInCameraView(const glm::vec2 & position, const glm::vec2& dimensions)const noexcept;

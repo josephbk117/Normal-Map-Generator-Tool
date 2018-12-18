@@ -18,7 +18,7 @@ DrawingPanel::~DrawingPanel()
 		glDeleteVertexArrays(1, &vaoID);
 }
 
-void DrawingPanel::init(float width, float height)
+void DrawingPanel::init(float width, float height) noexcept
 {
 	width *= 2;
 	height *= 2;
@@ -83,7 +83,7 @@ Transform * DrawingPanel::getTransform() noexcept
 	return &transform;
 }
 
-void DrawingPanel::setTextureID(unsigned int textureID)
+void DrawingPanel::setTextureID(unsigned int textureID) noexcept
 {
 	if (this->textureID != textureID)
 		glDeleteTextures(1, &this->textureID);
@@ -97,7 +97,7 @@ unsigned int DrawingPanel::getTextureID() const noexcept
 
 bool DrawingPanel::isPointInPanel(float xpos, float ypos)noexcept
 {
-	glm::vec4 dimensions = getPanelWorldDimension();
+	const glm::vec4 dimensions = getPanelWorldDimension();
 	if (xpos >= dimensions.x && xpos <= dimensions.y && ypos >= dimensions.w && ypos <= dimensions.z)
 		return true;
 	return false;
@@ -105,10 +105,10 @@ bool DrawingPanel::isPointInPanel(float xpos, float ypos)noexcept
 
 glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
 {
-	float left = (-transform.getScale().x * 0.5f) + 0.5f;
-	float right = (transform.getScale().x * 0.5f) + 0.5f;
-	float top = (transform.getScale().y * 0.5f) + 0.5f;
-	float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
+	const float left = (-transform.getScale().x * 0.5f) + 0.5f;
+	const float right = (transform.getScale().x * 0.5f) + 0.5f;
+	const float top = (transform.getScale().y * 0.5f) + 0.5f;
+	const float bottom = (-transform.getScale().y * 0.5f) + 0.5f;
 	return glm::vec4
 	(
 		left + transform.getPosition().x,

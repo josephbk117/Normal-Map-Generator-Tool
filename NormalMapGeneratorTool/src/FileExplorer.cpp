@@ -96,8 +96,8 @@ void FileExplorer::display()
 		else
 		{
 			std::cout << "\nIs empty " << path;
-			int locationOfLastSlash = path.find_last_of('//');
-			int locationOfFirstSlash = path.find_first_of('//');
+			const int locationOfLastSlash = path.find_last_of('//');
+			const int locationOfFirstSlash = path.find_first_of('//');
 
 			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
 			{
@@ -109,8 +109,8 @@ void FileExplorer::display()
 		}
 		if (ImGui::Button("BACK"))
 		{
-			int locationOfLastSlash = path.find_last_of('//');
-			int locationOfFirstSlash = path.find_first_of('//');
+			const int locationOfLastSlash = path.find_last_of('//');
+			const int locationOfFirstSlash = path.find_first_of('//');
 
 			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
 			{
@@ -132,7 +132,7 @@ void FileExplorer::display()
 	}
 }
 
-void FileExplorer::displayDialog(std::string* pathOutput, FileType filter)
+void FileExplorer::displayDialog(std::string* pathOutput, FileType filter) noexcept
 {
 	shouldDisplay = true;
 	this->fileFilter = filter;

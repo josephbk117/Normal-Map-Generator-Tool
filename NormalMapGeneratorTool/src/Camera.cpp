@@ -25,7 +25,7 @@ void Camera::init(float dimensionX, float dimensionY) noexcept
 		-((float)dimensionY / 2.0f), ((float)dimensionY / 2.0f));
 }
 
-void Camera::setScale(float newScale)
+void Camera::setScale(float newScale) noexcept
 {
 	needsUpdate = true;
 	scale = newScale;
@@ -43,16 +43,16 @@ const mat4& Camera::getOrthoMatrix()const noexcept
 
 bool Camera::isObjectInCameraView(const vec2 & spritePosition, const vec2& spriteDimensions)const noexcept
 {
-	vec2 scaledScreenDimensions = vec2((float)screenDimensions.x, (float)screenDimensions.y) / (float)scale;
+	const vec2 scaledScreenDimensions = vec2((float)screenDimensions.x, (float)screenDimensions.y) / (float)scale;
 
 	const float MIN_DISTANCE_X = scaledScreenDimensions.x + (float)spriteDimensions.x;
 	const float MIN_DISTANCE_Y = scaledScreenDimensions.y + (float)spriteDimensions.y;
 
-	vec2 distVec = spritePosition - transform->getPosition();
+	const vec2 distVec = spritePosition - transform->getPosition();
 
 	//Get depth of collision
-	float xDepth = MIN_DISTANCE_X - abs(distVec.x);
-	float yDepth = MIN_DISTANCE_Y - abs(distVec.y);
+	const float xDepth = MIN_DISTANCE_X - abs(distVec.x);
+	const float yDepth = MIN_DISTANCE_Y - abs(distVec.y);
 
 	//If both depths are greater than 0 then we collided
 	if (xDepth > 0 && yDepth > 0)

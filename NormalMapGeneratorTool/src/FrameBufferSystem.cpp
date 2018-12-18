@@ -30,35 +30,30 @@ void FrameBufferSystem::init(int windowWidth, int windowHeight)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBufferSystem::BindFrameBuffer()
+void FrameBufferSystem::BindFrameBuffer() noexcept
 {
 	currentlyBoundFBO = framebuffer;
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
-void FrameBufferSystem::BindBufferTexture()
+void FrameBufferSystem::BindBufferTexture() noexcept
 {
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 }
 
-unsigned int FrameBufferSystem::getBufferTexture()
+unsigned int FrameBufferSystem::getBufferTexture() noexcept
 {
 	return textureColorbuffer;
 }
 
-void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeight)
+void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeight) noexcept
 {
-	/*if(currentlyBoundFBO != framebuffer)
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);*/
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	//glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowWidth, windowHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//glBindFramebuffer(GL_FRAMEBUFFER, currentlyBoundFBO);
 }
 
-int FrameBufferSystem::GetCurrentlyBoundFBO()
+int FrameBufferSystem::GetCurrentlyBoundFBO() noexcept
 {
 	return currentlyBoundFBO;
 }

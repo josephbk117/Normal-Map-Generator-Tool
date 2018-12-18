@@ -63,7 +63,7 @@ enum class LoadingOption
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
@@ -201,8 +201,6 @@ int main(void)
 	bool blueChannelActive = true;
 
 	glm::vec3 rotation = glm::vec3(0);
-	int k = 0;
-	bool showHeightMapInput = true;
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
@@ -229,7 +227,7 @@ int main(void)
 	double initTime = glfwGetTime();
 	while (!windowSys.IsWindowClosing())
 	{
-		double deltaTime = glfwGetTime() - initTime;
+		const double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
 		glViewport(0, 0, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
@@ -242,7 +240,7 @@ int main(void)
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
-		glm::vec2 curPos = windowSys.GetCursorPos();
+		const glm::vec2 curPos = windowSys.GetCursorPos();
 		HandleKeyboardInput(normalMapStrength, deltaTime, mapDrawViewMode, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
@@ -254,7 +252,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		normalmapShader.use();
 
-		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curPos, windowSys.GetWindowRes());
+		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curPos, windowSys.GetWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -263,7 +261,7 @@ int main(void)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
-		float aspectRatio = windowSys.GetAspectRatio();
+		const float aspectRatio = windowSys.GetAspectRatio();
 		glm::vec2 aspectRatioHolder;
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 			aspectRatioHolder = glm::vec2(1, aspectRatio);
@@ -274,8 +272,8 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
-		int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
-		int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
+		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
+		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curPos.x, curPos.y, isMaximized, prevGlobalFirstMouseCoord);
 		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
@@ -430,7 +428,7 @@ int main(void)
 
 		if (path != prevPath)
 		{
-			for (int i = 0; i < path.length(); i++)
+			for (unsigned int i = 0; i < path.length(); i++)
 				imageLoadLocation[i] = path[i];
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
@@ -633,7 +631,7 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
-	float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
+	const float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
 
 	if (!redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
 	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
@@ -1100,12 +1098,11 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 
 inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
 {
-	float rVal;
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);
 	const float px_width = inputTexData.getWidth();
 	const float px_height = inputTexData.getHeight();
-	float distanceRemap = brushData.brushScale / px_height;
+	const float distanceRemap = brushData.brushScale / px_height;
 
 	//Temp allocation of image section
 	const int _width = endX - startX;
@@ -1168,17 +1165,15 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 inline void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData)
 {
 	ColourData colData;
-	float rVal;
 	float distance = 0;
 	const glm::vec2 pixelPos(xpos, ypos);
-	const float px_width = inputTexData.getWidth();
-	const float px_height = inputTexData.getHeight();
+	const glm::vec2 texRes = glm::vec2(inputTexData.getWidth(), inputTexData.getHeight());
 	const float distanceRemap = 0.5f;
 	for (int i = startX; i < width; i++)
 	{
 		for (int j = startY; j < height; j++)
 		{
-			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+			distance = glm::distance(pixelPos, texRes);
 			ColourData col;
 			if (distance < distanceRemap)
 			{
@@ -1222,7 +1217,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	previewFbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
 	zoomLevel += zoomLevel * 0.1f * yoffset;
 }

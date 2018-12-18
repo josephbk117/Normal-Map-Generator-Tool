@@ -5,7 +5,7 @@ struct ColourData
 private:
 	glm::vec4 colour;
 public:
-	ColourData()
+	ColourData() noexcept
 	{
 		colour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
@@ -15,21 +15,21 @@ public:
 	}
 	void setColour_8_Bit(const glm::vec4& colour)
 	{
-		int r = glm::clamp((int)colour.r, 0, 255);
-		int g = glm::clamp((int)colour.g, 0, 255);
-		int b = glm::clamp((int)colour.b, 0, 255);
-		int a = glm::clamp((int)colour.a, 0, 255);
+		const int r = glm::clamp((int)colour.r, 0, 255);
+		const int g = glm::clamp((int)colour.g, 0, 255);
+		const int b = glm::clamp((int)colour.b, 0, 255);
+		const int a = glm::clamp((int)colour.a, 0, 255);
 		this->colour = glm::vec4(r, g, b, a);
 	}
 	void setColour_8_Bit(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 	{
-		float _r = r / 255.0f;
-		float _g = g / 255.0f;
-		float _b = b / 255.0f;
-		float _a = a / 255.0f;
+		const float _r = r / 255.0f;
+		const float _g = g / 255.0f;
+		const float _b = b / 255.0f;
+		const float _a = a / 255.0f;
 		this->colour = glm::vec4(_r, _g, _b, _a);
 	}
-	void setColour_32_bit(const glm::vec4& colour)
+	void setColour_32_bit(const glm::vec4& colour)noexcept
 	{
 		this->colour = colour;
 	}
@@ -43,10 +43,10 @@ public:
 	}
 	glm::vec4 getColour_8_Bit()
 	{
-		unsigned char rV = (unsigned char)(colour.r * 255.0f);
-		unsigned char gV = (unsigned char)(colour.g * 255.0f);
-		unsigned char bV = (unsigned char)(colour.b * 255.0f);
-		unsigned char aV = (unsigned char)(colour.a * 255.0f);
+		const unsigned char rV = (unsigned char)(colour.r * 255.0f);
+		const unsigned char gV = (unsigned char)(colour.g * 255.0f);
+		const unsigned char bV = (unsigned char)(colour.b * 255.0f);
+		const unsigned char aV = (unsigned char)(colour.a * 255.0f);
 		return glm::vec4(rV, gV, bV, aV);
 	}
 };
