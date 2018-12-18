@@ -160,6 +160,7 @@
     <ClCompile Include="src\TextureLoader.cpp" />
     <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\TextureData.cpp" />
+    <ClCompile Include="src\WindowSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ModelObject.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="src\TextureData.h" />
     <ClInclude Include="src\WindowTransformUtility.h" />
     <ClInclude Include="src\stb_image_write.h" />
+    <ClInclude Include="src\WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="Resources\arial.ttf" />

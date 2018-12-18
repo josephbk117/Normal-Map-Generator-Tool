@@ -1,4 +1,5 @@
 #pragma once
+#include <GLM\common.hpp>
 class FrameBufferSystem
 {
 private:
@@ -8,6 +9,7 @@ private:
 	static unsigned int currentlyBoundFBO;
 public:
 	FrameBufferSystem();
+	void init(const glm::vec2 &windowRes);
 	void init(int windowWidth, int windowHeight);
 	void BindFrameBuffer();
 	void BindBufferTexture();

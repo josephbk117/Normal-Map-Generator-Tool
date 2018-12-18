@@ -2,7 +2,6 @@
 #include <string>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
-#include <thread> 
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -62,6 +61,11 @@ FrameBufferSystem fbs;
 FrameBufferSystem previewFbs;
 GLFWwindow* window;
 
+enum class LoadingOption
+{
+	MODEL, TEXTURE, NONE
+};
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
@@ -82,7 +86,7 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag);
 void SetupImGui();
 
@@ -96,6 +100,10 @@ TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
 ModelObject *modelPreviewObj = nullptr;
 const GLFWvidmode * videoMode;
+LoadingOption currentLoadingOption = LoadingOption::NONE;
+std::string path;
+std::string prevPath;
+FileExplorer fileExplorer;
 int main(void)
 {
 	if (!glfwInit())
@@ -240,10 +248,6 @@ int main(void)
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
-	std::string path;
-	std::string prevPath;
-	FileExplorer fileExplorer;
-	bool updateImageLocation = false;
 	bool shouldSaveNormalMap = false;
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
@@ -339,7 +343,6 @@ int main(void)
 
 		static char saveLocation[500] = "D:\\scr.tga";
 		static char imageLoadLocation[500] = "Resources\\goli.png";
-		static std::string path;
 		if (shouldSaveNormalMap)
 		{
 			SaveNormalMapToFile(saveLocation);
@@ -393,7 +396,8 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
-		modelPreviewObj->draw();
+		if (modelPreviewObj != nullptr)
+			modelPreviewObj->draw();
 		glActiveTexture(GL_TEXTURE0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -439,7 +443,7 @@ int main(void)
 
 		BottomBarDisplay(p_open, window_flags);
 		SideBarDisplay(p_open, window_flags, isFullscreen, videoMode, frameDrawingPanel, imageLoadLocation,
-			fileExplorer, path, updateImageLocation, saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
+			saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
 		if (mapDrawViewMode < 3)
@@ -469,12 +473,19 @@ int main(void)
 
 		if (path != prevPath)
 		{
-			TextureManager::getTextureDataFromFile(path, texData);
-			heightmapTexId = TextureManager::loadTextureFromData(texData, false);
-			normalmapPanel.setTextureID(heightmapTexId);
 			for (int i = 0; i < path.length(); i++)
 				imageLoadLocation[i] = path[i];
-			updateImageLocation = false;
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				TextureManager::getTextureDataFromFile(path, texData);
+				heightmapTexId = TextureManager::loadTextureFromData(texData, false);
+				normalmapPanel.setTextureID(heightmapTexId);
+			}
+			else if (currentLoadingOption == LoadingOption::MODEL)
+			{
+				modelPreviewObj = modelLoader.CreateModelFromFile(path);
+			}
+			currentLoadingOption = LoadingOption::NONE;
 			prevPath = path;
 		}
 
@@ -490,7 +501,7 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], FileExplorer &fileExplorer, std::string &path, bool &updateImageLocation, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
 {
 	ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
@@ -523,8 +534,8 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
 	{
+		currentLoadingOption = LoadingOption::TEXTURE;
 		fileExplorer.displayDialog(&path, FileType::IMAGE);
-		updateImageLocation = true;
 	}
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 	ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
@@ -712,7 +723,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 
-	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS" };
+	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS", "CUSTOM MODEL" };
 	static const char* current_item = items[0];
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 
@@ -739,6 +750,10 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 					break;
 				case 3:
 					modelPreviewObj = modelLoader.CreateModelFromFile(TORUS_MODEL_PATH);
+					break;
+				case 4:
+					currentLoadingOption = LoadingOption::MODEL;
+					fileExplorer.displayDialog(&path, FileType::MODEL);
 					break;
 				default:
 					break;
@@ -864,10 +879,10 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(char  saveLocation[500])
 {
 	std::string locationStr = std::string(saveLocation);

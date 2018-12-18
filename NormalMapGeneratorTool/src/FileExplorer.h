@@ -3,7 +3,7 @@
 
 enum class FileType
 {
-	IMAGE, TEXT, NONE
+	IMAGE, TEXT, MODEL, NONE
 };
 
 class FileExplorer

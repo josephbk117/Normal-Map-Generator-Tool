@@ -4,6 +4,11 @@
 unsigned int FrameBufferSystem::currentlyBoundFBO;
 FrameBufferSystem::FrameBufferSystem(){}
 
+void FrameBufferSystem::init(const glm::vec2 & windowRes)
+{
+	init(windowRes.x, windowRes.y);
+}
+
 void FrameBufferSystem::init(int windowWidth, int windowHeight)
 {
 	glGenFramebuffers(1, &framebuffer);
