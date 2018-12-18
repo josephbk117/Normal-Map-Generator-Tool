@@ -30,9 +30,9 @@
 //TODO : Rotation editor values
 //TODO : Distance based drawing
 //TODO : Add custom path for preview texture on model
-//TODO : Add custom model loading for preview model
 //TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
+//TODO : Custom Brush Support
 
 /*Define For Enabling Custom Window Chrome*/
 //#define NORA_CUSTOM_WINDOW_CHROME
@@ -50,7 +50,7 @@ const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
 const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
 const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
-const int WINDOW_SIZE_MIN = 640;
+const int WINDOW_SIZE_MIN = 480;
 
 int windowWidth = 1600; //Temporary Hack, Max resoltion will not face issues
 int windowHeight = 800;
@@ -71,7 +71,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
-bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
@@ -104,6 +103,7 @@ LoadingOption currentLoadingOption = LoadingOption::NONE;
 std::string path;
 std::string prevPath;
 FileExplorer fileExplorer;
+
 int main(void)
 {
 	if (!glfwInit())
@@ -346,7 +346,7 @@ int main(void)
 		if (shouldSaveNormalMap)
 		{
 			SaveNormalMapToFile(saveLocation);
-			glfwSetWindowSize(window, prevWindowSize.x, prevWindowSize.y);
+			//glfwSetWindowSize(window, prevWindowSize.x, prevWindowSize.y);
 			shouldSaveNormalMap = false;
 			continue;
 		}
@@ -593,12 +593,13 @@ void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, in
 {
 	retflag = 1;
 	glViewport(0, 0, texData.getWidth(), texData.getHeight());
+	fbs.updateTextureDimensions(texData.getWidth(), texData.getHeight());
 	if (changeSize)
 	{
 		prevWindowSize = glm::vec2(windowWidth, windowHeight);
-		glfwSetWindowSize(window, texData.getWidth() + 100, texData.getHeight() + 100);
 		changeSize = false;
-		{ retflag = 3; return; };
+		retflag = 3;
+		return;
 	}
 }
 void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized)
@@ -879,17 +880,27 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(char  saveLocation[500])
 {
 	std::string locationStr = std::string(saveLocation);
 	if (locationStr.length() > 4)
 	{
-		if (exportImage(locationStr, 0, 0, texData.getWidth(), texData.getHeight()))
-			std::cout << "Saved at " << locationStr;
+		fbs.BindBufferTexture();
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+		const int nSize = texData.getWidth() * texData.getHeight() * 3;
+		char* dataBuffer = new char[nSize];
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		fbs.updateTextureDimensions(windowWidth, windowHeight);
+		stbi_write_bmp(locationStr.c_str(), texData.getWidth(), texData.getHeight(), 3, dataBuffer);
+		std::cout << "Saved at " << locationStr;
+		delete dataBuffer;
 	}
 }
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
@@ -1274,40 +1285,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	zoomLevel += zoomLevel * 0.1f * yoffset;
 }
 
-bool exportImage(const std::string& filename, int xOff, int yOff, int w, int h)
-{
-	//This prevents the images getting padded 
-	// when the width multiplied by 3 is not a multiple of 4
-	//fbs.BindBufferTexture();
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-	const int nSize = w * h * 3;
-	// First let's create our buffer, 3 channels per Pixel
-	char* dataBuffer = new char[nSize];
-
-	if (!dataBuffer) return false;
-	glReadPixels((GLint)xOff, (GLint)yOff, (GLint)w, (GLint)h, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
-
-	//glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
-
-	//stbi_write_bmp(filename.c_str(), w, h, 3, dataBuffer);
-
-	//Now the file creation
-#pragma warning(suppress : 4996)
-	FILE *filePtr = fopen(filename.c_str(), "wb");
-	if (!filePtr) return false;
-
-	unsigned char TGAheader[12] = { 0,0,2,0,0,0,0,0,0,0,0,0 };
-	unsigned char header[6] = { w % 256,w / 256, h % 256, h / 256, 24, 0 };
-	// We write the headers
-	fwrite(TGAheader, sizeof(unsigned char), 12, filePtr);
-	fwrite(header, sizeof(unsigned char), 6, filePtr);
-	// And finally our image data
-	fwrite(dataBuffer, sizeof(GLubyte), nSize, filePtr);
-	fclose(filePtr);
-	delete[] dataBuffer;
-	return true;
-}
 void CustomColourImGuiTheme(ImGuiStyle* dst)
 {
 	isUsingCustomTheme = true;

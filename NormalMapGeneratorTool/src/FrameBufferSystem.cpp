@@ -52,7 +52,7 @@ void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeigh
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);*/
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
+	//glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, windowWidth, windowHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	//glBindFramebuffer(GL_FRAMEBUFFER, currentlyBoundFBO);
