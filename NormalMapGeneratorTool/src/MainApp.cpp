@@ -16,6 +16,7 @@
 #include "TextureLoader.h"
 #include "ShaderProgram.h"
 #include "Transform.h"
+#include "WindowSystem.h"
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
 #include "ModelObject.h"
@@ -25,7 +26,7 @@
 
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
 //TODO : Add detail value in normal settings, Sampling rate in shader
-//TODO : MAke camera move around instead of model
+//TODO : Make camera move around instead of model
 //TODO : Implement modal dialouges
 //TODO : Rotation editor values
 //TODO : Distance based drawing
@@ -33,6 +34,7 @@
 //TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Brush Support
+//TODO : Add cube map in preview
 
 /*Define For Enabling Custom Window Chrome*/
 //#define NORA_CUSTOM_WINDOW_CHROME
@@ -51,11 +53,6 @@ const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
 const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 480;
-
-int windowWidth = 1600; //Temporary Hack, Max resoltion will not face issues
-int windowHeight = 800;
-int maxWindowWidth = -1;
-int maxWindowHeight = -1;
 
 FrameBufferSystem fbs;
 FrameBufferSystem previewFbs;
@@ -85,7 +82,7 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag);
 void SetupImGui();
 
@@ -98,44 +95,28 @@ bool isFullscreen = false;
 TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
 ModelObject *modelPreviewObj = nullptr;
-const GLFWvidmode * videoMode;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 std::string path;
 std::string prevPath;
 FileExplorer fileExplorer;
+WindowSystem windowSys;
+
 
 int main(void)
 {
-	if (!glfwInit())
-		return -1;
-#ifdef NORA_CUSTOM_WINDOW_CHROME
-	glfwWindowHint(GLFW_DECORATED, false);
-#endif
-	window = glfwCreateWindow(windowWidth, windowHeight, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
+	windowSys.Init("Nora Normal Map Editor v0.8 alpha", 1600, 800);
+	window = (GLFWwindow*)windowSys.GetWindow();
 
-	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	maxWindowWidth = videoMode->width;
-	maxWindowHeight = videoMode->height;
-	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowWidth, maxWindowHeight);
-	glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-	glfwSetWindowPos(window, 0, 0);
-
-	if (!window)
-	{
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
+	glewExperimental = GL_TRUE;
+
 	SetupImGui();
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
-
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
 	DrawingPanel normalmapPanel;
@@ -174,7 +155,7 @@ int main(void)
 	brushPreviewShader.linkShaders();
 
 	Camera camera;
-	camera.init(windowWidth, windowHeight);
+	camera.init(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -219,8 +200,6 @@ int main(void)
 	zoomLevel = 1;
 	int mapDrawViewMode = 1;
 	int modelViewMode = 1;
-	const float widthRes = texData.getWidth();
-	const float heightRes = texData.getHeight();
 	bool flipX_Ydir = false;
 	bool redChannelActive = true;
 	bool greenChannelActive = true;
@@ -241,8 +220,8 @@ int main(void)
 	brushData.brushRate = 0.0f;
 	brushData.heightMapPositiveDir = false;
 
-	fbs.init(windowWidth, windowHeight);
-	previewFbs.init(windowWidth, windowHeight);
+	fbs.init(windowSys.GetWindowRes());
+	previewFbs.init(windowSys.GetWindowRes());
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -253,12 +232,12 @@ int main(void)
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 
 	double initTime = glfwGetTime();
-	while (!glfwWindowShouldClose(window))
+	while (!windowSys.IsWindowClosing())
 	{
 		double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
-		glViewport(0, 0, windowWidth, windowHeight);
+		glViewport(0, 0, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		if (shouldSaveNormalMap)
 		{
 			int retflag;
@@ -281,7 +260,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		normalmapShader.use();
 
-		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
+		WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -290,9 +269,9 @@ int main(void)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
-		float aspectRatio = (float)windowWidth / (float)windowHeight;
+		float aspectRatio = (float)windowSys.GetWindowRes().x / (float)windowSys.GetWindowRes().y;
 		glm::vec2 aspectRatioHolder;
-		if (windowWidth < windowHeight)
+		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 			aspectRatioHolder = glm::vec2(1, aspectRatio);
 		else
 			aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1);
@@ -332,8 +311,8 @@ int main(void)
 		normalmapShader.applyShaderFloat(specularityStrengthUniform, specularityStrength);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
-		normalmapShader.applyShaderFloat(widthUniform, widthRes);
-		normalmapShader.applyShaderFloat(heightUniform, heightRes);
+		normalmapShader.applyShaderFloat(widthUniform, texData.getWidth());
+		normalmapShader.applyShaderFloat(heightUniform, texData.getHeight());
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapDrawViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapShader.applyShaderBool(RedChannelUniform, redChannelActive);
@@ -346,7 +325,6 @@ int main(void)
 		if (shouldSaveNormalMap)
 		{
 			SaveNormalMapToFile(saveLocation);
-			//glfwSetWindowSize(window, prevWindowSize.x, prevWindowSize.y);
 			shouldSaveNormalMap = false;
 			continue;
 		}
@@ -401,22 +379,22 @@ int main(void)
 		glActiveTexture(GL_TEXTURE0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		if (windowWidth < windowHeight)
+		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
 			float scale = 1.0f;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * zoomLevel * 2.0f);
 		}
 		else
 		{
-			float scale = (float)1;
-			if (windowHeight < texData.getHeight())
+			float scale = 1.0f;
+			if (windowSys.GetWindowRes().y < texData.getHeight())
 				scale = 1;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * zoomLevel * 2.0f);
 		}
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
-		brushPanel.getTransform()->setPosition(((x / windowWidth)*2.0f) - 1.0f, -(((y / windowHeight)*2.0f) - 1.0f));
+		brushPanel.getTransform()->setPosition(((x / windowSys.GetWindowRes().x)*2.0f) - 1.0f, -(((y / windowSys.GetWindowRes().y)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
 		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, brushData.brushOffset);
@@ -442,7 +420,7 @@ int main(void)
 		bool *p_open = NULL;
 
 		BottomBarDisplay(p_open, window_flags);
-		SideBarDisplay(p_open, window_flags, isFullscreen, videoMode, frameDrawingPanel, imageLoadLocation,
+		SideBarDisplay(p_open, window_flags, isFullscreen, frameDrawingPanel, imageLoadLocation,
 			saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
@@ -501,24 +479,24 @@ int main(void)
 	glfwTerminate();
 	return 0;
 }
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, const GLFWvidmode * mode, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, bool &isFullscreen, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
 {
-	ImGui::SetNextWindowPos(ImVec2(windowWidth - 5, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(10, windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Side_Bar", p_open, window_flags);
 	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowWidth * 0.15f, 280.0f, 600.0f), windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", p_open, window_flags);
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 
 	if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		if (!isFullscreen)
-			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, 60);
+			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, windowSys.GetMaxWindowRes().x, windowSys.GetMaxWindowRes().y, 60);
 		else
-			glfwSetWindowMonitor(window, NULL, 100, 100, (mode->width / 1.2f), (mode->height / 1.2f), 60);
+			glfwSetWindowMonitor(window, NULL, 100, 100, (windowSys.GetMaxWindowRes().x / 1.2f), (windowSys.GetMaxWindowRes().y / 1.2f), 60);
 		isFullscreen = !isFullscreen;
 	}
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
@@ -570,8 +548,8 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 }
 void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, windowHeight - 25), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(windowWidth, 25), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 25), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
 	ImGui::Begin("Bottom_Bar", p_open, window_flags);
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
 	ImGui::Text("v0.8 - Alpha");
@@ -596,7 +574,7 @@ void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, in
 	fbs.updateTextureDimensions(texData.getWidth(), texData.getHeight());
 	if (changeSize)
 	{
-		prevWindowSize = glm::vec2(windowWidth, windowHeight);
+		prevWindowSize = windowSys.GetWindowRes();
 		changeSize = false;
 		retflag = 3;
 		return;
@@ -719,8 +697,8 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
-	ImGui::SetNextWindowPos(ImVec2(windowWidth - 305, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(300, windowHeight - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 
@@ -897,7 +875,7 @@ void SaveNormalMapToFile(char  saveLocation[500])
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
-		fbs.updateTextureDimensions(windowWidth, windowHeight);
+		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		stbi_write_bmp(locationStr.c_str(), texData.getWidth(), texData.getHeight(), 3, dataBuffer);
 		std::cout << "Saved at " << locationStr;
 		delete dataBuffer;
@@ -911,15 +889,15 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		glfwGetCursorPos(window, &xpos, &ypos);
 		glm::vec2 currentMouseCoord(xpos, ypos);
 
-		glm::vec2 windowNormalizedCurrentMouseCoord = glm::vec2(currentMouseCoord.x / windowWidth, currentMouseCoord.y / windowHeight);
-		glm::vec2 windowNormalizedPrevMouseCoord = glm::vec2(prevMouseCoord.x / windowWidth, prevMouseCoord.y / windowHeight);
+		glm::vec2 windowNormalizedCurrentMouseCoord = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, currentMouseCoord.y / windowSys.GetWindowRes().y);
+		glm::vec2 windowNormalizedPrevMouseCoord = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, prevMouseCoord.y / windowSys.GetWindowRes().y);
 		float minDistThresholdForDraw = (brushData.brushRate / texData.getWidth()) * zoomLevel;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
 
 		if (currentMouseCoord != prevMouseCoord && distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
 		{
-			xpos = xpos / windowWidth; // window size normalized width
-			ypos = 1.0f - (ypos / windowHeight); // window size normalized height
+			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
+			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
 
 			//std::cout << "\nCursor pos : " << xpos << ", " << ypos;
 			/*glm::vec4 wD = frameBufferPanel.getPanelWorldDimension();
@@ -933,8 +911,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 			if (xpos >= leftBound && xpos <= rightBound /*&& ypos >= bottomBound && ypos <= topBound*//*frameBufferPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
 			{
-				float prevX = prevMouseCoord.x / windowWidth;
-				float prevY = 1.0f - (prevMouseCoord.y / windowHeight);
+				float prevX = prevMouseCoord.x / windowSys.GetWindowRes().x;
+				float prevY = 1.0f - (prevMouseCoord.y / windowSys.GetWindowRes().y);
 
 				glm::vec4 worldDimensions = frameBufferPanel.getPanelWorldDimension();
 
@@ -1016,7 +994,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 	{
 		if (initPos == glm::vec2(-1000, -1000))
 		{
-			windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowWidth, windowHeight);
+			windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 			initPos = glm::vec2(x, y);
 		}
 
@@ -1046,7 +1024,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glfwGetWindowPos(window, &xPos, &yPos);
 				glfwSetWindowPos(window, xPos + currentPos.x, yPos);
 				const glm::vec2 diff = (currentPos + glm::vec2(xPos, 0)) - (initPos + glm::vec2(xPos, 0));
-				glfwSetWindowSize(window, windowWidth - diff.x, windowHeight);
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x - diff.x, windowSys.GetWindowRes().y);
 			}
 		}
 		else if (windowSideAtInitPos == WindowSide::RIGHT)
@@ -1055,7 +1033,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
 				glm::vec2 diff = currentPos - initPos;
-				glfwSetWindowSize(window, windowWidth + diff.x, windowHeight);
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x + diff.x, windowSys.GetWindowRes().y);
 			}
 		}
 		else if (windowSideAtInitPos == WindowSide::BOTTOM_RIGHT)
@@ -1064,7 +1042,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
 				glm::vec2 diff = currentPos - initPos;
-				glfwSetWindowSize(window, windowWidth + diff.x, windowHeight + diff.y);
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x + diff.x, windowSys.GetWindowRes().y + diff.y);
 			}
 		}
 		else if (windowSideAtInitPos == WindowSide::TOP)
@@ -1073,8 +1051,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
 				glm::vec2 diff = currentPos - initPos;
-				glfwSetWindowSize(window, windowWidth, windowHeight - diff.y);
-				windowHeight -= diff.y;
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y - diff.y);
 				int xPos, yPos;
 				glfwGetWindowPos(window, &xPos, &yPos);
 				glfwSetWindowPos(window, xPos + currentPos.x - initPos.x, yPos + currentPos.y - initPos.y);
@@ -1086,7 +1063,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
 				const glm::vec2 diff = currentPos - initPos;
-				glfwSetWindowSize(window, windowWidth, windowHeight + diff.y);
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y + diff.y);
 			}
 		}
 		else if (windowSideAtInitPos == WindowSide::BOTTOM_LEFT)
@@ -1095,7 +1072,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
 			{
 				glm::vec2 diff = currentPos - initPos;
-				glfwSetWindowSize(window, windowWidth - diff.x, windowHeight + diff.y);
+				windowSys.SetWindowRes(windowSys.GetWindowRes().x - diff.x, windowSys.GetWindowRes().y + diff.y);
 				int xPos, yPos;
 				glfwGetWindowPos(window, &xPos, &yPos);
 				glfwSetWindowPos(window, xPos + currentPos.x, yPos);
@@ -1114,7 +1091,7 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 		double x, y;
 		glfwGetCursorPos(window, &x, &y);
 		glm::vec2 currentPos(x, y);
-		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowWidth, 1.0f / windowHeight) * 2.0f;
+		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.GetWindowRes().x, 1.0f / windowSys.GetWindowRes().y) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
 	}
@@ -1270,14 +1247,12 @@ bool isKeyReleased(int key)
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	width = glm::clamp(width, WINDOW_SIZE_MIN, maxWindowWidth);
-	height = glm::clamp(height, WINDOW_SIZE_MIN, maxWindowHeight);
+	width = glm::clamp(width, WINDOW_SIZE_MIN, (int)windowSys.GetMaxWindowRes().x);
+	height = glm::clamp(height, WINDOW_SIZE_MIN, (int)windowSys.GetMaxWindowRes().y);
 
-	glfwSetWindowSize(window, width, height);
-	windowWidth = width;
-	windowHeight = height;
-	fbs.updateTextureDimensions(windowWidth, windowHeight);
-	previewFbs.updateTextureDimensions(windowWidth, windowHeight);
+	windowSys.SetWindowRes(width, height);
+	fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+	previewFbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

@@ -18,7 +18,6 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	maxWindowRes.x = videoMode->width;
 	maxWindowRes.y = videoMode->height;
 	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowRes.x, maxWindowRes.y);
-	//glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
 	glfwSetWindowPos(window, 0, 0);
 
 	if (!window)
@@ -32,6 +31,11 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 const GLFWvidmode * WindowSystem::GetVideoMode()
 {
 	return videoMode;
+}
+
+const GLFWwindow * WindowSystem::GetWindow()
+{
+	return window;
 }
 
 void WindowSystem::SetWindowRes(int windowWidth, int windowHeight)
@@ -53,6 +57,11 @@ const glm::vec2 WindowSystem::GetWindowRes()
 float WindowSystem::GetAspectRatio()
 {
 	return (float)windowRes.x / (float)windowRes.y;
+}
+
+bool WindowSystem::IsWindowClosing()
+{
+	return glfwWindowShouldClose(window);
 }
 
 WindowSystem::~WindowSystem()
