@@ -28,6 +28,18 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	glfwMakeContextCurrent(window);
 }
 
+void WindowSystem::Close()
+{
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
+
+void WindowSystem::UpdateWindow()
+{
+	glfwSwapBuffers(window);
+	glfwPollEvents();
+}
+
 const GLFWvidmode * WindowSystem::GetVideoMode()
 {
 	return videoMode;
@@ -38,10 +50,29 @@ const GLFWwindow * WindowSystem::GetWindow()
 	return window;
 }
 
+void WindowSystem::SetWindowRes(const glm::vec2 & res)
+{
+	SetWindowRes(res.x, res.y);
+}
+
 void WindowSystem::SetWindowRes(int windowWidth, int windowHeight)
 {
 	glfwSetWindowSize(window, windowWidth, windowHeight);
 	windowRes = glm::vec2(windowWidth, windowHeight);
+}
+
+void WindowSystem::SetFullscreen(bool isFullscreen)
+{
+	if (isFullscreen)
+		glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, windowRes.x, windowRes.y, 60);
+	else
+		glfwSetWindowMonitor(window, NULL, 100, 100, (windowRes.x / 1.2f), (windowRes.y / 1.2f), 60);
+	this->isFullscreen = isFullscreen;
+}
+
+bool WindowSystem::IsFullscreen()
+{
+	return isFullscreen;
 }
 
 const glm::vec2 WindowSystem::GetMaxWindowRes()
@@ -52,6 +83,25 @@ const glm::vec2 WindowSystem::GetMaxWindowRes()
 const glm::vec2 WindowSystem::GetWindowRes()
 {
 	return windowRes;
+}
+
+glm::vec2 WindowSystem::GetWindowPos()
+{
+	int winPosX, winPosY;
+	glfwGetWindowPos(window, &winPosX, &winPosY);
+	return glm::vec2(winPosX, winPosY);
+}
+
+glm::vec2 WindowSystem::GetCursorPos()
+{
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
+	return glm::vec2(x, y);
+}
+
+void WindowSystem::SetWindowPos(int x, int y)
+{
+	glfwSetWindowPos(window, x, y);
 }
 
 float WindowSystem::GetAspectRatio()

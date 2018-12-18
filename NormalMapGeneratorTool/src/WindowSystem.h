@@ -9,17 +9,26 @@ private:
 
 	const GLFWvidmode * videoMode = nullptr;
 	GLFWwindow * window = nullptr;
+	bool isFullscreen = false;
 	std::string windowTitle="NIL";
 	glm::vec2 windowRes = glm::vec2(1600, 800);
 	glm::vec2 maxWindowRes = glm::vec2(-1, -1);
 public:
 	WindowSystem();
 	void Init(const std::string windowTitle, int windowWidth, int windowHeight);
+	void Close();
+	void UpdateWindow();
 	const GLFWvidmode* GetVideoMode();
 	const GLFWwindow* GetWindow();
+	void SetWindowRes(const glm::vec2 &res);
 	void SetWindowRes(int windowWidth, int windowHeight);
+	void SetFullscreen(bool isFullscreen);
+	bool IsFullscreen();
 	const glm::vec2 GetMaxWindowRes();
 	const glm::vec2 GetWindowRes();
+	glm::vec2 GetWindowPos();
+	glm::vec2 GetCursorPos();
+	void SetWindowPos(int x, int y);
 	float GetAspectRatio();
 	bool IsWindowClosing();
 	~WindowSystem();
