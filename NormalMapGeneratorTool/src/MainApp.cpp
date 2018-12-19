@@ -551,7 +551,7 @@ void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
 	ImGui::Begin("Bottom_Bar", p_open, window_flags);
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
-	ImGui::Text("v0.8 - Alpha");
+	ImGui::Text("v0.85 - Alpha");
 	ImGui::End();
 }
 void SetupImGui()

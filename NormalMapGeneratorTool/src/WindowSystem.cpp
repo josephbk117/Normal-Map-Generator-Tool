@@ -13,7 +13,7 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 	glfwWindowHint(GLFW_DECORATED, false);
 #endif
-	window = glfwCreateWindow(windowRes.x, windowRes.y, "Nora Normal Map Editor v0.8 alpha", NULL, NULL);
+	window = glfwCreateWindow(windowRes.x, windowRes.y, windowTitle.c_str(), NULL, NULL);
 	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowRes.x = videoMode->width;
 	maxWindowRes.y = videoMode->height;
