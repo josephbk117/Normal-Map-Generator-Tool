@@ -88,8 +88,6 @@ void main()
     }
     else if(_normalMapModeOn == 3)
     {
-		vec3 I = normalize(FragPos - vec3(0,0,-3));
-		vec3 R = reflect(I, normalize(Normal));
-        FragColor = textureLod(skybox, R, 0.0);
+        FragColor = texture(inTexture, TexCoords);
     }
 }

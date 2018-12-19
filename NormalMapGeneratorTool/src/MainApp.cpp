@@ -93,7 +93,7 @@ void SetupImGui();
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
-float modelRoughness = 0.0f;
+float modelRoughness = 5.0f;
 float modelReflectivity = 0.5f;
 bool isUsingCustomTheme = false;
 
@@ -215,7 +215,7 @@ int main(void)
 	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
 	int mapDrawViewMode = 1;
-	int modelViewMode = 1;
+	int modelViewMode = 2;
 	bool flipX_Ydir = false;
 	bool redChannelActive = true;
 	bool greenChannelActive = true;
