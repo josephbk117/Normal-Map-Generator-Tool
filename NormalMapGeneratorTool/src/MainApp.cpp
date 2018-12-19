@@ -35,10 +35,14 @@
 //TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Brush Support
-//TODO : Add cube map in preview
 
 /*Define For Enabling Custom Window Chrome*/
 //#define NORA_CUSTOM_WINDOW_CHROME
+
+enum class LoadingOption
+{
+	MODEL, TEXTURE, NONE
+};
 
 const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
@@ -62,11 +66,6 @@ const int WINDOW_SIZE_MIN = 480;
 
 FrameBufferSystem fbs;
 FrameBufferSystem previewFbs;
-
-enum class LoadingOption
-{
-	MODEL, TEXTURE, NONE
-};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
@@ -95,7 +94,7 @@ float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
 float modelRoughness = 0.0f;
-float modelReflectivity = 0.0f;
+float modelReflectivity = 0.5f;
 bool isUsingCustomTheme = false;
 
 TextureData texData;
@@ -1242,8 +1241,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	height = glm::clamp(height, WINDOW_SIZE_MIN, (int)windowSys.GetMaxWindowRes().y);
 
 	windowSys.SetWindowRes(width, height);
-	fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-	previewFbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+	fbs.updateTextureDimensions(windowSys.GetWindowRes());
+	previewFbs.updateTextureDimensions(windowSys.GetWindowRes());
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept

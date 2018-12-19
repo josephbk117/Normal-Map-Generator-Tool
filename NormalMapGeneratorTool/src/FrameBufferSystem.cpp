@@ -53,6 +53,11 @@ void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeigh
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void FrameBufferSystem::updateTextureDimensions(const glm::vec2 & windowRes) noexcept
+{
+	updateTextureDimensions(windowRes.x, windowRes.y);
+}
+
 int FrameBufferSystem::GetCurrentlyBoundFBO() noexcept
 {
 	return currentlyBoundFBO;

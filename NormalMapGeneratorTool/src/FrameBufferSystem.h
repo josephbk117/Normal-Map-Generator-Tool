@@ -15,6 +15,7 @@ public:
 	void BindBufferTexture() noexcept;
 	unsigned int getBufferTexture() noexcept;
 	void updateTextureDimensions(int windowWidth, int windowHeight) noexcept;
+	void updateTextureDimensions(const glm::vec2 &windowRes) noexcept;
 	static int GetCurrentlyBoundFBO() noexcept;
 	~FrameBufferSystem();
 };
