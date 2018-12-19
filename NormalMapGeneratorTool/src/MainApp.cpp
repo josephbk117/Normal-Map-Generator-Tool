@@ -47,6 +47,11 @@ const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f
 const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
 const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
 
+const std::string FONTS_PATH = "Resources\\Fonts\\";
+const std::string TEXTURES_PATH = "Resources\\Textures\\";
+const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
+const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
+const std::string SHADERS_PATH = "Resources\\Shaders\\";
 const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
 const std::string CUBE_MODEL_PATH = MODELS_PATH + "Cube.obj";
 const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
@@ -89,6 +94,8 @@ void SetupImGui();
 float zoomLevel = 1;
 float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
+float modelRoughness = 0.0f;
+float modelReflectivity = 0.0f;
 bool isUsingCustomTheme = false;
 
 TextureData texData;
@@ -125,40 +132,39 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
-	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", false);
-	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", false);
-	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", false);
-	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", false);
-	unsigned int crateTextureId = TextureManager::loadTextureFromFile("Resources\\crate.jpg", false);
+	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png", false);
+	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png", false);
+	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png", false);
+	unsigned int logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png", false);
 
 	std::vector<std::string> cubeMapImagePaths;
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_bk.tga");
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_dn.tga");
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_ft.tga");
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_lf.tga");
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_rt.tga");
-	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_up.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_rt.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_dn.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_up.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
+	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths, false);
-
-	TextureManager::getTextureDataFromFile("Resources\\Textures\\goli.png", texData);
+	unsigned int crateTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg", false);
+	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", texData);
 	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
 	normalmapPanel.setTextureID(heightmapTexId);
 
 	ShaderProgram normalmapShader;
-	normalmapShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\normalPanel.fs");
+	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
 	normalmapShader.linkShaders();
 
 	ShaderProgram modelViewShader;
-	modelViewShader.compileShaders("Resources\\Shaders\\modelView.vs", "Resources\\Shaders\\modelView.fs");
+	modelViewShader.compileShaders(SHADERS_PATH + "modelView.vs", SHADERS_PATH + "modelView.fs");
 	modelViewShader.linkShaders();
 
 	ShaderProgram frameShader;
-	frameShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\frameBuffer.fs");
+	frameShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "frameBuffer.fs");
 	frameShader.linkShaders();
 
 	ShaderProgram brushPreviewShader;
-	brushPreviewShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\brushPreview.fs");
+	brushPreviewShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "brushPreview.fs");
 	brushPreviewShader.linkShaders();
 
 	Camera camera;
@@ -192,6 +198,8 @@ int main(void)
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
 	int modelLightSpecularityUniform = modelViewShader.getUniformLocation("_Specularity");
 	int modelLightSpecularityStrengthUniform = modelViewShader.getUniformLocation("_SpecularStrength");
+	int modelRoughnessUniform = modelViewShader.getUniformLocation("_Roughness");
+	int modelReflectivityUniform = modelViewShader.getUniformLocation("_Reflectivity");
 	int modelLightDirectionUniform = modelViewShader.getUniformLocation("lightDir");
 	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
@@ -352,6 +360,8 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, specularityStrength);
+		modelViewShader.applyShaderFloat(modelRoughnessUniform, modelRoughness);
+		modelViewShader.applyShaderFloat(modelReflectivityUniform, modelReflectivity);
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
@@ -365,7 +375,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, crateTextureId);
-		glActiveTexture(GL_TEXTURE3);
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
@@ -736,6 +746,8 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
+	ImGui::SliderFloat("##Roughness", &modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
+	ImGui::SliderFloat("##Reflectivity", &modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");

@@ -16,6 +16,8 @@ uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
 uniform float _Specularity;
 uniform float _SpecularStrength;
+uniform float _Roughness;
+uniform float _Reflectivity;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 uniform bool _flipX_Ydir;
@@ -67,9 +69,15 @@ void main()
 				result = inTexCol * result;
 			}
 
-			result.x = pow(result.x, 1.0/2.4);
-			result.y = pow(result.y, 1.0/2.4);
-			result.z = pow(result.z, 1.0/2.4);
+			vec3 I = normalize(FragPos - vec3(0,0,-3));
+			vec3 R = reflect(I, normalize(_norm));
+			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
+
+			result.r = pow(result.x, 1.0/2.4);
+			result.g = pow(result.y, 1.0/2.4);
+			result.b = pow(result.z, 1.0/2.4);
+
+			result.rgb = mix(result, reflectionCol, _Reflectivity);
 
 			FragColor = vec4(result, 1.0);
 		}
@@ -80,6 +88,8 @@ void main()
     }
     else if(_normalMapModeOn == 3)
     {
-        FragColor = texture(inTexture,TexCoords);
+		vec3 I = normalize(FragPos - vec3(0,0,-3));
+		vec3 R = reflect(I, normalize(Normal));
+        FragColor = textureLod(skybox, R, 0.0);
     }
 }
