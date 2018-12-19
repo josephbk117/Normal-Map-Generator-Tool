@@ -3,10 +3,10 @@
 class TextureData
 {
 private:
-	unsigned char* data;
-	int width;
-	int height;
-	int componentCount;
+	unsigned char* data = nullptr;
+	int width = 0;
+	int height = 0;
+	int componentCount = 0;
 public:
 	TextureData();
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);

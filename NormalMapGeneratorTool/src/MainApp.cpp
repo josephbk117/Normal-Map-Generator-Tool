@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
 
@@ -94,10 +95,10 @@ TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
-std::string path;
-std::string prevPath;
 FileExplorer fileExplorer;
 WindowSystem windowSys;
+std::string prevPath;
+std::string path;
 
 int main(void)
 {
@@ -113,6 +114,7 @@ int main(void)
 	glfwSetFramebufferSizeCallback((GLFWwindow*)windowSys.GetWindow(), framebuffer_size_callback);
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
+	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 
 	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
@@ -123,30 +125,40 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
-	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", "close", false);
-	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", "restore", false);
-	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", "mini", false);
-	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", "mdini", false);
-	unsigned int penguinTextureId = TextureManager::loadTextureFromFile("Resources\\Penguins.jpg", "penguin", false);
+	unsigned int closeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\closeIcon.png", false);
+	unsigned int restoreTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\maxWinIcon.png", false);
+	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\toTrayIcon.png", false);
+	unsigned int logoTextureId = TextureManager::loadTextureFromFile("Resources\\UI\\icon.png", false);
+	unsigned int crateTextureId = TextureManager::loadTextureFromFile("Resources\\crate.jpg", false);
 
-	TextureManager::getTextureDataFromFile("Resources\\goli.png", texData);
+	std::vector<std::string> cubeMapImagePaths;
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_bk.tga");
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_dn.tga");
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_ft.tga");
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_lf.tga");
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_rt.tga");
+	cubeMapImagePaths.push_back("Resources\\Cubemap Textures\\Sahara Desert Cubemap\\sahara_up.tga");
+
+	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths, false);
+
+	TextureManager::getTextureDataFromFile("Resources\\Textures\\goli.png", texData);
 	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
 	normalmapPanel.setTextureID(heightmapTexId);
 
 	ShaderProgram normalmapShader;
-	normalmapShader.compileShaders("Resources\\spriteBase.vs", "Resources\\spriteBase.fs");
+	normalmapShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\normalPanel.fs");
 	normalmapShader.linkShaders();
 
 	ShaderProgram modelViewShader;
-	modelViewShader.compileShaders("Resources\\modelView.vs", "Resources\\modelView.fs");
+	modelViewShader.compileShaders("Resources\\Shaders\\modelView.vs", "Resources\\Shaders\\modelView.fs");
 	modelViewShader.linkShaders();
 
 	ShaderProgram frameShader;
-	frameShader.compileShaders("Resources\\spriteBase.vs", "Resources\\frameBuffer.fs");
+	frameShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\frameBuffer.fs");
 	frameShader.linkShaders();
 
 	ShaderProgram brushPreviewShader;
-	brushPreviewShader.compileShaders("Resources\\spriteBase.vs", "Resources\\brushPreview.fs");
+	brushPreviewShader.compileShaders("Resources\\Shaders\\normalPanel.vs", "Resources\\Shaders\\brushPreview.fs");
 	brushPreviewShader.linkShaders();
 
 	Camera camera;
@@ -186,6 +198,8 @@ int main(void)
 	int modelAmbientColourUniform = modelViewShader.getUniformLocation("ambientColour");
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
+	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
+
 
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
@@ -297,7 +311,7 @@ int main(void)
 		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
-		static char imageLoadLocation[500] = "Resources\\goli.png";
+		static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
 		if (shouldSaveNormalMap)
 		{
 			SaveNormalMapToFile(saveLocation);
@@ -341,6 +355,7 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
+		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 2);
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
@@ -349,7 +364,9 @@ int main(void)
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, penguinTextureId);
+		glBindTexture(GL_TEXTURE_2D, crateTextureId);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
 		glActiveTexture(GL_TEXTURE0);
@@ -537,7 +554,7 @@ void SetupImGui()
 	ImGui_ImplOpenGL2_Init();
 	// Setup ImGui Theme
 	CustomColourImGuiTheme();
-	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\arial.ttf", 16.0f);
+	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 }
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag)

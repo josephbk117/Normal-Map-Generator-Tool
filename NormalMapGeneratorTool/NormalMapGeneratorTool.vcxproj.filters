@@ -148,44 +148,33 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Resources\arial.ttf">
-      <Filter>Resource Files</Filter>
-    </Font>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\frameBuffer.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Resources\spriteBase.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Resources\spriteBase.vs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Resources\windowChrome.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Resources\brushPreview.fs">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="Resources\3dmodel.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\modelView.vs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Resources\modelView.fs">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="glew32.dll" />
+    <None Include="Resources\Shaders\brushPreview.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\frameBuffer.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\modelView.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\normalPanel.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\normalPanel.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\modelView.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\windowChrome.fs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\goli.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\test2.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Resources\UI\toTrayIcon.png">
       <Filter>Resource Files</Filter>
     </Image>
@@ -198,16 +187,43 @@
     <Image Include="Resources\UI\closeIcon.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\test3.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Resources\UI\icon.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Nora.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Penguins.jpg">
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_bk.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_dn.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_ft.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_lf.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_rt.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\crate.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\goli.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Penguins.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\test2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\test3.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

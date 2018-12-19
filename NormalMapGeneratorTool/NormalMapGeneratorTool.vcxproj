@@ -105,7 +105,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -114,6 +114,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -125,7 +126,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -134,6 +135,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -190,27 +192,31 @@
     <ClInclude Include="src\WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Resources\arial.ttf" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="glew32.dll" />
     <None Include="Resources\3dmodel.vs" />
-    <None Include="Resources\brushPreview.fs" />
-    <None Include="Resources\frameBuffer.fs" />
-    <None Include="Resources\modelView.fs" />
-    <None Include="Resources\modelView.vs" />
-    <None Include="Resources\spriteBase.fs" />
-    <None Include="Resources\spriteBase.vs" />
-    <None Include="Resources\windowChrome.fs" />
+    <None Include="Resources\Shaders\brushPreview.fs" />
+    <None Include="Resources\Shaders\frameBuffer.fs" />
+    <None Include="Resources\Shaders\modelView.fs" />
+    <None Include="Resources\Shaders\modelView.vs" />
+    <None Include="Resources\Shaders\normalPanel.fs" />
+    <None Include="Resources\Shaders\normalPanel.vs" />
+    <None Include="Resources\Shaders\windowChrome.fs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">
       <FileType>Image</FileType>
     </Image>
-    <Image Include="Resources\goli.png" />
-    <Image Include="Resources\Penguins.jpg" />
-    <Image Include="Resources\test2.png" />
-    <Image Include="Resources\test3.png" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_bk.tga" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_dn.tga" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_ft.tga" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_lf.tga" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_rt.tga" />
+    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga" />
+    <Image Include="Resources\Textures\crate.jpg" />
+    <Image Include="Resources\Textures\goli.png" />
+    <Image Include="Resources\Textures\Penguins.jpg" />
+    <Image Include="Resources\Textures\test2.png" />
+    <Image Include="Resources\Textures\test3.png" />
     <Image Include="Resources\UI\closeIcon.png" />
     <Image Include="Resources\UI\icon.png" />
     <Image Include="Resources\UI\maxWinIcon.png" />

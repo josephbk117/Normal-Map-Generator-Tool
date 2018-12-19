@@ -6,6 +6,7 @@ in vec3 Normal;
 in vec2 TexCoords;
 uniform sampler2D inTexture;
 uniform sampler2D inTexture2;
+uniform samplerCube skybox;
 uniform vec3 diffuseColour;
 uniform vec3 ambientColour;
 uniform vec3 lightColour;
