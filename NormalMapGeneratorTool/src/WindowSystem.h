@@ -4,6 +4,8 @@
 #include <string>
 class WindowSystem
 {
+/*Define For Enabling Custom Window Chrome*/
+//#define NORA_CUSTOM_WINDOW_CHROME
 private:
 	const int WINDOW_SIZE_MIN = 640;
 
@@ -16,8 +18,10 @@ private:
 public:
 	WindowSystem();
 	void Init(const std::string windowTitle, int windowWidth, int windowHeight);
+	void Destroy();
 	void Close();
 	void UpdateWindow();
+	void Minimize();
 	const GLFWvidmode* GetVideoMode();
 	const GLFWwindow* GetWindow();
 	void SetWindowRes(const glm::vec2 &res);

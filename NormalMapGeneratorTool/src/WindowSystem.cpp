@@ -28,16 +28,26 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	glfwMakeContextCurrent(window);
 }
 
-void WindowSystem::Close()
+void WindowSystem::Destroy()
 {
 	glfwDestroyWindow(window);
 	glfwTerminate();
+}
+
+void WindowSystem::Close()
+{
+	glfwSetWindowShouldClose(window, true);
 }
 
 void WindowSystem::UpdateWindow()
 {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
+}
+
+void WindowSystem::Minimize()
+{
+	glfwIconifyWindow(window);
 }
 
 const GLFWvidmode * WindowSystem::GetVideoMode()

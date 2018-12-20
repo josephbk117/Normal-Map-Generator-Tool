@@ -26,18 +26,14 @@
 #include "MeshLoadingSystem.h"
 
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
-//TODO : Add detail value in normal settings, Sampling rate in shader
 //TODO : Make camera move around instead of model
 //TODO : Implement modal dialouges
 //TODO : Rotation editor values
-//TODO : Distance based drawing
+//TODO : Better Blurring
 //TODO : Add custom path for preview texture on model
 //TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Brush Support
-
-/*Define For Enabling Custom Window Chrome*/
-//#define NORA_CUSTOM_WINDOW_CHROME
 
 enum class LoadingOption
 {
@@ -476,7 +472,7 @@ int main(void)
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	windowSys.Close();
+	windowSys.Destroy();
 	return 0;
 }
 inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
@@ -839,21 +835,20 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 		}
 		ImGui::PopStyleVar();
 #ifdef NORA_CUSTOM_WINDOW_CHROME
-		ImGui::Indent(windowWidth - 160);
+		ImGui::Indent(windowSys.GetWindowRes().x - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 		if (isUsingCustomTheme)
 			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
-		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwIconifyWindow(window); }
+		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Minimize(); }
 		if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
 		{
-			if (!isFullscreen)
-				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, videoMode->width, videoMode->height, 60);
+			if (windowSys.IsFullscreen())
+				windowSys.SetFullscreen(false);
 			else
-				glfwSetWindowMonitor(window, NULL, 100, 100, (videoMode->width / 1.2f), (videoMode->height / 1.2f), 60);
-			isFullscreen = !isFullscreen;
+				windowSys.SetFullscreen(true);
 		}
-		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { glfwSetWindowShouldClose(window, true); }
+		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Close(); }
 		ImGui::PopStyleColor();
 		if (isUsingCustomTheme)
 			ImGui::PopStyleColor();
