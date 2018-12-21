@@ -192,6 +192,7 @@
     <ClInclude Include="src\WindowTransformUtility.h" />
     <ClInclude Include="src\stb_image_write.h" />
     <ClInclude Include="src\WindowSystem.h" />
+    <ClInclude Include="src\ThemeManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glew32.dll" />

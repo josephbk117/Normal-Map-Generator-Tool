@@ -21,6 +21,7 @@
 #include "WindowTransformUtility.h"
 #include "FileExplorer.h"
 #include "ModelObject.h"
+#include "ThemeManager.h"
 
 #include "stb_image_write.h"
 #include "MeshLoadingSystem.h"
@@ -40,13 +41,6 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const ImVec4 PRIMARY_COL = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
-const ImVec4 TITLE_COL = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
-const ImVec4 SECONDARY_COL = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
-const ImVec4 ACCENT_COL = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
-const ImVec4 WHITE = ImVec4(1, 1, 1, 1.1f);
-const ImVec4 DARK_GREY = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
-
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -65,7 +59,6 @@ FrameBufferSystem previewFbs;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
-void CustomColourImGuiTheme(ImGuiStyle* dst = (ImGuiStyle*)0);
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
@@ -99,6 +92,7 @@ ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
 WindowSystem windowSys;
+ThemeManager themeManager;
 std::string prevPath;
 std::string path;
 
@@ -111,8 +105,9 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	glewExperimental = GL_TRUE;
-
 	SetupImGui();
+	themeManager.Init();
+	themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
 	glfwSetFramebufferSizeCallback((GLFWwindow*)windowSys.GetWindow(), framebuffer_size_callback);
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
@@ -216,7 +211,6 @@ int main(void)
 	bool greenChannelActive = true;
 	bool blueChannelActive = true;
 
-	glm::vec3 rotation = glm::vec3(0);
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
@@ -486,6 +480,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::Begin("Settings", p_open, window_flags);
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		if (!windowSys.IsFullscreen())
@@ -498,6 +493,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		zoomLevel = 1;
 	}
+	
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
@@ -515,6 +511,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
 	ImGui::PopStyleVar();
+	ImGui::PopStyleColor();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
 	ImGui::Separator();
@@ -522,20 +519,20 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
-	if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
-	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
-	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
@@ -557,7 +554,8 @@ void SetupImGui()
 	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.GetWindow(), true);
 	ImGui_ImplOpenGL2_Init();
 	// Setup ImGui Theme
-	CustomColourImGuiTheme();
+	//CustomColourImGuiTheme();
+	
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 16.0f);
 	IM_ASSERT(font != NULL);
 }
@@ -617,7 +615,8 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	ImGui::Spacing();
-	ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 
 	if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
 		isBlurOn = !isBlurOn;
@@ -630,7 +629,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 		brushData.heightMapPositiveDir = (isBlurOn) ? brushData.heightMapPositiveDir : !brushData.heightMapPositiveDir;
 	if (isBlurOn)
 		ImGui::PopStyleVar();
-
+	ImGui::PopStyleColor();
 	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
@@ -651,21 +650,23 @@ inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &f
 	ImGui::Text("NORMAL SETTINGS");
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
+	ImGui::PopStyleColor();
 	const float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
 
-	if (!redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (!redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("R", ImVec2(width, 40))) { redChannelActive = !redChannelActive; } ImGui::SameLine();
 	ImGui::PopStyleColor();
 
-	if (!greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (!greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("G", ImVec2(width, 40))) { greenChannelActive = !greenChannelActive; } ImGui::SameLine();
 	ImGui::PopStyleColor();
 
-	if (!blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (!blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
 	ImGui::PopStyleColor();
 }
@@ -678,11 +679,11 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 1.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
-	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.01f, 179.99f, "X:%.2f")) {}
+	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.01f, 359.99f, "X:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.01f, 179.99f, "Y:%.2f")) {}
+	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.01f, 359.99f, "Y:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 179.99f, "Z:%.2f")) {}
+	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
@@ -690,7 +691,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_SliderGrab, SECONDARY_COL);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", p_open, window_flags);
@@ -750,26 +751,26 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 4.0f);
 	ImGui::Spacing();
 
-	if (modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 3; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 1; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, ACCENT_COL);
-	else ImGui::PushStyleColor(ImGuiCol_Button, SECONDARY_COL);
+	if (modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { modelViewMode = 4; }
 	ImGui::PopStyleColor();
 
@@ -815,19 +816,16 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 		switch (item_current)
 		{
 		case 0:
-			CustomColourImGuiTheme();
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
 			break;
 		case 1:
-			ImGui::StyleColorsDark();
-			isUsingCustomTheme = false;
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
 			break;
 		case 2:
-			ImGui::StyleColorsLight();
-			isUsingCustomTheme = false;
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
 			break;
 		case 3:
-			ImGui::StyleColorsClassic();
-			isUsingCustomTheme = false;
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::BLUE);
 			break;
 		default:
 			break;
@@ -1242,52 +1240,4 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
 	zoomLevel += zoomLevel * 0.1f * yoffset;
-}
-
-void CustomColourImGuiTheme(ImGuiStyle* dst)
-{
-	isUsingCustomTheme = true;
-	ImGuiStyle* style = dst ? dst : &ImGui::GetStyle();
-	ImVec4* colors = style->Colors;
-
-	colors[ImGuiCol_Text] = WHITE;
-	colors[ImGuiCol_TextDisabled] = SECONDARY_COL;
-	colors[ImGuiCol_WindowBg] = PRIMARY_COL;
-	colors[ImGuiCol_ChildBg] = PRIMARY_COL;
-	colors[ImGuiCol_PopupBg] = PRIMARY_COL;
-	colors[ImGuiCol_Border] = ACCENT_COL;
-	colors[ImGuiCol_BorderShadow] = DARK_GREY;
-	colors[ImGuiCol_FrameBg] = ACCENT_COL;
-	colors[ImGuiCol_FrameBgHovered] = PRIMARY_COL;
-	colors[ImGuiCol_FrameBgActive] = SECONDARY_COL;
-	colors[ImGuiCol_TitleBg] = TITLE_COL;
-	colors[ImGuiCol_TitleBgActive] = SECONDARY_COL;
-	colors[ImGuiCol_TitleBgCollapsed] = ACCENT_COL;
-	colors[ImGuiCol_MenuBarBg] = TITLE_COL;
-	colors[ImGuiCol_ScrollbarBg] = ACCENT_COL;
-	colors[ImGuiCol_ScrollbarGrab] = SECONDARY_COL;
-	colors[ImGuiCol_ScrollbarGrabHovered] = SECONDARY_COL;
-	colors[ImGuiCol_ScrollbarGrabActive] = PRIMARY_COL;
-	colors[ImGuiCol_CheckMark] = SECONDARY_COL;
-	colors[ImGuiCol_SliderGrab] = ACCENT_COL;
-	colors[ImGuiCol_SliderGrabActive] = ACCENT_COL;
-	colors[ImGuiCol_Button] = SECONDARY_COL;
-	colors[ImGuiCol_ButtonHovered] = PRIMARY_COL;
-	colors[ImGuiCol_ButtonActive] = ACCENT_COL;
-	colors[ImGuiCol_Header] = ACCENT_COL;
-	colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	colors[ImGuiCol_Separator] = WHITE;
-	colors[ImGuiCol_SeparatorHovered] = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
-	colors[ImGuiCol_SeparatorActive] = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
-	colors[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-	colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.45f, 0.00f, 1.00f);
-	colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-	colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.0f, 0.0f, 0.20f, 0.45f);
-	colors[ImGuiCol_DragDropTarget] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
 }
