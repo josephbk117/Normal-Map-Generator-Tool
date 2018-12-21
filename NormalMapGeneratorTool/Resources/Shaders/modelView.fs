@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
+in mat3 TBN;
 uniform sampler2D inTexture;
 uniform sampler2D inTexture2;
 uniform samplerCube skybox;
@@ -48,37 +49,32 @@ void main()
 			norm = norm.grb;
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
-			// diffuse 
-			norm = (2.0 * norm)-1.0;
-			vec3 _norm = normalize(Normal*norm);
+			norm = (2.0 * norm) - 1.0;
+			vec3 _norm = normalize(Normal * norm);
 			vec3 _lightDir = normalize(lightDir);
-			float diff = max(dot(_norm, _lightDir), 0.0);
-			vec3 diffuse = _LightIntensity * (diff * diffuseColour);
-    
-			// specular
-			vec3 viewDir = normalize(vec3(0,0,-2.4) - FragPos);
-			vec3 reflectDir = reflect(-_lightDir, _norm);
-			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity);
-			vec3 specular = lightColour * (spec * _SpecularStrength);
-			vec3 result = (diffuse + specular);
-			result += ambientColour;
+			float lightDot = max(dot( _norm, _lightDir), 0.0);
 
+			// diffuse
+			vec3 diffuse = _LightIntensity * lightDot * diffuseColour;
 			if(_normalMapModeOn == 4)
-			{
-				vec3 inTexCol = texture(inTexture2,TexCoords).rgb;
-				result = inTexCol * result;
-			}
+				diffuse *= texture(inTexture2,TexCoords).rgb;
 
-			vec3 I = normalize(FragPos - vec3(0,0,-3));
+			//Reflection
+			vec3 I = normalize(FragPos - vec3(0, 0, -5.0));
 			vec3 R = reflect(I, normalize(_norm));
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
 
-			result.r = pow(result.x, 1.0/2.4);
-			result.g = pow(result.y, 1.0/2.4);
-			result.b = pow(result.z, 1.0/2.4);
-
-			result.rgb = mix(result, reflectionCol, _Reflectivity);
-
+			//Diffuse & Reflection Combo
+			vec3 diffAndReflec = mix(diffuse, reflectionCol, _Reflectivity);
+    
+			// specular
+			vec3 viewDir = normalize(vec3( 0, 0, -5.0) - FragPos);
+			vec3 reflectDir = reflect(-_lightDir, _norm);
+			float spec = pow(dot(viewDir, reflectDir), _Specularity) * lightDot;
+			vec3 specular = lightColour * spec * _SpecularStrength;
+			
+			//final colour
+			vec3 result = diffAndReflec + specular + ambientColour;
 			FragColor = vec4(result, 1.0);
 		}
         else

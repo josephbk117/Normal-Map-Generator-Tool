@@ -71,9 +71,9 @@ bool isKeyReleased(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
-void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
-void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
-void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
+inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
+inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 void SaveNormalMapToFile(const std::string &locationStr);
 inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
@@ -202,8 +202,7 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
-
-
+	
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
 	float specularityStrength = 0.5f;
@@ -675,7 +674,7 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	ImGui::Text("LIGHT SETTINGS");
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity", &specularity, 0.01f, 10.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &specularity, 1.0f, 100.0f, "%.2f")) {}
 	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 1.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
@@ -890,7 +889,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		float minDistThresholdForDraw = (brushData.brushRate / texData.getWidth()) * zoomLevel;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
 
-		if (currentMouseCoord != prevMouseCoord && distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
+		if (currentMouseCoord != prevMouseCoord /*&& distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw*/)
 		{
 			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
 			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
@@ -916,7 +915,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
 				const float maxWidth = texData.getWidth();
-				const float convertedBrushScale = (brushData.brushScale / texData.getHeight()) * maxWidth * 2.5f;
+				const float convertedBrushScale = (brushData.brushScale / texData.getHeight()) * maxWidth * 3.5f;
 
 				float left = (xpos - convertedBrushScale) * maxWidth;
 				float right = (xpos + convertedBrushScale) * maxWidth;
@@ -925,7 +924,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 				if (!isBlurOn)
 				{
-					if (distOfPrevAndCurrentMouseCoord > 0.02f)
+					if (distOfPrevAndCurrentMouseCoord > 0.03f)
 					{
 						prevX = /*(prevX - leftBound) / (rightBound - leftBound);*/((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 						prevY = ((prevY - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
@@ -933,9 +932,9 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						glm::vec2 toPoint(xpos, ypos);
 						glm::vec2 curPoint = prevPoint;
 
-						distOfPrevAndCurrentMouseCoord = glm::min(distOfPrevAndCurrentMouseCoord, 0.05f);
+						distOfPrevAndCurrentMouseCoord = glm::min(distOfPrevAndCurrentMouseCoord, 0.03f);
 
-						int numberOfPoints = (distOfPrevAndCurrentMouseCoord / 0.05f) * 5;
+						int numberOfPoints = (distOfPrevAndCurrentMouseCoord / 0.03f) * 5;
 						glm::vec2 incValue = (prevPoint - toPoint) * (1.0f / numberOfPoints);
 
 						for (int i = 0; i < numberOfPoints; i++)

@@ -21,19 +21,16 @@ void main()
     if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
         float currentPx = texture(textureOne,textureUV).x;
-        float n = texture(textureOne,vec2(textureUV.x,textureUV.y + 1.0/_HeightmapDimY)).x;
-        float s = texture(textureOne,vec2(textureUV.x, textureUV.y - 1.0/_HeightmapDimY)).x;
-        float e = texture(textureOne,vec2(textureUV.x - 1.0/_HeightmapDimX, textureUV.y)).x;
-        float w = texture(textureOne,vec2(textureUV.x + 1.0/_HeightmapDimX, textureUV.y)).x;
+        float n = texture(textureOne,vec2(textureUV.x, textureUV.y + 1.0/_HeightmapDimY)).r;
+        float s = texture(textureOne,vec2(textureUV.x, textureUV.y - 1.0/_HeightmapDimY)).r;
+        float e = texture(textureOne,vec2(textureUV.x - 1.0/_HeightmapDimX, textureUV.y)).r;
+        float w = texture(textureOne,vec2(textureUV.x + 1.0/_HeightmapDimX, textureUV.y)).r;
 
-        vec3 norm = normalize(vec3(0.5, 0.5, 1.0));
-        vec3 temp = norm;
-        if(norm.x==1) temp.y += 0.5;
-        else temp.x += 0.5;
-		temp = normalize(temp);
+        vec3 norm = normalize(vec3( 0.5, 0.5, 1.0));
+        vec3 temp = vec3(1.0, 0, 0);
         //form a basis with norm being one of the axes:
-        vec3 perp1 = normalize(cross(norm,temp));
-        vec3 perp2 = normalize(cross(norm,perp1));
+        vec3 perp1 = normalize(cross(norm, temp));
+        vec3 perp2 = normalize(cross(norm, perp1));
         //use the basis to move the normal in its own space by the offset
         vec3 normalOffset = -_HeightmapStrength * currentPx * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
         norm += normalOffset;
