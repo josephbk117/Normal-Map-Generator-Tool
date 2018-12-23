@@ -22,6 +22,7 @@
 #include "FileExplorer.h"
 #include "ModelObject.h"
 #include "ThemeManager.h"
+#include "ModalWindow.h"
 
 #include "stb_image_write.h"
 #include "MeshLoadingSystem.h"
@@ -86,14 +87,16 @@ float modelReflectivity = 0.5f;
 bool isUsingCustomTheme = false;
 unsigned int heightmapTexId = 0;
 
-TextureData texData;
+ImFont* menuBarLargerText = NULL;
 MeshLoadingSystem::MeshLoader modelLoader;
+TextureData texData;
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
+ModalWindow modalWindow;
 WindowSystem windowSys;
 ThemeManager themeManager;
-DrawingPanel normalmapPanel;;
+DrawingPanel normalmapPanel;
 
 int main(void)
 {
@@ -107,6 +110,7 @@ int main(void)
 	SetupImGui();
 	themeManager.Init();
 	themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
+
 	glfwSetFramebufferSizeCallback((GLFWwindow*)windowSys.GetWindow(), framebuffer_size_callback);
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
@@ -195,7 +199,7 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
-	
+
 	float normalMapStrength = 10.0f;
 	float specularity = 10.0f;
 	float specularityStrength = 0.5f;
@@ -310,6 +314,8 @@ int main(void)
 		{
 			SaveNormalMapToFile(saveLocation);
 			shouldSaveNormalMap = false;
+			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " + 
+				std::to_string(texData.getWidth()) + "x" + std::to_string(texData.getHeight()) );
 			continue;
 		}
 
@@ -433,6 +439,8 @@ int main(void)
 		//________Preview Display_______
 		DisplayPreview(p_open, window_flags, modelViewMode, diffuseColour, ambientColour, lightColour);
 		fileExplorer.display();
+		modalWindow.display();
+
 		ImGui::Render();
 
 		glBindVertexArray(0);
@@ -440,6 +448,9 @@ int main(void)
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 		windowSys.UpdateWindow();
 	}
+
+	delete modelPreviewObj;
+	delete cubeForSkybox;
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -473,7 +484,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		zoomLevel = 1;
 	}
-	
+
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
@@ -483,8 +494,8 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
 	{
 		currentLoadingOption = LoadingOption::TEXTURE;
-		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str) 
-		{ 
+		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+		{
 			for (unsigned int i = 0; i < str.length(); i++)
 				imageLoadLocation[i] = str[i];
 			if (currentLoadingOption == LoadingOption::TEXTURE)
@@ -543,11 +554,14 @@ void SetupImGui()
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.GetWindow(), true);
 	ImGui_ImplOpenGL2_Init();
-	// Setup ImGui Theme
-	//CustomColourImGuiTheme();
-	
+
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 16.0f);
+	menuBarLargerText = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 18.0f);
+
+	modalWindow.setTitleFont(menuBarLargerText);
+
 	IM_ASSERT(font != NULL);
+	IM_ASSERT(menuBarLargerText != NULL);
 }
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag)
 {
@@ -792,6 +806,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 	{
 		ImGui::Indent(20);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
+		ImGui::PushFont(menuBarLargerText);
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Open Project", "CTRL+O"))
@@ -806,6 +821,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
 		ImGui::PopItemWidth();
+		ImGui::PopFont();
 		switch (item_current)
 		{
 		case 0:
@@ -844,10 +860,10 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)

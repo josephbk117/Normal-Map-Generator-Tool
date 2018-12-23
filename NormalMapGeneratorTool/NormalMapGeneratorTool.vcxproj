@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\ModalWindow.cpp" />
     <ClCompile Include="src\ModelObject.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\FileExplorer.cpp" />
@@ -167,6 +168,7 @@
     <ClCompile Include="src\WindowSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ModalWindow.h" />
     <ClInclude Include="src\ModelObject.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\MeshLoadingSystem.h" />
