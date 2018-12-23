@@ -62,12 +62,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
-void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
+void SaveNormalMapToFile(const std::string &locationStr);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
-void SaveNormalMapToFile(const std::string &locationStr);
 inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
@@ -85,6 +84,7 @@ float modelPreviewZoomLevel = -5.0f;
 float modelRoughness = 5.0f;
 float modelReflectivity = 0.5f;
 bool isUsingCustomTheme = false;
+unsigned int heightmapTexId = 0;
 
 TextureData texData;
 MeshLoadingSystem::MeshLoader modelLoader;
@@ -93,8 +93,7 @@ LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
 WindowSystem windowSys;
 ThemeManager themeManager;
-std::string prevPath;
-std::string path;
+DrawingPanel normalmapPanel;;
 
 int main(void)
 {
@@ -113,7 +112,6 @@ int main(void)
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 
-	DrawingPanel normalmapPanel;
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
@@ -138,7 +136,7 @@ int main(void)
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths, false);
 	unsigned int crateTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg", false);
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", texData);
-	unsigned int heightmapTexId = TextureManager::loadTextureFromData(texData, false);
+	heightmapTexId = TextureManager::loadTextureFromData(texData, false);
 	normalmapPanel.setTextureID(heightmapTexId);
 
 	ShaderProgram normalmapShader;
@@ -440,24 +438,6 @@ int main(void)
 		glBindVertexArray(0);
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-
-		if (path != prevPath)
-		{
-			for (unsigned int i = 0; i < path.length(); i++)
-				imageLoadLocation[i] = path[i];
-			if (currentLoadingOption == LoadingOption::TEXTURE)
-			{
-				TextureManager::getTextureDataFromFile(path, texData);
-				heightmapTexId = TextureManager::loadTextureFromData(texData, false);
-				normalmapPanel.setTextureID(heightmapTexId);
-			}
-			else if (currentLoadingOption == LoadingOption::MODEL)
-			{
-				modelPreviewObj = modelLoader.CreateModelFromFile(path);
-			}
-			currentLoadingOption = LoadingOption::NONE;
-			prevPath = path;
-		}
 		windowSys.UpdateWindow();
 	}
 
@@ -503,7 +483,17 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
 	{
 		currentLoadingOption = LoadingOption::TEXTURE;
-		fileExplorer.displayDialog(&path, FileType::IMAGE);
+		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str) 
+		{ 
+			for (unsigned int i = 0; i < str.length(); i++)
+				imageLoadLocation[i] = str[i];
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				TextureManager::getTextureDataFromFile(str, texData);
+				heightmapTexId = TextureManager::loadTextureFromData(texData, false);
+				normalmapPanel.setTextureID(heightmapTexId);
+			}
+		});
 	}
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 	ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
@@ -727,7 +717,10 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 					break;
 				case 4:
 					currentLoadingOption = LoadingOption::MODEL;
-					fileExplorer.displayDialog(&path, FileType::MODEL);
+					fileExplorer.displayDialog(FileType::MODEL, [&](std::string str)
+					{
+						modelPreviewObj = modelLoader.CreateModelFromFile(str);
+					});
 					break;
 				default:
 					break;
@@ -1164,7 +1157,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				int topRightIndex = ((i + 1) - startX)*(endX - startX) + ((j + 1) - startY);
 				int bottomRightIndex = ((i + 1) - startX)*(endX - startX) + ((j - 1) - startY);
 
-				int kernel[] = { leftIndex,rightIndex,topIndex,bottomIndex, topLeftIndex,bottomLeftIndex, topRightIndex, bottomRightIndex };
+				int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (unsigned int i = 0; i < 8; i++)
 					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0.01f;
@@ -1180,35 +1173,6 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 		}
 	}
 	delete[] tempPixelData;
-}
-
-inline void SetBrushPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData)
-{
-	ColourData colData;
-	float distance = 0;
-	const glm::vec2 pixelPos(xpos, ypos);
-	const glm::vec2 texRes = glm::vec2(inputTexData.getWidth(), inputTexData.getHeight());
-	const float distanceRemap = 0.5f;
-	for (int i = startX; i < width; i++)
-	{
-		for (int j = startY; j < height; j++)
-		{
-			distance = glm::distance(pixelPos, texRes);
-			ColourData col;
-			if (distance < distanceRemap)
-			{
-				distance = (1.0f - (distance / distanceRemap)) * brushData.brushOffset;
-				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
-				if (brushData.heightMapPositiveDir)
-					col.setColour_32_bit(brushData.brushMaxHeight, brushData.brushMaxHeight, brushData.brushMaxHeight, distance);
-				else
-					col.setColour_32_bit(brushData.brushMinHeight, brushData.brushMinHeight, brushData.brushMinHeight, distance);
-			}
-			else
-				col.setColour_32_bit(0, 0, 0, 0);
-			inputTexData.setTexelColor(col, i, j);
-		}
-	}
 }
 
 bool isKeyPressed(int key)

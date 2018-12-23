@@ -50,7 +50,7 @@ void FileExplorer::display()
 		filter.Draw();
 		if (!std::experimental::filesystem::is_empty(path))
 		{
-			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight()-50), true, ImGuiWindowFlags_HorizontalScrollbar);
+			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight() - 50), true, ImGuiWindowFlags_HorizontalScrollbar);
 			for (std::string strPath : paths)
 			{
 				std::vector<std::string> filterEnd;
@@ -82,7 +82,7 @@ void FileExplorer::display()
 					}
 					if (canShow)
 					{
-						if (ImGui::Button(strPath.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(),30)))
+						if (ImGui::Button(strPath.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
 						{
 							if (!pathTypeCheck(filterEnd, strPath))
 								isDirty = true;
@@ -123,7 +123,11 @@ void FileExplorer::display()
 		ImGui::SameLine();
 		if (ImGui::Button("SELECT"))
 		{
-			*outputPath = path;
+			if (functionToCall != nullptr)
+			{
+				std::cout << "\nCalled func to call";
+				functionToCall(path);
+			}
 			shouldDisplay = false;
 			ImGui::CloseCurrentPopup();
 		}
@@ -132,16 +136,17 @@ void FileExplorer::display()
 	}
 }
 
-void FileExplorer::displayDialog(std::string* pathOutput, FileType filter) noexcept
+void FileExplorer::displayDialog(FileType filter) noexcept
 {
 	shouldDisplay = true;
 	this->fileFilter = filter;
-	outputPath = pathOutput;
 }
 
-std::string FileExplorer::getOutputPath()
+void FileExplorer::displayDialog(FileType filter, std::function<void(std::string)> func) noexcept
 {
-	return *outputPath;
+	shouldDisplay = true;
+	this->fileFilter = fileFilter;
+	functionToCall = func;
 }
 
 FileExplorer::~FileExplorer()

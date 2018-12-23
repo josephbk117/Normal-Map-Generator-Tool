@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-
+#include <functional>
 enum class FileType
 {
 	IMAGE, TEXT, MODEL, NONE
@@ -15,13 +15,13 @@ public:
 	std::string path = "C:\\";
 	FileExplorer();
 	void display();
-	void displayDialog(std::string* pathOutput, FileType filter = FileType::NONE) noexcept;
-	std::string getOutputPath();
+	void displayDialog( FileType filter = FileType::NONE) noexcept;
+	void displayDialog( FileType filter, std::function<void(std::string)> func) noexcept;
 	~FileExplorer();
 private:
 	std::vector<std::string> paths;
 	std::vector<std::string> roots;
-	std::string* outputPath = nullptr;
+	std::function<void(std::string)> functionToCall = nullptr;
 	FileType fileFilter = FileType::NONE;
 	bool pathTypeCheck(std::vector<std::string> endTypes, std::string& _path);
 };
