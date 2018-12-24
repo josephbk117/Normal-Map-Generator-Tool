@@ -43,15 +43,22 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool 
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
 	if (data)
 	{
+		GLenum internalFormat = GL_SRGB;
 		GLenum format = GL_RED;
 		if (nrComponents == 1)
 			format = GL_RED;
 		else if (nrComponents == 3)
+		{
 			format = GL_RGB;
+			internalFormat = GL_SRGB;
+		}
 		else if (nrComponents == 4)
+		{
 			format = GL_RGBA;
+			internalFormat = GL_SRGB_ALPHA;
+		}
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -66,7 +73,7 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool 
 #endif
 	stbi_image_free(data);
 	return textureID;
-}
+	}
 
 unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>& paths, bool gamma)
 {
@@ -81,7 +88,7 @@ unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>&
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+				0, GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
 			);
 			stbi_image_free(data);
 		}
@@ -130,7 +137,7 @@ unsigned int TextureManager::loadTextureFromData(TextureData & textureData, bool
 		std::cout << "\nTexture failed to load with texture data " << std::endl;
 #endif
 	return textureID;
-}
+	}
 
 GLenum TextureManager::getTextureFormatFromData(TextureData & textureData)
 {

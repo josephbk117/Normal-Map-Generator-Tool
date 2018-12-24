@@ -185,6 +185,7 @@ int main(void)
 	int modelViewmodelUniform = modelViewShader.getUniformLocation("model");
 	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
 	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
+	int modelCameraZoomUniform = modelViewShader.getUniformLocation("_CameraZoom");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
@@ -257,6 +258,7 @@ int main(void)
 
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
@@ -314,8 +316,8 @@ int main(void)
 		{
 			SaveNormalMapToFile(saveLocation);
 			shouldSaveNormalMap = false;
-			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " + 
-				std::to_string(texData.getWidth()) + "x" + std::to_string(texData.getHeight()) );
+			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " +
+				std::to_string(texData.getWidth()) + "x" + std::to_string(texData.getHeight()));
 			continue;
 		}
 
@@ -348,6 +350,7 @@ int main(void)
 		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, modelViewMode);
+		modelViewShader.applyShaderFloat(modelCameraZoomUniform, modelPreviewZoomLevel);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);

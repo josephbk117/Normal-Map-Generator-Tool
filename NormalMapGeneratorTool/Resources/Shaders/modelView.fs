@@ -12,6 +12,7 @@ uniform vec3 diffuseColour;
 uniform vec3 ambientColour;
 uniform vec3 lightColour;
 uniform vec3 lightDir;
+uniform float _CameraZoom;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
@@ -51,30 +52,30 @@ void main()
 		{
 			norm = (2.0 * norm) - 1.0;
 			vec3 _norm = normalize(Normal * norm);
-			vec3 _lightDir = normalize(lightDir);
-			float lightDot = max(dot( _norm, _lightDir), 0.0);
+			float lightDot = max(dot( _norm, lightDir), 0.0);
+
+			//Object colour
+			vec3 objectColour = diffuseColour;
+			if(_normalMapModeOn == 4)
+				objectColour *= texture(inTexture2,TexCoords).rgb;
 
 			// diffuse
-			vec3 diffuse = _LightIntensity * lightDot * diffuseColour;
-			if(_normalMapModeOn == 4)
-				diffuse *= texture(inTexture2,TexCoords).rgb;
+			vec3 diffuse = lightColour * lightDot * _LightIntensity;
 
 			//Reflection
-			vec3 I = normalize(FragPos - vec3(0, 0, -5.0));
+			vec3 I = normalize(FragPos - vec3(0, 0, _CameraZoom));
 			vec3 R = reflect(I, normalize(_norm));
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
-
-			//Diffuse & Reflection Combo
-			vec3 diffAndReflec = mix(diffuse, reflectionCol, _Reflectivity);
     
 			// specular
-			vec3 viewDir = normalize(vec3( 0, 0, -5.0) - FragPos);
-			vec3 reflectDir = reflect(-_lightDir, _norm);
-			float spec = pow(dot(viewDir, reflectDir), _Specularity) * lightDot;
-			vec3 specular = lightColour * spec * _SpecularStrength;
-			
+			vec3 viewDir = normalize(FragPos - vec3( 0, 0, _CameraZoom));
+			vec3 reflectDir = reflect(-lightDir, _norm);  
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity);
+			vec3 specular = _SpecularStrength * spec * lightColour;  
+
 			//final colour
-			vec3 result = diffAndReflec + specular + ambientColour;
+			vec3 result = (ambientColour + diffuse + specular) * mix(objectColour, reflectionCol, _Reflectivity);
+			result = pow(result, vec3(1.0/2.2));
 			FragColor = vec4(result, 1.0);
 		}
         else
