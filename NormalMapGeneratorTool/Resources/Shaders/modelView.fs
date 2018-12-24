@@ -64,13 +64,14 @@ void main()
 
 			//Reflection
 			vec3 I = normalize(FragPos - vec3(0, 0, _CameraZoom));
-			vec3 R = reflect(I, normalize(_norm));
+			vec3 R = reflect(I, _norm);
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
     
 			// specular
 			vec3 viewDir = normalize(FragPos - vec3( 0, 0, _CameraZoom));
-			vec3 reflectDir = reflect(-lightDir, _norm);  
-			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity);
+			vec3 halfwayDir = normalize(lightDir + viewDir);  
+			float spec = pow(max(dot(_norm, halfwayDir), 0.0), _Specularity);
+
 			vec3 specular = _SpecularStrength * spec * lightColour;  
 
 			//final colour

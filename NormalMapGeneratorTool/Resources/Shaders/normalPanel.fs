@@ -38,23 +38,20 @@ void main()
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
 		norm = (2.0 * norm) - 1.0; // from -1.0 to +1.0 range
-        float light = max((dot(norm, lightDir) + 1.0) * 0.5 * _LightIntensity, 0.0);
-        vec3 LightReflect = normalize(reflect(lightDir, norm));
-        vec3 worldEyePos = worldPos - vec3(0.0,0.0,10.0);
-        float SpecularFactor = (dot(worldEyePos, LightReflect) + 1.0)*0.5 * _SpecularStrength;
+        float diffuse = max(dot(norm, lightDir) * 0.5 + 0.5, 0.0) * _LightIntensity;
 
         if(_normalMapModeOn == 2)
 		{
-			if(SpecularFactor > 0)
-				SpecularFactor = pow(SpecularFactor, _Specularity);
-			else
-				SpecularFactor = 0;
-			float gammaCorrected = min(pow(SpecularFactor + light, 1.0/2.4), 1.0);
+			// specular
+			vec3 viewDir = normalize(- vec3( 0, 0, 5.0));
+			vec3 halfwayDir = normalize(lightDir + viewDir);  
+			float spec = pow(max(dot(norm, halfwayDir), 0.0), _Specularity) * _SpecularStrength;
+			float gammaCorrected = min(pow(spec + diffuse, 1.0/2.2), 1.0);
             color = vec4(gammaCorrected, gammaCorrected, gammaCorrected, 1.0);
 		}
         else
 		{
-            color = vec4((norm+1.0)*0.5,1.0);
+            color = vec4(norm*0.5 + 0.5,1.0);
 			color.rgb *= vec3(_Channel_R, _Channel_G, _Channel_B);
 		}
     }
