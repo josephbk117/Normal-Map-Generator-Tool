@@ -85,11 +85,11 @@ float modelPreviewZoomLevel = -5.0f;
 float modelRoughness = 5.0f;
 float modelReflectivity = 0.5f;
 bool isUsingCustomTheme = false;
-unsigned int heightmapTexId = 0;
 
 ImFont* menuBarLargerText = NULL;
 MeshLoadingSystem::MeshLoader modelLoader;
-TextureData texData;
+TextureData heightMapTexData;
+TextureData diffuseTexDataForPreview;
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
@@ -138,10 +138,11 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths, false);
-	unsigned int crateTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg", false);
-	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", texData);
-	heightmapTexId = TextureManager::loadTextureFromData(texData, false);
-	normalmapPanel.setTextureID(heightmapTexId);
+	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg", false));
+
+	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
+	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
+	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
@@ -263,7 +264,7 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 
-		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
+		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		normalmapShader.use();
 
 		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curPos, windowSys.GetWindowRes());
@@ -301,8 +302,8 @@ int main(void)
 		normalmapShader.applyShaderFloat(specularityStrengthUniform, specularityStrength);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
 		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
-		normalmapShader.applyShaderFloat(widthUniform, texData.getWidth());
-		normalmapShader.applyShaderFloat(heightUniform, texData.getHeight());
+		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getWidth());
+		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getHeight());
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapDrawViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
 		normalmapShader.applyShaderBool(RedChannelUniform, redChannelActive);
@@ -317,7 +318,7 @@ int main(void)
 			SaveNormalMapToFile(saveLocation);
 			shouldSaveNormalMap = false;
 			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " +
-				std::to_string(texData.getWidth()) + "x" + std::to_string(texData.getHeight()));
+				std::to_string(heightMapTexData.getWidth()) + "x" + std::to_string(heightMapTexData.getHeight()));
 			continue;
 		}
 
@@ -367,9 +368,9 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, heightmapTexId);
+		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, crateTextureId);
+		glBindTexture(GL_TEXTURE_2D, diffuseTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
@@ -380,14 +381,14 @@ int main(void)
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
 			float scale = 1.0f;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth())*scale, (brushData.brushScale / texData.getHeight())*aspectRatio) * zoomLevel * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth())*scale, (brushData.brushScale / heightMapTexData.getHeight())*aspectRatio) * zoomLevel * 2.0f);
 		}
 		else
 		{
 			float scale = 1.0f;
-			if (windowSys.GetWindowRes().y < texData.getHeight())
+			if (windowSys.GetWindowRes().y < heightMapTexData.getHeight())
 				scale = 1;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / texData.getWidth()) / aspectRatio, (brushData.brushScale / texData.getHeight())*scale) * zoomLevel * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio, (brushData.brushScale / heightMapTexData.getHeight())*scale) * zoomLevel * 2.0f);
 		}
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -499,13 +500,12 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		currentLoadingOption = LoadingOption::TEXTURE;
 		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 		{
-			for (unsigned int i = 0; i < str.length(); i++)
-				imageLoadLocation[i] = str[i];
+			imageLoadLocation = (char *)str.c_str();
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
-				TextureManager::getTextureDataFromFile(str, texData);
-				heightmapTexId = TextureManager::loadTextureFromData(texData, false);
-				normalmapPanel.setTextureID(heightmapTexId);
+				TextureManager::getTextureDataFromFile(str, heightMapTexData);
+				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
+				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 			}
 		});
 	}
@@ -569,8 +569,8 @@ void SetupImGui()
 void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag)
 {
 	retflag = 1;
-	glViewport(0, 0, texData.getWidth(), texData.getHeight());
-	fbs.updateTextureDimensions(texData.getWidth(), texData.getHeight());
+	glViewport(0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight());
+	fbs.updateTextureDimensions(heightMapTexData.getWidth(), heightMapTexData.getHeight());
 	if (changeSize)
 	{
 		prevWindowSize = windowSys.GetWindowRes();
@@ -637,12 +637,12 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 	if (isBlurOn)
 		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
-	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, texData.getHeight()*0.5f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f, "%.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, texData.getHeight() / 2, "%0.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getHeight() / 2, "%0.2f", 1.0f)) {}
 	static BrushData bCopy = BrushData();
 	if (bCopy != brushData)
 		bCopy = brushData;
@@ -682,8 +682,8 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	ImGui::Text("LIGHT SETTINGS");
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity", &specularity, 1.0f, 100.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 1.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &specularity, 1.0f, 1000.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 10.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
 	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.01f, 359.99f, "X:%.2f")) {}
@@ -796,6 +796,26 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		ImGui::Text("Light Colour");
 		ImGui::ColorEdit3("Light Color", &lightColour[0]);
 		ImGui::PopItemWidth();
+		static char diffuseTextureImageLocation[500];
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.7f);
+		ImGui::InputText("## Preview Image Location", diffuseTextureImageLocation, sizeof(diffuseTextureImageLocation));
+		ImGui::PopItemWidth();
+		ImGui::SameLine(0, 5);
+		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 27)))
+		{
+			currentLoadingOption = LoadingOption::TEXTURE;
+			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			{
+				for (unsigned int i = 0; i < str.length(); i++)
+					diffuseTextureImageLocation[i] = str[i];
+				if (currentLoadingOption == LoadingOption::TEXTURE)
+				{
+					diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str, false));
+				}
+			});
+		}
+		ImGui::PopStyleVar();
 	}
 	ImGui::End();
 
@@ -863,7 +883,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
 	}
@@ -874,13 +894,13 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		fbs.BindBufferTexture();
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		const int nSize = texData.getWidth() * texData.getHeight() * 3;
+		const int nSize = heightMapTexData.getWidth() * heightMapTexData.getHeight() * 3;
 		char* dataBuffer = new char[nSize];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-		stbi_write_bmp(locationStr.c_str(), texData.getWidth(), texData.getHeight(), 3, dataBuffer);
+		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getWidth(), heightMapTexData.getHeight(), 3, dataBuffer);
 		std::cout << "Saved at " << locationStr;
 		delete dataBuffer;
 	}
@@ -896,7 +916,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 		glm::vec2 windowNormalizedCurrentMouseCoord = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, currentMouseCoord.y / windowSys.GetWindowRes().y);
 		glm::vec2 windowNormalizedPrevMouseCoord = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, prevMouseCoord.y / windowSys.GetWindowRes().y);
-		float minDistThresholdForDraw = (brushData.brushRate / texData.getWidth()) * zoomLevel;
+		float minDistThresholdForDraw = (brushData.brushRate / heightMapTexData.getWidth()) * zoomLevel;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
 
 		if (currentMouseCoord != prevMouseCoord /*&& distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw*/)
@@ -924,8 +944,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				xpos = /*(xpos - leftBound) / (rightBound - leftBound);*/((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
 				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
 
-				const float maxWidth = texData.getWidth();
-				const float convertedBrushScale = (brushData.brushScale / texData.getHeight()) * maxWidth * 3.5f;
+				const float maxWidth = heightMapTexData.getWidth();
+				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
 
 				float left = (xpos - convertedBrushScale) * maxWidth;
 				float right = (xpos + convertedBrushScale) * maxWidth;
@@ -960,7 +980,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 							top = glm::clamp(top, 0.0f, maxWidth);
 
 							curPoint += incValue;
-							SetPixelValues(texData, left, right, bottom, top, curPoint.x, curPoint.y, brushData);
+							SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y, brushData);
 						}
 					}
 					else
@@ -969,7 +989,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						right = glm::clamp(right, 0.0f, maxWidth);
 						bottom = glm::clamp(bottom, 0.0f, maxWidth);
 						top = glm::clamp(top, 0.0f, maxWidth);
-						SetPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+						SetPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
 					}
 				}
 				else if (isBlurOn)
@@ -978,11 +998,11 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					right = glm::clamp(right, 0.0f, maxWidth);
 					bottom = glm::clamp(bottom, 0.0f, maxWidth);
 					top = glm::clamp(top, 0.0f, maxWidth);
-					SetBluredPixelValues(texData, left, right, bottom, top, xpos, ypos, brushData);
+					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
 				}
 
 				GLenum format = TextureManager::getTextureFormatFromData(4);
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texData.getWidth(), texData.getHeight(), format, GL_UNSIGNED_BYTE, texData.getTextureData());
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight(), format, GL_UNSIGNED_BYTE, heightMapTexData.getTextureData());
 				prevMouseCoord = currentMouseCoord;
 			}
 		}

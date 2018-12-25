@@ -35,6 +35,18 @@ int TextureData::getComponentCount() noexcept
 	return componentCount;
 }
 
+void TextureData::SetTexId(unsigned int texId)
+{
+	if(this->texId != 0)
+		glDeleteTextures(1, &(this->texId));
+	this->texId = texId;
+}
+
+unsigned int TextureData::GetTexId()
+{
+	return texId;
+}
+
 void TextureData::setTexelColor(int r, int g, int b, int a, int x, int y)
 {
 	x = glm::clamp(x, 0, width);
@@ -72,5 +84,7 @@ ColourData TextureData::getTexelColor(int x, int y)
 
 TextureData::~TextureData()
 {
+	if(texId != 0)
+		glDeleteTextures(1, &texId);
 	delete[] data;
 }
