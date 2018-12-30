@@ -700,81 +700,48 @@ namespace MeshLoadingSystem
 			float *vertexDataArray = new float[resourceObjvertices.size() * 14];
 			std::vector<unsigned int> indices = LoadedIndices;
 			int counter = 0;
-			// Have to generate Tangents & Bi-tangents
-			// For that Acessing the vertices and UVs are need
 
-			std::vector<glm::vec3> tangents(resourceObjvertices.size());
-			std::vector<glm::vec3> biTangents(resourceObjvertices.size());
-
-			//We first calculate the first triangle's edges and delta UV coordinates: 
-			/*glm::vec3 edge1 = pos2 - pos1;
-			glm::vec3 edge2 = pos3 - pos1;
-			glm::vec2 deltaUV1 = uv2 - uv1;
-			glm::vec2 deltaUV2 = uv3 - uv1;*/
-
-			/*With the required data for calculating tangents and bitangents we can start following the equation from the previous section :
-
-			float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-
-			tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-			tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-			tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-			tangent1 = glm::normalize(tangent1);
-
-			bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-			bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-			bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-			bitangent1 = glm::normalize(bitangent1);*/
+			std::vector<glm::vec3> tangents;
+			std::vector<glm::vec3> biTangents;
 
 			const int vertexSize = resourceObjvertices.size();
-			for (unsigned int i = 0; i < resourceObjvertices.size(); i++)
+			std::cout << "Vertex size = " << vertexSize;
+			for (unsigned int i = 0; i < resourceObjvertices.size() - 3; i += 3)
 			{
+				const glm::vec3 v0 = resourceObjvertices[i].getPos();
+				const glm::vec3 v1 = resourceObjvertices[i + 1].getPos();
+				const glm::vec3 v2 = resourceObjvertices[i + 2].getPos();
 
-				glm::vec3 edge1;
-				glm::vec3 edge2;
+				const glm::vec2 uv0 = resourceObjvertices[i].getTex();
+				const glm::vec2 uv1 = resourceObjvertices[i + 1].getTex();
+				const glm::vec2 uv2 = resourceObjvertices[i + 2].getTex();
 
-				glm::vec2 deltaUV1;
-				glm::vec2 deltaUV2;
+				const glm::vec3 dd_v0 = v1 - v0;
+				const glm::vec3 dd_v1 = v2 - v0;
 
-				if (i % 2 == 0)
+				const glm::vec2 dd_uv0 = uv1 - uv0;
+				const glm::vec2 dd_uv1 = uv2 - uv0;
+
+				float r = 1.0f / (dd_uv0.x * dd_uv1.y - dd_uv0.y * dd_uv1.x);
+
+				glm::vec3 tangent = (dd_v0 * dd_uv1.y - dd_v1 * dd_uv0.y)*r;
+				glm::vec3 bitangent = (dd_v1 * dd_uv0.x - dd_v0 * dd_uv1.x)*r;
+
+				if (glm::dot(glm::cross(resourceObjvertices[i].getNormal(), tangent), bitangent) < 0.0f)
 				{
-					int index2 = (i + 1);// % vertexSize;
-					int index3 = (i + 2);// % vertexSize;
-					edge1 = resourceObjvertices[index2].getPos() - resourceObjvertices[i].getPos();
-					edge2 = resourceObjvertices[index3].getPos() - resourceObjvertices[i].getPos();
-
-					deltaUV1 = resourceObjvertices[index2].getTex() - resourceObjvertices[i].getTex();
-					deltaUV2 = resourceObjvertices[index3].getTex() - resourceObjvertices[i].getTex();
-				}
-				else
-				{
-					int index3 = (i + 2);// % vertexSize;
-					int index4 = (i + 3);// % vertexSize;
-					edge1 = resourceObjvertices[index3].getPos() - resourceObjvertices[i].getPos();
-					edge2 = resourceObjvertices[index4].getPos() - resourceObjvertices[i].getPos();
-
-					deltaUV1 = resourceObjvertices[index3].getTex() - resourceObjvertices[i].getTex();
-					deltaUV2 = resourceObjvertices[index4].getTex() - resourceObjvertices[i].getTex();
+					tangent = tangent * -1.0f;
 				}
 
-				float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+				tangents.push_back(tangent);
+				tangents.push_back(tangent);
+				tangents.push_back(tangent);
 
-				tangents[i].x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-				tangents[i].y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-				tangents[i].z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+				biTangents.push_back(bitangent);
+				biTangents.push_back(bitangent);
+				biTangents.push_back(bitangent);
 
-				biTangents[i].x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-				biTangents[i].y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-				biTangents[i].z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-
-				tangents[i] = glm::normalize(tangents[i]);
-				biTangents[i] = glm::normalize(biTangents[i]);
-				if (glm::dot(glm::cross(resourceObjvertices[i].getNormal(), tangents[i]), biTangents[i]) < 0.0f)
-				{
-					tangents[i] = tangents[i] * -1.0f;
-				}
+				std::cout << "\nTangent at " << i << " = " << tangents[i].x << " ," << tangents[i].y << " ," << tangents[i].z;
 			}
-
 
 
 			for (unsigned int i = 0; i < resourceObjvertices.size(); i++)
@@ -801,7 +768,7 @@ namespace MeshLoadingSystem
 				counter += 14;
 			}
 			ModelObject* modelObj = new ModelObject();
-			modelObj->UpdateMeshData(vertexDataArray, resourceObjvertices.size(), &indices[0], indices.size());
+			modelObj->UpdateMeshData(vertexDataArray, resourceObjvertices.size() * 14 * sizeof(float), &indices[0], indices.size());
 			delete[] vertexDataArray;
 			return modelObj;
 		}

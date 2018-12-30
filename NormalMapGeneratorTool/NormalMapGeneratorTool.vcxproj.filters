@@ -182,6 +182,9 @@
     <None Include="Resources\Shaders\windowChrome.fs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Shaders\modelViewPBR.fs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">

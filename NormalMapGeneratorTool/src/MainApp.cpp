@@ -1134,7 +1134,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 		for (int j = startY; j < endY; j++)
 		{
 			colData = inputTexData.getTexelColor(i, j);
-			rVal = colData.getColourIn_0_1_Range().r;
+			rVal = colData.getColour_32_Bit().r;
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < distanceRemap)
 			{
@@ -1184,7 +1184,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 					continue;
 
 				index = (i - startX)*(endX - startX) + (j - startY);
-				float avg = tempPixelData[index].getColourIn_0_1_Range().r * 0.5f;
+				float avg = tempPixelData[index].getColour_32_Bit().r * 0.5f;
 
 				int leftIndex = ((i - 1) - startX)*(endX - startX) + (j - startY);
 				int rightIndex = ((i + 1) - startX)*(endX - startX) + (j - startY);
@@ -1199,8 +1199,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (unsigned int i = 0; i < 8; i++)
-					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColourIn_0_1_Range().r * 0.0625f : 0.01f;
-				float pixelCol = tempPixelData[index].getColourIn_0_1_Range().r;
+					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColour_32_Bit().r * 0.0625f : 0.01f;
+				float pixelCol = tempPixelData[index].getColour_32_Bit().r;
 				float finalColor = 0.0025f * pixelCol;
 				finalColor += avg;
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);

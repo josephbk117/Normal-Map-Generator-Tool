@@ -37,7 +37,7 @@ public:
 	{
 		this->colour = glm::vec4(r, g, b, a);
 	}
-	glm::vec4 getColourIn_0_1_Range()
+	glm::vec4 getColour_32_Bit()
 	{
 		return colour;
 	}

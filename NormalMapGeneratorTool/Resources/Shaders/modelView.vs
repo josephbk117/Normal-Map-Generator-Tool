@@ -20,14 +20,14 @@ void main()
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;
 
-	vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
-    vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
-    vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+	vec3 T = normalize(vec3(view * model * vec4(aTangent,   0.0)));
+    vec3 B = normalize(vec3(view * model * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(view * model * vec4(aNormal,    0.0)));
 
 	// re-orthogonalize T with respect to N
-	T = normalize(T - dot(T, N) * N);
+	//T = normalize(T - dot(T, N) * N);
 	// then retrieve perpendicular vector B with the cross product of T and N
-	B = normalize(cross(N, T));
+	//B = normalize(cross(N, T));
 
     TBN = mat3(T, B, N);
     gl_Position = projection * view * vec4(FragPos, 1.0);

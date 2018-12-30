@@ -33,7 +33,7 @@ void ModelObject::UpdateMeshData(float vertexData[], int vertexDataCount, unsign
 {
 	std::cout<<"\nUpdated Mesh";
 	usesElementBuffer = true;
-	this->vertexDataCount = vertexDataCount * 56;
+	this->vertexDataCount = vertexDataCount;
 	this->indicesCount = indicesCount;
 
 	if (VAO != 0)
