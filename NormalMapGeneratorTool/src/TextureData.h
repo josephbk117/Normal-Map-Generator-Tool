@@ -20,6 +20,8 @@ public:
 	unsigned int GetTexId();
 	void setTexelColor(int r, int g, int b, int a, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
+	void updateTexture();
+	void updateTextureData(unsigned char* data);
 	ColourData getTexelColor(int x, int y);
 
 	~TextureData();

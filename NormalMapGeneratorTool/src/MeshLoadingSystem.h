@@ -722,7 +722,7 @@ namespace MeshLoadingSystem
 				const glm::vec2 dd_uv0 = uv1 - uv0;
 				const glm::vec2 dd_uv1 = uv2 - uv0;
 
-				float r = 1.0f / (dd_uv0.x * dd_uv1.y - dd_uv0.y * dd_uv1.x);
+				float r = 1.0f / glm::max((dd_uv0.x * dd_uv1.y - dd_uv0.y * dd_uv1.x), 0.001f);
 
 				glm::vec3 tangent = (dd_v0 * dd_uv1.y - dd_v1 * dd_uv0.y)*r;
 				glm::vec3 bitangent = (dd_v1 * dd_uv0.x - dd_v0 * dd_uv1.x)*r;

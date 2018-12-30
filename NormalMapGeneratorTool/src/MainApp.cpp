@@ -25,6 +25,7 @@
 #include "ModalWindow.h"
 
 #include "stb_image_write.h"
+#include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
@@ -116,6 +117,8 @@ int main(void)
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 
+	UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
+
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
 	frameDrawingPanel.init(1.0f, 1.0f);
@@ -142,6 +145,9 @@ int main(void)
 
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
+
+	undoRedoSystem.record(heightMapTexData.getTextureData());
+
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
 	ShaderProgram normalmapShader;
@@ -326,6 +332,10 @@ int main(void)
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
+		}
+		if (isKeyPressed(GLFW_KEY_5))
+		{
+			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -883,7 +893,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
 	}
@@ -1000,9 +1010,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					top = glm::clamp(top, 0.0f, maxWidth);
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
 				}
-
-				GLenum format = TextureManager::getTextureFormatFromData(4);
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight(), format, GL_UNSIGNED_BYTE, heightMapTexData.getTextureData());
+				heightMapTexData.updateTexture();
 				prevMouseCoord = currentMouseCoord;
 			}
 		}

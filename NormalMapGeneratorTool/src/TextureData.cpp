@@ -1,4 +1,5 @@
 #include "TextureData.h"
+#include "TextureLoader.h"
 TextureData::TextureData()
 {
 	data = nullptr;
@@ -37,7 +38,7 @@ int TextureData::getComponentCount() noexcept
 
 void TextureData::SetTexId(unsigned int texId)
 {
-	if(this->texId != 0)
+	if (this->texId != 0)
 		glDeleteTextures(1, &(this->texId));
 	this->texId = texId;
 }
@@ -74,6 +75,17 @@ void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 	data[i + 3] = colourData.getColour_8_Bit().a;
 }
 
+void TextureData::updateTexture()
+{
+	GLenum format = TextureManager::getTextureFormatFromData(4);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
+}
+
+void TextureData::updateTextureData(unsigned char * data)
+{
+	std::memcpy(this->data, data, width*height*componentCount);
+}
+
 ColourData TextureData::getTexelColor(int x, int y)
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
@@ -84,7 +96,7 @@ ColourData TextureData::getTexelColor(int x, int y)
 
 TextureData::~TextureData()
 {
-	if(texId != 0)
+	if (texId != 0)
 		glDeleteTextures(1, &texId);
 	delete[] data;
 }

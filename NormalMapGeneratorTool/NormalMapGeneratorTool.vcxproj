@@ -168,6 +168,7 @@
     <ClCompile Include="src\Transform.cpp" />
     <ClCompile Include="src\TextureData.cpp" />
     <ClCompile Include="src\WindowSystem.cpp" />
+    <ClCompile Include="src\UndoRedoSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ModalWindow.h" />
@@ -197,6 +198,7 @@
     <ClInclude Include="src\stb_image_write.h" />
     <ClInclude Include="src\WindowSystem.h" />
     <ClInclude Include="src\ThemeManager.h" />
+    <ClInclude Include="src\UndoRedoSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glew32.dll" />
