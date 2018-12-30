@@ -145,7 +145,6 @@ int main(void)
 
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
-
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
@@ -328,14 +327,26 @@ int main(void)
 			continue;
 		}
 
+		/*static int numberOfSaves = 0;
+		static double prevTime = 0;
+		if ((int)glfwGetTime() - (int)prevTime > 1)
+		{
+			if (numberOfSaves < 5)
+			{
+				undoRedoSystem.record(heightMapTexData.getTextureData());
+			}
+			else if(numberOfSaves >= 5 && numberOfSaves < 10)
+			{
+				heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
+			}
+			numberOfSaves++;
+			prevTime = glfwGetTime();
+		}*/
+
 		if (isKeyPressed(GLFW_KEY_F10))
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
-		}
-		if (isKeyPressed(GLFW_KEY_5))
-		{
-			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

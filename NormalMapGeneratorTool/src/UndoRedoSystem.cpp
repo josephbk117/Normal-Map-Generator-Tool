@@ -22,12 +22,24 @@ const unsigned int UndoRedoSystem::getMaxUndoSteps(const glm::vec2& sampleImageR
 
 void UndoRedoSystem::record(unsigned char * data)
 {
-	std::memcpy(this->data, data, bytesPerSection);
+	if (sectionsFilled + 1 > maxAllocatedMemoryInBytes / bytesPerSection)
+	{
+		std::cout << "\nOut of UNDO/REDO Memory bounds (Upper bound)";
+		return;
+	}
+	std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
+	++sectionsFilled;
 }
 
 unsigned char * UndoRedoSystem::retrieve()
 {
-	return data;
+	--sectionsFilled;
+	if (sectionsFilled < 0)
+	{
+		std::cout << "\nOut of UNDO/REDO Memory bounds (Lower bound)";
+		sectionsFilled = 0;
+	}
+	return data + sectionsFilled * bytesPerSection;
 }
 
 UndoRedoSystem::~UndoRedoSystem()
