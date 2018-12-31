@@ -99,6 +99,7 @@ ModalWindow modalWindow;
 WindowSystem windowSys;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
+UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 
 int main(void)
 {
@@ -117,8 +118,6 @@ int main(void)
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
-
-	UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -293,6 +292,16 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
+		if (isKeyPressedDown(GLFW_KEY_N))
+		{
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+		}
+		if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+		{
+			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
+			heightMapTexData.updateTexture();
+		}
+
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
@@ -333,18 +342,6 @@ int main(void)
 			shouldSaveNormalMap = true;
 			changeSize = true;
 		}
-		if (isKeyPressedDown(GLFW_KEY_N))
-		{
-			std::cout << "\n*Recorded";
-			undoRedoSystem.record(heightMapTexData.getTextureData());
-		}
-		if (isKeyPressedDown(GLFW_KEY_B))
-		{
-			std::cout << "\n* Retrieve";
-			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
-			//std::cout << "\n V is being pressed";
-		}
-
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -904,7 +901,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -925,6 +922,9 @@ void SaveNormalMapToFile(const std::string &locationStr)
 }
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
 {
+	static int prevState = GLFW_RELEASE;
+	static bool didActuallyDraw = false;
+
 	if (state == GLFW_PRESS)
 	{
 		double xpos, ypos;
@@ -1009,6 +1009,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						top = glm::clamp(top, 0.0f, maxWidth);
 						SetPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
 					}
+					didActuallyDraw = true;
 				}
 				else if (isBlurOn)
 				{
@@ -1017,16 +1018,26 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					bottom = glm::clamp(bottom, 0.0f, maxWidth);
 					top = glm::clamp(top, 0.0f, maxWidth);
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
+					didActuallyDraw = true;
 				}
 				heightMapTexData.updateTexture();
 				prevMouseCoord = currentMouseCoord;
 			}
+			else
+				didActuallyDraw = false;
 		}
 	}
 	else
 	{
+		if (prevState == GLFW_PRESS && didActuallyDraw)
+		{
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+			std::cout << "\nTake texture into undo";
+			didActuallyDraw = false;
+		}
 		prevMouseCoord = glm::vec2(-10, -10);
 	}
+	prevState = state;
 }
 
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
