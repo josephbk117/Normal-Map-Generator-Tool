@@ -63,6 +63,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
+bool isKeyPressedDown(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
 void SaveNormalMapToFile(const std::string &locationStr);
@@ -327,27 +328,23 @@ int main(void)
 			continue;
 		}
 
-		/*static int numberOfSaves = 0;
-		static double prevTime = 0;
-		if ((int)glfwGetTime() - (int)prevTime > 1)
-		{
-			if (numberOfSaves < 5)
-			{
-				undoRedoSystem.record(heightMapTexData.getTextureData());
-			}
-			else if(numberOfSaves >= 5 && numberOfSaves < 10)
-			{
-				heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
-			}
-			numberOfSaves++;
-			prevTime = glfwGetTime();
-		}*/
-
-		if (isKeyPressed(GLFW_KEY_F10))
+		if (isKeyPressedDown(GLFW_KEY_F10))
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
 		}
+		if (isKeyPressedDown(GLFW_KEY_N))
+		{
+			std::cout << "\n*Recorded";
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+		}
+		if (isKeyPressedDown(GLFW_KEY_B))
+		{
+			std::cout << "\n* Retrieve";
+			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
+			//std::cout << "\n V is being pressed";
+		}
+
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -904,10 +901,10 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1246,6 +1243,27 @@ bool isKeyReleased(int key)
 	int state = glfwGetKey((GLFWwindow*)windowSys.GetWindow(), key);
 	if (state == GLFW_RELEASE)
 		return true;
+	return false;
+}
+bool isKeyPressedDown(int key)
+{
+	static int prevKey = GLFW_KEY_0;
+	int state = glfwGetKey((GLFWwindow*)windowSys.GetWindow(), key);
+
+	if (state == GLFW_PRESS)
+	{
+		if (prevKey != key)
+		{
+			prevKey = key;
+			return true;
+		}
+		prevKey = key;
+	}
+	else if (state == GLFW_RELEASE)
+	{
+		if (prevKey == key)
+			prevKey = GLFW_KEY_0;
+	}
 	return false;
 }
 
