@@ -292,10 +292,6 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
-		if (isKeyPressedDown(GLFW_KEY_N))
-		{
-			undoRedoSystem.record(heightMapTexData.getTextureData());
-		}
 		if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		{
 			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
@@ -853,6 +849,19 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			if (ImGui::MenuItem("Open Scene")) {}
 			ImGui::EndMenu();
 		}
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			{
+				heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
+				heightMapTexData.updateTexture();
+			}
+			if (ImGui::MenuItem("Redo", "CTRL+Y"))
+			{
+			}
+
+			ImGui::EndMenu();
+		}
 
 		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
 		static int item_current = 0;
@@ -901,7 +910,7 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
