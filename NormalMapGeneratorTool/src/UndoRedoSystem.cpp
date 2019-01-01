@@ -39,12 +39,13 @@ void UndoRedoSystem::record(unsigned char * data)
 unsigned char * UndoRedoSystem::retrieve()
 {
 	--sectionsFilled;
-	if (sectionsFilled < 0)
+	if (sectionsFilled - 1 < 0)
 	{
 		std::cout << "\nOut of UNDO/REDO Memory bounds (Lower bound)";
-		sectionsFilled = 0;
+		sectionsFilled = 1;
 	}
-	return data + sectionsFilled * bytesPerSection;
+	std::cout << "\nSections filled : " << sectionsFilled;
+	return data + (sectionsFilled - 1) * bytesPerSection;
 }
 
 UndoRedoSystem::~UndoRedoSystem()

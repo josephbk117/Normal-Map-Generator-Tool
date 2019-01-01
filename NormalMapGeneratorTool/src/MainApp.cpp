@@ -287,8 +287,6 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
-
-
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
@@ -607,6 +605,8 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 		heightMapTexData.updateTexture();
+		if (undoRedoSystem.getCurrentSectionPosition() == 0)
+			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 
 	if (isKeyPressed(GLFW_KEY_F10))
