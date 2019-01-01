@@ -29,11 +29,15 @@ void UndoRedoSystem::record(unsigned char * data)
 {
 	if (sectionsFilled + 1 > maxAllocatedMemoryInBytes / bytesPerSection)
 	{
+		std::memcpy(this->data, this->data + bytesPerSection, maxAllocatedMemoryInBytes - bytesPerSection);
+		std::memcpy(this->data + (maxAllocatedMemoryInBytes - bytesPerSection), data, bytesPerSection);
 		std::cout << "\nOut of UNDO/REDO Memory bounds (Upper bound)";
-		return;
 	}
-	std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
-	++sectionsFilled;
+	else
+	{
+		std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
+	}
+	sectionsFilled = glm::min(sectionsFilled + 1, (int)(maxAllocatedMemoryInBytes / bytesPerSection));
 }
 
 unsigned char * UndoRedoSystem::retrieve()
