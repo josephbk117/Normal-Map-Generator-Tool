@@ -487,11 +487,15 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		else
 			windowSys.SetFullscreen(false);
 	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Press T)");
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		zoomLevel = 1;
 	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Reset position and scale of panel (Press R)");
 
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -521,7 +525,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Save current view-mode image to file");
+		ImGui::SetTooltip("Save current view-mode image to file (F10)");
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	ImGui::Spacing();
@@ -535,17 +539,23 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Press J)");
 
 	ImGui::SameLine(0, 5);
 	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Press K)");
 
 	ImGui::SameLine(0, 5);
 	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Press L)");
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
@@ -592,11 +602,11 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 	zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
 
 	if (isKeyPressed(GLFW_KEY_J))
-		mapDrawViewMode = 1;
-	if (isKeyPressed(GLFW_KEY_K))
-		mapDrawViewMode = 2;
-	if (isKeyPressed(GLFW_KEY_L))
 		mapDrawViewMode = 3;
+	if (isKeyPressed(GLFW_KEY_K))
+		mapDrawViewMode = 1;
+	if (isKeyPressed(GLFW_KEY_L))
+		mapDrawViewMode = 2;
 
 	if (isKeyPressed(GLFW_KEY_LEFT))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
@@ -617,7 +627,21 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 
-	if (isKeyPressed(GLFW_KEY_F10))
+	if (isKeyPressedDown(GLFW_KEY_T))
+	{
+		if (!windowSys.IsFullscreen())
+			windowSys.SetFullscreen(true);
+		else
+			windowSys.SetFullscreen(false);
+	}
+
+	if (isKeyPressedDown(GLFW_KEY_R))
+	{
+		frameDrawingPanel.getTransform()->setPosition(0, 0);
+		zoomLevel = 1;
+	}
+
+	if (isKeyPressed(GLFW_KEY_F9))
 	{
 		windowSys.SetWindowRes(1600, 800);
 		isMaximized = false;
