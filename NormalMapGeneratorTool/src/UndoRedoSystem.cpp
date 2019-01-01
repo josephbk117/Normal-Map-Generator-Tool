@@ -15,7 +15,7 @@ UndoRedoSystem::UndoRedoSystem(const glm::vec2 & sampleImageRes, unsigned int co
 	data = new unsigned char[maxAllocatedMemoryInBytes];
 }
 
-const unsigned int UndoRedoSystem::getMaxUndoSteps(const glm::vec2& sampleImageRes)
+const unsigned int UndoRedoSystem::getMaxUndoSteps()
 {
 	return maxAllocatedMemoryInBytes / bytesPerSection;
 }

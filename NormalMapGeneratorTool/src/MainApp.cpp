@@ -840,15 +840,25 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
+			bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
+			bool isRedoDisabled = undoRedoSystem.getCurrentSectionPosition() >= 1 && undoRedoSystem.getCurrentSectionPosition() <= undoRedoSystem.getMaxUndoSteps() - 1 ? false : true;
+
+			if (isUndoDisabled)
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 			if (ImGui::MenuItem("Undo", "CTRL+Z"))
 			{
 				heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 				heightMapTexData.updateTexture();
 			}
+			if (isUndoDisabled)
+				ImGui::PopStyleVar();
+			if (isRedoDisabled)
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 			if (ImGui::MenuItem("Redo", "CTRL+Y"))
 			{
 			}
-
+			if (isRedoDisabled)
+				ImGui::PopStyleVar();
 			ImGui::EndMenu();
 		}
 
@@ -896,10 +906,10 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
