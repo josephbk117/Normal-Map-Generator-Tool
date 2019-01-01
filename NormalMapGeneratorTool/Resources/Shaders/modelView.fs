@@ -193,6 +193,12 @@ void main()
     }
     else if(_normalMapModeOn == 3)
     {
-        FragColor = texture(inTexture, TexCoords);
+		//vec4 col = texture(inTexture, TexCoords);
+		//vec2 parallaxTexCoord = TexCoords;
+		//vec3 dirToEye = normalize(vec3(0, 0, _CameraZoom) - FragPos);
+		//parallaxTexCoord += (dirToEye * TBN[2]).xy * col.r;
+		
+        //FragColor = texture(inTexture, parallaxTexCoord);
+		FragColor = texture(inTexture, TexCoords);
     }
 }

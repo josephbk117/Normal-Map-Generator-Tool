@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <queue>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
 
@@ -28,7 +29,6 @@
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
-//TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
 //TODO : Make camera move around instead of model
 //TODO : Rotation editor values
 //TODO : Better Blurring
@@ -36,12 +36,14 @@
 //TODO : Add custom theme capability (with json support)
 //TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Brush Support
+//TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| ) 
 
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
 };
 
+const std::string VERSION_NAME = "v0.90 Alpha";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -70,12 +72,12 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
+inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
-inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
 inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
@@ -99,10 +101,11 @@ WindowSystem windowSys;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
+std::queue<glm::vec2> mouseCoordQueue;
 
 int main(void)
 {
-	windowSys.Init("Nora Normal Map Editor v0.85 alpha", 1600, 800);
+	windowSys.Init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Open GL init error" << std::endl;
@@ -547,7 +550,7 @@ void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
 	ImGui::Begin("Bottom_Bar", p_open, window_flags);
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
-	ImGui::Text("v0.85 - Alpha");
+	ImGui::Text(VERSION_NAME.c_str());
 	ImGui::End();
 }
 void SetupImGui()
@@ -906,10 +909,10 @@ inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -928,7 +931,7 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		delete dataBuffer;
 	}
 }
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameBufferPanel, bool isBlurOn)
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
 	static int prevState = GLFW_RELEASE;
 	static bool didActuallyDraw = false;
@@ -950,25 +953,22 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
 			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
 
-			//std::cout << "\nCursor pos : " << xpos << ", " << ypos;
-			/*glm::vec4 wD = frameBufferPanel.getPanelWorldDimension();
-			std::cout << "\nLeft side loc bound : " << wD.x;*/
-			float leftBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f - 0.25f;
-			float rightBound = (frameBufferPanel.getTransform()->getPosition().x + 1) * 0.5f + 0.25f;
-			float topBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f + 0.25f;
-			float bottomBound = (frameBufferPanel.getTransform()->getPosition().y + 1) * 0.5f - 0.25f;
-			//std::cout << "\nLeft bound = " << leftBound << " Right bound = " << rightBound
-				//<< " Top bound = " << topBound << " Bottom bound = " << bottomBound;
 
-			if (xpos >= leftBound && xpos <= rightBound /*&& ypos >= bottomBound && ypos <= topBound*//*frameBufferPanel.isPointInPanel(xpos, ypos)*/) //not working correctly
+			glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
+			glm::vec2 topRightCorner;
+			glm::vec2 bottomLeftCorner;
+			topRightCorner.x = midPointWorldPos.x + frameDrawingPanel.getTransform()->getScale().x;
+			topRightCorner.y = midPointWorldPos.y + frameDrawingPanel.getTransform()->getScale().y;
+			bottomLeftCorner.x = midPointWorldPos.x - frameDrawingPanel.getTransform()->getScale().x;
+			bottomLeftCorner.y = midPointWorldPos.y - frameDrawingPanel.getTransform()->getScale().y;
+
+			if (xpos * 2.0f - 1.0f > bottomLeftCorner.x && xpos * 2.0f - 1.0f < topRightCorner.x && ypos * 2.0f - 1.0f > bottomLeftCorner.y && ypos * 2.0f - 1.0f < topRightCorner.y)
 			{
 				float prevX = prevMouseCoord.x / windowSys.GetWindowRes().x;
 				float prevY = 1.0f - (prevMouseCoord.y / windowSys.GetWindowRes().y);
 
-				glm::vec4 worldDimensions = frameBufferPanel.getPanelWorldDimension();
-
-				xpos = /*(xpos - leftBound) / (rightBound - leftBound);*/((xpos - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
-				ypos = ((ypos - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+				xpos = ((xpos * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+				ypos = ((ypos * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 				const float maxWidth = heightMapTexData.getWidth();
 				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
@@ -982,8 +982,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				{
 					if (distOfPrevAndCurrentMouseCoord > 0.03f)
 					{
-						prevX = /*(prevX - leftBound) / (rightBound - leftBound);*/((prevX - worldDimensions.x) / (worldDimensions.y - worldDimensions.x)) + (frameBufferPanel.getTransform()->getPosition().x * zoomLevel * 0.5f); //works at default zoom as 0.5
-						prevY = ((prevY - worldDimensions.w) / (worldDimensions.z - worldDimensions.w)) + (frameBufferPanel.getTransform()->getPosition().y * zoomLevel * 0.5f);
+						prevX = ((prevX * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+						prevY = ((prevY * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 						glm::vec2 prevPoint(prevX, prevY);
 						glm::vec2 toPoint(xpos, ypos);
 						glm::vec2 curPoint = prevPoint;
@@ -1040,7 +1040,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		if (prevState == GLFW_PRESS && didActuallyDraw)
 		{
 			undoRedoSystem.record(heightMapTexData.getTextureData());
-			std::cout << "\nTake texture into undo";
 			didActuallyDraw = false;
 		}
 		prevMouseCoord = glm::vec2(-10, -10);
