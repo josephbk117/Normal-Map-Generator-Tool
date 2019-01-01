@@ -705,7 +705,7 @@ namespace MeshLoadingSystem
 			std::vector<glm::vec3> biTangents;
 
 			const int vertexSize = resourceObjvertices.size();
-			std::cout << "Vertex size = " << vertexSize;
+			//std::cout << "Vertex size = " << vertexSize;
 			for (unsigned int i = 0; i < resourceObjvertices.size() - 3; i += 3)
 			{
 				const glm::vec3 v0 = resourceObjvertices[i].getPos();
@@ -740,7 +740,7 @@ namespace MeshLoadingSystem
 				biTangents.push_back(bitangent);
 				biTangents.push_back(bitangent);
 
-				std::cout << "\nTangent at " << i << " = " << tangents[i].x << " ," << tangents[i].y << " ," << tangents[i].z;
+				//std::cout << "\nTangent at " << i << " = " << tangents[i].x << " ," << tangents[i].y << " ," << tangents[i].z;
 			}
 
 

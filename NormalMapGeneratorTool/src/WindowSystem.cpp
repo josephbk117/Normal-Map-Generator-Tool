@@ -18,7 +18,7 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	maxWindowRes.x = videoMode->width;
 	maxWindowRes.y = videoMode->height;
 	glfwSetWindowSizeLimits(window, WINDOW_SIZE_MIN, WINDOW_SIZE_MIN, maxWindowRes.x, maxWindowRes.y);
-	glfwSetWindowPos(window, 0, 0);
+	glfwSetWindowPos(window, 50, 50);
 
 	if (!window)
 	{

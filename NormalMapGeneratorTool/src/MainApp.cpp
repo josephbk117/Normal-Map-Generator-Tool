@@ -112,6 +112,8 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	glewExperimental = GL_TRUE;
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
 	SetupImGui();
 	themeManager.Init();
 	themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
@@ -262,7 +264,6 @@ int main(void)
 
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
-		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
@@ -512,11 +513,15 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 			}
 		});
 	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Load grey-scale height map");
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 	ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
 	ImGui::PopItemWidth();
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Save current view-mode image to file");
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	ImGui::Spacing();
@@ -751,6 +756,8 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		}
 		ImGui::EndCombo();
 	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Load 3d model for preview");
 
 	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
@@ -778,7 +785,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::SameLine(0, 5);
 	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
+	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
 	ImGui::PopStyleColor();
 
 	ImGui::SameLine(0, 5);
@@ -819,6 +826,8 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 			});
 		}
 		ImGui::PopStyleVar();
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Load texture for preview model");
 	}
 	ImGui::End();
 
@@ -927,7 +936,6 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getWidth(), heightMapTexData.getHeight(), 3, dataBuffer);
-		std::cout << "Saved at " << locationStr;
 		delete dataBuffer;
 	}
 }
@@ -952,7 +960,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		{
 			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
 			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
-
 
 			glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
 			glm::vec2 topRightCorner;
@@ -1191,6 +1198,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	const float distanceRemap = brushData.brushScale / px_height;
 
 	//Temp allocation of image section
+
 	const int _width = endX - startX;
 	const int _height = endY - startY;
 	const int totalPixelCount = _width * _height;
