@@ -30,7 +30,6 @@
 
 //TODO : Drawing should take copy of entire image before button press and make changes on that.(prevents overwrite)
 //TODO : Make camera move around instead of model
-//TODO : Implement modal dialouges
 //TODO : Rotation editor values
 //TODO : Better Blurring
 //TODO : Add custom path for preview texture on model
@@ -78,7 +77,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushDa
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
 inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
-void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag);
+void SetStatesForSavingNormalMap();
 void SetupImGui();
 
 float zoomLevel = 1;
@@ -251,11 +250,7 @@ int main(void)
 
 		glViewport(0, 0, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		if (shouldSaveNormalMap)
-		{
-			int retflag;
-			SetStatesForSavingNormalMap(changeSize, prevWindowSize, retflag);
-			if (retflag == 3) continue;
-		}
+			SetStatesForSavingNormalMap();
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
@@ -292,11 +287,7 @@ int main(void)
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
 
-		if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		{
-			heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
-			heightMapTexData.updateTexture();
-		}
+
 
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
@@ -577,18 +568,10 @@ void SetupImGui()
 	IM_ASSERT(font != NULL);
 	IM_ASSERT(menuBarLargerText != NULL);
 }
-void SetStatesForSavingNormalMap(bool &changeSize, glm::vec2 &prevWindowSize, int &retflag)
+void SetStatesForSavingNormalMap()
 {
-	retflag = 1;
 	glViewport(0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight());
 	fbs.updateTextureDimensions(heightMapTexData.getWidth(), heightMapTexData.getHeight());
-	if (changeSize)
-	{
-		prevWindowSize = windowSys.GetWindowRes();
-		changeSize = false;
-		retflag = 3;
-		return;
-	}
 }
 void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
@@ -620,7 +603,13 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 	if (isKeyPressed(GLFW_KEY_8))
 		frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
 
-	if (isKeyPressed(GLFW_KEY_V))
+	if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	{
+		heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
+		heightMapTexData.updateTexture();
+	}
+
+	if (isKeyPressed(GLFW_KEY_F10))
 	{
 		windowSys.SetWindowRes(1600, 800);
 		isMaximized = false;

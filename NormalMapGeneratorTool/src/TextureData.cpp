@@ -77,8 +77,12 @@ void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 
 void TextureData::updateTexture()
 {
-	GLenum format = TextureManager::getTextureFormatFromData(4);
+	GLint currentTexture;
+	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
+	GLenum format = TextureManager::getTextureFormatFromData(componentCount);
+	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
+	glBindTexture(GL_TEXTURE_2D, currentTexture);
 }
 
 void TextureData::updateTextureData(unsigned char * data)

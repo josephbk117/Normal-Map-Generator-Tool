@@ -20,6 +20,11 @@ const unsigned int UndoRedoSystem::getMaxUndoSteps(const glm::vec2& sampleImageR
 	return maxAllocatedMemoryInBytes / bytesPerSection;
 }
 
+const unsigned int UndoRedoSystem::getCurrentSectionPosition()
+{
+	return sectionsFilled;
+}
+
 void UndoRedoSystem::record(unsigned char * data)
 {
 	if (sectionsFilled + 1 > maxAllocatedMemoryInBytes / bytesPerSection)
