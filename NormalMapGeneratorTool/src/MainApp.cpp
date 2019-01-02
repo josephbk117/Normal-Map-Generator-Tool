@@ -78,7 +78,7 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
@@ -316,7 +316,6 @@ int main(void)
 		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
-		static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
 		if (shouldSaveNormalMap)
 		{
 			SaveNormalMapToFile(saveLocation);
@@ -424,7 +423,7 @@ int main(void)
 		bool *p_open = nullptr;
 
 		BottomBarDisplay(p_open, window_flags);
-		SideBarDisplay(p_open, window_flags, frameDrawingPanel, imageLoadLocation,
+		SideBarDisplay(p_open, window_flags, frameDrawingPanel,
 			saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
 		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
 
@@ -467,8 +466,10 @@ int main(void)
 	windowSys.Destroy();
 	return 0;
 }
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  imageLoadLocation[500], char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
 {
+	static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
+
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Side_Bar", p_open, window_flags);
@@ -508,7 +509,8 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		currentLoadingOption = LoadingOption::TEXTURE;
 		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 		{
-			imageLoadLocation = (char *)str.c_str();
+			for (unsigned int i = 0; i < str.length(); i++)
+				imageLoadLocation[i] = str[i];
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				TextureManager::getTextureDataFromFile(str, heightMapTexData);
@@ -520,7 +522,7 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Load grey-scale height map");
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
-	ImGui::InputText("## Save location", saveLocation, sizeof(saveLocation));
+	ImGui::InputText("## Save location", saveLocation, 500);
 	ImGui::PopItemWidth();
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
@@ -830,7 +832,7 @@ inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, 
 		ImGui::Text("Light Colour");
 		ImGui::ColorEdit3("Light Color", &lightColour[0]);
 		ImGui::PopItemWidth();
-		static char diffuseTextureImageLocation[500];
+		static char diffuseTextureImageLocation[500] = "Resources\\Textures\\crate.jpg";
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.7f);
 		ImGui::InputText("## Preview Image Location", diffuseTextureImageLocation, sizeof(diffuseTextureImageLocation));
