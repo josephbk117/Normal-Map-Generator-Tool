@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <chrono>
+#include <thread>
 #include <queue>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
@@ -29,12 +31,9 @@
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
-//TODO : Make camera move around instead of model
 //TODO : Rotation editor values
 //TODO : Better Blurring
-//TODO : Add custom path for preview texture on model
 //TODO : Add custom theme capability (with json support)
-//TODO : Undo/Redo Capability, 20 steps in RAM after that Write to disk
 //TODO : Custom Brush Support
 //TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| ) 
 
@@ -91,6 +90,7 @@ bool isUsingCustomTheme = false;
 
 ImFont* menuBarLargerText = NULL;
 MeshLoadingSystem::MeshLoader modelLoader;
+BrushData brushData;
 TextureData heightMapTexData;
 TextureData diffuseTexDataForPreview;
 ModelObject *modelPreviewObj = nullptr;
@@ -101,7 +101,60 @@ WindowSystem windowSys;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
-std::queue<glm::vec2> mouseCoordQueue;
+
+struct BoundsAndPos
+{
+public:
+	glm::vec2 mouseCoord;
+	float left, right, bottom, up;
+};
+
+std::queue<BoundsAndPos> mouseCoordQueue;
+
+
+void ApplyChangesToPanel()
+{
+	while (!windowSys.IsWindowClosing())
+	{
+		bool needsUpdate = false;
+		while (mouseCoordQueue.size() > 0)
+		{
+			BoundsAndPos boundAndPos = mouseCoordQueue.front();
+			mouseCoordQueue.pop();
+			glm::vec2 mousePos = boundAndPos.mouseCoord;
+			glm::vec2 prevMousePos = mouseCoordQueue.front().mouseCoord;
+
+			const float maxWidth = heightMapTexData.getWidth();
+			const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
+
+			glm::vec2 curPoint = prevMousePos;
+			glm::vec2 incValue = glm::normalize(prevMousePos - mousePos) * 0.01f;
+
+
+			/*for (int i = 0; i < 10; i++)
+			{
+				float left = boundAndPos.left;
+				float right = boundAndPos.right;
+				float bottom = boundAndPos.bottom;
+				float top = boundAndPos.up;
+
+				left = glm::clamp(left, 0.0f, maxWidth);
+				right = glm::clamp(right, 0.0f, maxWidth);
+				bottom = glm::clamp(bottom, 0.0f, maxWidth);
+				top = glm::clamp(top, 0.0f, maxWidth);
+
+				curPoint += incValue;
+				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y, brushData);
+			}*/
+			
+			SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
+			needsUpdate = true;
+		}
+		if (needsUpdate)
+			heightMapTexData.updateTexture();
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	}
+}
 
 int main(void)
 {
@@ -227,7 +280,6 @@ int main(void)
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
-	BrushData brushData;
 	brushData.brushScale = 10.0f;
 	brushData.brushOffset = 1.0f;
 	brushData.brushStrength = 1.0f;
@@ -247,6 +299,7 @@ int main(void)
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 
+	std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
 	while (!windowSys.IsWindowClosing())
 	{
@@ -455,6 +508,7 @@ int main(void)
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 		windowSys.UpdateWindow();
 	}
+	applyPanelChangeThread.join();
 
 	delete modelPreviewObj;
 	delete cubeForSkybox;
@@ -982,7 +1036,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		float minDistThresholdForDraw = (brushData.brushRate / heightMapTexData.getWidth()) * zoomLevel;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
 
-		if (currentMouseCoord != prevMouseCoord /*&& distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw*/)
+		if (currentMouseCoord != prevMouseCoord)
 		{
 			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
 			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
@@ -1013,7 +1067,14 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 				if (!isBlurOn)
 				{
-					if (distOfPrevAndCurrentMouseCoord > 0.03f)
+					BoundsAndPos bandp;
+					bandp.left = glm::clamp(left, 0.0f, maxWidth);
+					bandp.right = glm::clamp(right, 0.0f, maxWidth);
+					bandp.bottom = glm::clamp(bottom, 0.0f, maxWidth);
+					bandp.up = glm::clamp(top, 0.0f, maxWidth);
+					bandp.mouseCoord = glm::vec2(xpos, ypos);
+					mouseCoordQueue.push(bandp);
+					/*if (distOfPrevAndCurrentMouseCoord > 0.03f)
 					{
 						prevX = ((prevX * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
 						prevY = ((prevY * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
@@ -1043,14 +1104,13 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						}
 					}
 					else
-					{
-						left = glm::clamp(left, 0.0f, maxWidth);
-						right = glm::clamp(right, 0.0f, maxWidth);
-						bottom = glm::clamp(bottom, 0.0f, maxWidth);
-						top = glm::clamp(top, 0.0f, maxWidth);
-						SetPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
-					}
-					didActuallyDraw = true;
+					{*/
+					/*left = glm::clamp(left, 0.0f, maxWidth);
+					right = glm::clamp(right, 0.0f, maxWidth);
+					bottom = glm::clamp(bottom, 0.0f, maxWidth);
+					top = glm::clamp(top, 0.0f, maxWidth);
+					SetPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);*/
+					//}
 				}
 				else if (isBlurOn)
 				{
@@ -1059,8 +1119,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					bottom = glm::clamp(bottom, 0.0f, maxWidth);
 					top = glm::clamp(top, 0.0f, maxWidth);
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
-					didActuallyDraw = true;
 				}
+				didActuallyDraw = true;
 				heightMapTexData.updateTexture();
 				prevMouseCoord = currentMouseCoord;
 			}
