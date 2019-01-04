@@ -1099,13 +1099,13 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				heightMapTexData.setTextureDirty();
 				prevMouseCoord = currentMouseCoord;
 			}
-			else
+			else //Is not within the panel bounds
 			{
 				didActuallyDraw = false;
 			}
-		}
+		}//Check if same mouse position
 	}
-	else
+	else //Not pressing left-mouse button
 	{
 		if (prevState == GLFW_PRESS && didActuallyDraw)
 		{
@@ -1119,6 +1119,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
+#if NORA_CUSTOM_WINDOW_CHROME
 	if (state == GLFW_PRESS)
 	{
 		if (initPos == glm::vec2(-1000, -1000))
@@ -1207,6 +1208,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 	}
+#endif
 }
 
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
