@@ -64,12 +64,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool isKeyPressedDown(int key);
-void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
-void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos, const BrushData& brushData);
+void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
+void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &normalmapPanel, bool isBlurOn);
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
 inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
@@ -114,9 +114,11 @@ std::queue<BoundsAndPos> mouseCoordQueue;
 
 void ApplyChangesToPanel()
 {
+	const float maxWidth = heightMapTexData.getWidth();
+	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
+
 	while (!windowSys.IsWindowClosing())
 	{
-		bool needsUpdate = false;
 		while (mouseCoordQueue.size() > 0)
 		{
 			BoundsAndPos boundAndPos = mouseCoordQueue.front();
@@ -124,14 +126,11 @@ void ApplyChangesToPanel()
 			glm::vec2 mousePos = boundAndPos.mouseCoord;
 			glm::vec2 prevMousePos = mouseCoordQueue.front().mouseCoord;
 
-			const float maxWidth = heightMapTexData.getWidth();
-			const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
-
 			glm::vec2 curPoint = prevMousePos;
-			glm::vec2 incValue = glm::normalize(prevMousePos - mousePos) * 0.01f;
+			glm::vec2 incValue = (prevMousePos - mousePos) * 0.333f;
+			curPoint += incValue;
 
-
-			/*for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 3; i++)
 			{
 				float left = boundAndPos.left;
 				float right = boundAndPos.right;
@@ -144,15 +143,11 @@ void ApplyChangesToPanel()
 				top = glm::clamp(top, 0.0f, maxWidth);
 
 				curPoint += incValue;
-				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y, brushData);
-			}*/
-			
-			SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
-			needsUpdate = true;
+				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
+			}
+			//SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
 		}
-		if (needsUpdate)
-			heightMapTexData.updateTexture();
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 
@@ -299,7 +294,7 @@ int main(void)
 	bool changeSize = false;
 	glm::vec2  prevWindowSize = glm::vec2(500, 500);
 
-	std::thread applyPanelChangeThread(ApplyChangesToPanel);
+	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
 	while (!windowSys.IsWindowClosing())
 	{
@@ -348,8 +343,10 @@ int main(void)
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curPos.x, curPos.y, isMaximized, prevGlobalFirstMouseCoord);
-		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, brushData, frameDrawingPanel, isBlurOn);
+		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
 		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
+
+		heightMapTexData.updateTexture();
 
 		normalmapPanel.getTransform()->update();
 		//---- Applying Normal Map Shader Uniforms---//
@@ -508,7 +505,7 @@ int main(void)
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 		windowSys.UpdateWindow();
 	}
-	applyPanelChangeThread.join();
+	//applyPanelChangeThread.join();
 
 	delete modelPreviewObj;
 	delete cubeForSkybox;
@@ -1019,28 +1016,23 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		delete dataBuffer;
 	}
 }
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, BrushData &brushData, DrawingPanel &frameDrawingPanel, bool isBlurOn)
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
 	static int prevState = GLFW_RELEASE;
 	static bool didActuallyDraw = false;
+	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
 
 	if (state == GLFW_PRESS)
 	{
-		double xpos, ypos;
 		glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
-		xpos = currentMouseCoord.x;
-		ypos = currentMouseCoord.y;
+		glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
+		glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
 
-		glm::vec2 windowNormalizedCurrentMouseCoord = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, currentMouseCoord.y / windowSys.GetWindowRes().y);
-		glm::vec2 windowNormalizedPrevMouseCoord = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, prevMouseCoord.y / windowSys.GetWindowRes().y);
-		float minDistThresholdForDraw = (brushData.brushRate / heightMapTexData.getWidth()) * zoomLevel;
-		float distOfPrevAndCurrentMouseCoord = glm::distance(windowNormalizedCurrentMouseCoord, windowNormalizedPrevMouseCoord);
+		float minDistThresholdForDraw = brushData.brushRate;
+		float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
 
 		if (currentMouseCoord != prevMouseCoord)
 		{
-			xpos = xpos / windowSys.GetWindowRes().x; // window size normalized width
-			ypos = 1.0f - (ypos / windowSys.GetWindowRes().y); // window size normalized height
-
 			glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
 			glm::vec2 topRightCorner;
 			glm::vec2 bottomLeftCorner;
@@ -1049,83 +1041,68 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 			bottomLeftCorner.x = midPointWorldPos.x - frameDrawingPanel.getTransform()->getScale().x;
 			bottomLeftCorner.y = midPointWorldPos.y - frameDrawingPanel.getTransform()->getScale().y;
 
-			if (xpos * 2.0f - 1.0f > bottomLeftCorner.x && xpos * 2.0f - 1.0f < topRightCorner.x && ypos * 2.0f - 1.0f > bottomLeftCorner.y && ypos * 2.0f - 1.0f < topRightCorner.y)
+			if (wnCurMouse.x * 2.0f - 1.0f > bottomLeftCorner.x && wnCurMouse.x * 2.0f - 1.0f < topRightCorner.x &&
+				wnCurMouse.y * 2.0f - 1.0f > bottomLeftCorner.y && wnCurMouse.y * 2.0f - 1.0f < topRightCorner.y &&
+				distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
 			{
-				float prevX = prevMouseCoord.x / windowSys.GetWindowRes().x;
-				float prevY = 1.0f - (prevMouseCoord.y / windowSys.GetWindowRes().y);
-
-				xpos = ((xpos * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-				ypos = ((ypos * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+				float curX = ((wnCurMouse.x * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+				float curY = ((wnCurMouse.y * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 				const float maxWidth = heightMapTexData.getWidth();
 				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
 
-				float left = (xpos - convertedBrushScale) * maxWidth;
-				float right = (xpos + convertedBrushScale) * maxWidth;
-				float bottom = (ypos - convertedBrushScale) * maxWidth;
-				float top = (ypos + convertedBrushScale) * maxWidth;
-
 				if (!isBlurOn)
 				{
-					BoundsAndPos bandp;
-					bandp.left = glm::clamp(left, 0.0f, maxWidth);
-					bandp.right = glm::clamp(right, 0.0f, maxWidth);
-					bandp.bottom = glm::clamp(bottom, 0.0f, maxWidth);
-					bandp.up = glm::clamp(top, 0.0f, maxWidth);
-					bandp.mouseCoord = glm::vec2(xpos, ypos);
-					mouseCoordQueue.push(bandp);
-					/*if (distOfPrevAndCurrentMouseCoord > 0.03f)
+					float density = 0.01f;
+					if (distOfPrevAndCurrentMouseCoord > density)
 					{
-						prevX = ((prevX * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-						prevY = ((prevY * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+						float prevX = ((wnPrevMouse.x * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+						float prevY = ((wnPrevMouse.y * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+
 						glm::vec2 prevPoint(prevX, prevY);
-						glm::vec2 toPoint(xpos, ypos);
+						glm::vec2 toPoint(curX, curY);
 						glm::vec2 curPoint = prevPoint;
 
-						distOfPrevAndCurrentMouseCoord = glm::min(distOfPrevAndCurrentMouseCoord, 0.03f);
-
-						int numberOfPoints = (distOfPrevAndCurrentMouseCoord / 0.03f) * 5;
-						glm::vec2 incValue = (prevPoint - toPoint) * (1.0f / numberOfPoints);
+						float density = 0.01f;
+						glm::vec2 diff = (prevPoint - toPoint);
+						glm::vec2 incValue = glm::normalize(diff) * density;
+						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 10.0f));
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{
-							left = curPoint.x * maxWidth - convertedBrushScale;
-							right = curPoint.x * maxWidth + convertedBrushScale;
-							bottom = curPoint.y * maxWidth - convertedBrushScale;
-							top = curPoint.y * maxWidth + convertedBrushScale;
-
-							left = glm::clamp(left, 0.0f, maxWidth);
-							right = glm::clamp(right, 0.0f, maxWidth);
-							bottom = glm::clamp(bottom, 0.0f, maxWidth);
-							top = glm::clamp(top, 0.0f, maxWidth);
-
+							float left = glm::clamp(curPoint.x * maxWidth - convertedBrushScale, 0.0f, maxWidth);
+							float right = glm::clamp(curPoint.x * maxWidth + convertedBrushScale, 0.0f, maxWidth);
+							float bottom = glm::clamp(curPoint.y * maxWidth - convertedBrushScale, 0.0f, maxWidth);
+							float top = glm::clamp(curPoint.y * maxWidth + convertedBrushScale, 0.0f, maxWidth);
 							curPoint += incValue;
-							SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y, brushData);
+							SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
 						}
 					}
 					else
-					{*/
-					/*left = glm::clamp(left, 0.0f, maxWidth);
-					right = glm::clamp(right, 0.0f, maxWidth);
-					bottom = glm::clamp(bottom, 0.0f, maxWidth);
-					top = glm::clamp(top, 0.0f, maxWidth);
-					SetPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);*/
-					//}
+					{
+						float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+						float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+						float bottom = glm::clamp((curY - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+						float top = glm::clamp((curY + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+						SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+					}
 				}
 				else if (isBlurOn)
 				{
-					left = glm::clamp(left, 0.0f, maxWidth);
-					right = glm::clamp(right, 0.0f, maxWidth);
-					bottom = glm::clamp(bottom, 0.0f, maxWidth);
-					top = glm::clamp(top, 0.0f, maxWidth);
-					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, xpos, ypos, brushData);
+					float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+					float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+					float bottom = glm::clamp((curY - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+					float top = glm::clamp((curY + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
-				heightMapTexData.updateTexture();
+				heightMapTexData.setTextureDirty();
 				prevMouseCoord = currentMouseCoord;
 			}
 			else
+			{
 				didActuallyDraw = false;
+			}
 		}
 	}
 	else
@@ -1247,7 +1224,7 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 	}
 }
 
-inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
+inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	ColourData colData;
 	float rVal;
@@ -1275,7 +1252,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	}
 }
 
-inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos, const BrushData& brushData)
+inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);

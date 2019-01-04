@@ -77,6 +77,8 @@ void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 
 void TextureData::updateTexture()
 {
+	if (!requiresUpdate)
+		return;
 	GLint currentTexture;
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
 	GLenum format = TextureManager::getTextureFormatFromData(componentCount);
@@ -96,6 +98,11 @@ ColourData TextureData::getTexelColor(int x, int y)
 	ColourData colData;
 	colData.setColour_8_Bit(data[i], data[i + 1], data[i + 2], data[i + 3]);
 	return colData;
+}
+
+void TextureData::setTextureDirty()
+{
+	requiresUpdate = true;
 }
 
 TextureData::~TextureData()

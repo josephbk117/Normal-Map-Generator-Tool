@@ -9,6 +9,7 @@ private:
 	int height = 0;
 	int componentCount = 0;
 	unsigned int texId = 0;
+	bool requiresUpdate = false;
 public:
 	TextureData();
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
@@ -23,6 +24,7 @@ public:
 	void updateTexture();
 	void updateTextureData(unsigned char* data);
 	ColourData getTexelColor(int x, int y);
+	void setTextureDirty();
 
 	~TextureData();
 };
