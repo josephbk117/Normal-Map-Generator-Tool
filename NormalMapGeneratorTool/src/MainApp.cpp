@@ -26,6 +26,7 @@
 #include "ModelObject.h"
 #include "ThemeManager.h"
 #include "ModalWindow.h"
+#include "ViewBasedUtilities.h"
 
 #include "stb_image_write.h"
 #include "UndoRedoSystem.h"
@@ -73,24 +74,18 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
 inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
-inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
-inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags);
+inline void DisplayLightSettingsUserInterface();
+inline void DisplayNormalSettingsUserInterface();
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
-float zoomLevel = 1;
-float modelPreviewRotationSpeed = 0.1f;
-float modelPreviewZoomLevel = -5.0f;
-float modelRoughness = 5.0f;
-float modelReflectivity = 0.5f;
-int modelViewMode = 2;
-int mapDrawViewMode = 1;
-
 MeshLoadingSystem::MeshLoader modelLoader;
 ImFont* menuBarLargerText = NULL;
+PreviewStateUtility previewStateUtility;
+NormalViewStateUtility normalViewStateUtility;
 
 FrameBufferSystem fbs;
 FrameBufferSystem previewFbs;
@@ -264,22 +259,11 @@ int main(void)
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 
-	float normalMapStrength = 10.0f;
-	float specularity = 10.0f;
-	float specularityStrength = 0.5f;
-	float lightIntensity = 0.5f;
-	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
-	zoomLevel = 1;
-	bool flipX_Ydir = false;
-	bool redChannelActive = true;
-	bool greenChannelActive = true;
-	bool blueChannelActive = true;
-
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
 	brushData.brushScale = 10.0f;
-	brushData.brushOffset = 1.0f;
+	brushData.brushOffset = 0.5f;
 	brushData.brushStrength = 1.0f;
 	brushData.brushMinHeight = 0.0f;
 	brushData.brushMaxHeight = 1.0f;
@@ -311,7 +295,7 @@ int main(void)
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
 		const glm::vec2 curPos = windowSys.GetCursorPos();
-		HandleKeyboardInput(normalMapStrength, deltaTime, frameDrawingPanel, isMaximized);
+		HandleKeyboardInput(normalViewStateUtility.normalMapStrength, deltaTime, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
@@ -337,7 +321,7 @@ int main(void)
 			aspectRatioHolder = glm::vec2(1, aspectRatio);
 		else
 			aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1);
-		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * zoomLevel);
+		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.5f));
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
 		frameDrawingPanel.getTransform()->update();
@@ -354,18 +338,18 @@ int main(void)
 		normalmapPanel.getTransform()->update();
 		//---- Applying Normal Map Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-		normalmapShader.applyShaderFloat(strengthValueUniform, normalMapStrength);
-		normalmapShader.applyShaderFloat(specularityUniform, specularity);
-		normalmapShader.applyShaderFloat(specularityStrengthUniform, specularityStrength);
-		normalmapShader.applyShaderFloat(lightIntensityUniform, lightIntensity);
-		normalmapShader.applyShaderVector3(lightDirectionUniform, glm::normalize(glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f)));
+		normalmapShader.applyShaderFloat(strengthValueUniform, normalViewStateUtility.normalMapStrength);
+		normalmapShader.applyShaderFloat(specularityUniform, normalViewStateUtility.specularity);
+		normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
+		normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
+		normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
 		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getWidth());
 		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getHeight());
-		normalmapShader.applyShaderInt(normalMapModeOnUniform, mapDrawViewMode);
-		normalmapShader.applyShaderBool(flipXYdirUniform, flipX_Ydir);
-		normalmapShader.applyShaderBool(RedChannelUniform, redChannelActive);
-		normalmapShader.applyShaderBool(GreenChannelUniform, greenChannelActive);
-		normalmapShader.applyShaderBool(BlueChannelUniform, blueChannelActive);
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
+		normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
+		normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
+		normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
+		normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
 		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
@@ -398,30 +382,27 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		static float rot = 0;
-		static glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
-		static glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
-		static glm::vec3 lightColour = glm::vec3(1, 1, 1);
 		rot += 0.1f;
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, modelPreviewZoomLevel)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (previewStateUtility.modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		modelViewShader.applyShaderInt(modelNormalMapModeUniform, modelViewMode);
-		modelViewShader.applyShaderFloat(modelCameraZoomUniform, modelPreviewZoomLevel);
-		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalMapStrength);
-		modelViewShader.applyShaderFloat(modelLightIntensityUniform, lightIntensity);
-		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, specularity);
-		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, specularityStrength);
-		modelViewShader.applyShaderFloat(modelRoughnessUniform, modelRoughness);
-		modelViewShader.applyShaderFloat(modelReflectivityUniform, modelReflectivity);
-		modelViewShader.applyShaderVector3(modelLightDirectionUniform, glm::normalize(lightDirection));
+		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
+		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
+		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
+		modelViewShader.applyShaderFloat(modelLightIntensityUniform, normalViewStateUtility.lightIntensity);
+		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, normalViewStateUtility.specularity);
+		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
+		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.modelRoughness);
+		modelViewShader.applyShaderFloat(modelReflectivityUniform, previewStateUtility.modelReflectivity);
+		modelViewShader.applyShaderVector3(modelLightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
 		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 2);
 
-		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, diffuseColour);
-		modelViewShader.applyShaderVector3(modelLightColourUniform, lightColour);
-		modelViewShader.applyShaderVector3(modelAmbientColourUniform, ambientColour);
+		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
+		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
+		modelViewShader.applyShaderVector3(modelAmbientColourUniform, previewStateUtility.ambientColour);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
@@ -437,14 +418,16 @@ int main(void)
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
 			float scale = 1.0f;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth())*scale, (brushData.brushScale / heightMapTexData.getHeight())*aspectRatio) * zoomLevel * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth())*scale,
+				(brushData.brushScale / heightMapTexData.getHeight())*aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
 		}
 		else
 		{
 			float scale = 1.0f;
 			if (windowSys.GetWindowRes().y < heightMapTexData.getHeight())
 				scale = 1;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio, (brushData.brushScale / heightMapTexData.getHeight())*scale) * zoomLevel * 2.0f);
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio,
+				(brushData.brushScale / heightMapTexData.getHeight())*scale) * normalViewStateUtility.zoomLevel * 2.0f);
 		}
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -453,7 +436,7 @@ int main(void)
 			-(((curPos.y / windowSys.GetWindowRes().y)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
-		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, brushData.brushOffset);
+		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, glm::pow(brushData.brushOffset, 2) * 10.0f);
 		brushPreviewShader.applyShaderVector3(brushPreviewColourUniform, (brushData.heightMapPositiveDir ? glm::vec3(1) : glm::vec3(0)));
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 		brushPanel.draw();
@@ -473,17 +456,16 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoResize;
 		window_flags |= ImGuiWindowFlags_NoCollapse;
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
-		bool *p_open = nullptr;
 
 		DisplayBottomBar(window_flags);
 		DisplaySideBar(window_flags, frameDrawingPanel, saveLocation, shouldSaveNormalMap, changeSize);
 		DisplayBrushSettingsUserInterface(isBlurOn);
 
-		if (mapDrawViewMode < 3)
+		if (normalViewStateUtility.mapDrawViewMode < 3)
 		{
-			DisplayNormalSettingsUserInterface(normalMapStrength, flipX_Ydir, redChannelActive, greenChannelActive, blueChannelActive);
-			if (mapDrawViewMode == 2)
-				DisplayLightSettingsUserInterface(lightIntensity, specularity, specularityStrength, lightDirection);
+			DisplayNormalSettingsUserInterface();
+			if (normalViewStateUtility.mapDrawViewMode == 2)
+				DisplayLightSettingsUserInterface();
 		}
 
 		ImGui::PopStyleColor();
@@ -496,7 +478,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		DisplayPreview(window_flags, diffuseColour, ambientColour, lightColour);
+		DisplayPreview(window_flags);
 		fileExplorer.display();
 		modalWindow.display();
 
@@ -547,7 +529,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
-		zoomLevel = 1;
+		normalViewStateUtility.zoomLevel = 1;
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + R)");
@@ -591,25 +573,25 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
-	if (mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { normalViewStateUtility.mapDrawViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + H)");
 
 	ImGui::SameLine(0, 5);
-	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (normalViewStateUtility.mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
+	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { normalViewStateUtility.mapDrawViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + J)");
 
 	ImGui::SameLine(0, 5);
-	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (normalViewStateUtility.mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
+	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { normalViewStateUtility.mapDrawViewMode = 2; }
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + K)");
 	ImGui::PopStyleColor();
@@ -649,42 +631,42 @@ void SetStatesForSavingNormalMap()
 void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
-	if (isKeyPressed(GLFW_KEY_A))
-		normalMapStrength += 2.5f * deltaTime;
-	if (isKeyPressed(GLFW_KEY_D))
-		normalMapStrength -= 2.5f * deltaTime;
+	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		normalMapStrength += 0.05f;
+	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		normalMapStrength -= 0.05f;
 	if (isKeyPressed(GLFW_KEY_W))
-		zoomLevel += zoomLevel * 1.5f * deltaTime;
+		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
 	if (isKeyPressed(GLFW_KEY_S))
-		zoomLevel -= zoomLevel * 1.5f * deltaTime;
-	zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
+		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
+	normalViewStateUtility.zoomLevel = glm::clamp(normalViewStateUtility.zoomLevel, 0.1f, 5.0f);
 
 	//Set normal map view mode in editor
 	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		mapDrawViewMode = 3;
+		normalViewStateUtility.mapDrawViewMode = 3;
 	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		mapDrawViewMode = 1;
+		normalViewStateUtility.mapDrawViewMode = 1;
 	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-		mapDrawViewMode = 2;
+		normalViewStateUtility.mapDrawViewMode = 2;
 
 	//Set normal map view mode in model preview
 	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		modelViewMode = 3;
+		previewStateUtility.modelViewMode = 3;
 	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		modelViewMode = 1;
+		previewStateUtility.modelViewMode = 1;
 	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		modelViewMode = 2;
+		previewStateUtility.modelViewMode = 2;
 	if (isKeyPressed(GLFW_KEY_L) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		modelViewMode = 4;
+		previewStateUtility.modelViewMode = 4;
 
 	//Normal map movement
-	if (isKeyPressed(GLFW_KEY_LEFT))
+	if (isKeyPressed(GLFW_KEY_LEFT) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
-	if (isKeyPressed(GLFW_KEY_RIGHT))
+	if (isKeyPressed(GLFW_KEY_RIGHT) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
 		frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
-	if (isKeyPressed(GLFW_KEY_UP))
+	if (isKeyPressed(GLFW_KEY_UP) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
 		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
-	if (isKeyPressed(GLFW_KEY_DOWN))
+	if (isKeyPressed(GLFW_KEY_DOWN) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
 		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
 	if (isKeyPressed(GLFW_KEY_8))
 		frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
@@ -697,6 +679,27 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		if (undoRedoSystem.getCurrentSectionPosition() == 0)
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
+
+	//Brush data
+	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		brushData.brushScale += 0.1f;
+	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		brushData.brushScale -= 0.1f;
+	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		brushData.brushOffset += 0.01f;
+	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		brushData.brushOffset -= 0.01f;
+	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		brushData.brushStrength += 0.01f;
+	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		brushData.brushStrength -= 0.01f;
+	brushData.brushOffset = glm::clamp(brushData.brushOffset, 0.01f, 1.0f);
+	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f);
+	brushData.brushStrength = glm::clamp(brushData.brushStrength, 0.0f, 1.0f);
+
+	//Flip normal map x-y axis
+	if (isKeyPressedDown(GLFW_KEY_A) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+		normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir;
 
 	//Window fullscreen toggle
 	if (isKeyPressedDown(GLFW_KEY_T) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
@@ -711,7 +714,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
-		zoomLevel = 1;
+		normalViewStateUtility.zoomLevel = 1;
 	}
 
 	//Minimize window
@@ -744,7 +747,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f, "%.2f", 1.0f)) {}
-	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 10.0f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 1.0f, "%.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
@@ -758,48 +761,48 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	else if (brushData.brushMaxHeight < brushData.brushMinHeight)
 		brushData.brushMaxHeight = brushData.brushMinHeight;
 }
-inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive)
+inline void DisplayNormalSettingsUserInterface()
 {
 	ImGui::Text("NORMAL SETTINGS");
 	ImGui::Separator();
-	if (ImGui::SliderFloat(" Normal Strength", &normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { flipX_Ydir = !flipX_Ydir; }
+	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir; }
 	ImGui::PopStyleColor();
 	const float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
 
-	if (!redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (!normalViewStateUtility.redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("R", ImVec2(width, 40))) { redChannelActive = !redChannelActive; } ImGui::SameLine();
+	if (ImGui::Button("R", ImVec2(width, 40))) { normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive; } ImGui::SameLine();
 	ImGui::PopStyleColor();
 
-	if (!greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (!normalViewStateUtility.greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("G", ImVec2(width, 40))) { greenChannelActive = !greenChannelActive; } ImGui::SameLine();
+	if (ImGui::Button("G", ImVec2(width, 40))) { normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive; } ImGui::SameLine();
 	ImGui::PopStyleColor();
 
-	if (!blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (!normalViewStateUtility.blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("B", ImVec2(width, 40))) { blueChannelActive = !blueChannelActive; }
+	if (ImGui::Button("B", ImVec2(width, 40))) { normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive; }
 	ImGui::PopStyleColor();
 }
-inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection)
+inline void DisplayLightSettingsUserInterface()
 {
 	ImGui::Text("LIGHT SETTINGS");
 	ImGui::Separator();
-	if (ImGui::SliderFloat(" Diffuse Intensity", &lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity", &specularity, 1.0f, 1000.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity Strength", &specularityStrength, 0.0f, 10.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Diffuse Intensity", &normalViewStateUtility.lightIntensity, 0.0f, 1.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &normalViewStateUtility.specularity, 1.0f, 1000.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity Strength", &normalViewStateUtility.specularityStrength, 0.0f, 10.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
-	if (ImGui::SliderFloat("## X Angle", &lightDirection.x, 0.01f, 359.99f, "X:%.2f")) {}
+	if (ImGui::SliderFloat("## X Angle", &normalViewStateUtility.lightDirection.x, 0.01f, 359.99f, "X:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Y Angle", &lightDirection.y, 0.01f, 359.99f, "Y:%.2f")) {}
+	if (ImGui::SliderFloat("## Y Angle", &normalViewStateUtility.lightDirection.y, 0.01f, 359.99f, "Y:%.2f")) {}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
+	if (ImGui::SliderFloat("## Z Angle", &normalViewStateUtility.lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 {
 	bool open = true;
 
@@ -859,10 +862,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diff
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Load 3d model for preview");
 
-	ImGui::SliderFloat("##Rotation speed", &modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
-	ImGui::SliderFloat("##Zoom level", &modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
-	ImGui::SliderFloat("##Roughness", &modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
-	ImGui::SliderFloat("##Reflectivity", &modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");
+	ImGui::SliderFloat("##Rotation speed", &previewStateUtility.modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
+	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
+	ImGui::SliderFloat("##Roughness", &previewStateUtility.modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
+	ImGui::SliderFloat("##Reflectivity", &previewStateUtility.modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
@@ -871,48 +874,48 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diff
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 4.0f);
 	ImGui::Spacing();
 
-	if (modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 3; }
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + H)");
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 1; }
+	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + J)");
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
+	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 2; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + K)");
 
 	ImGui::SameLine(0, 5);
-	if (modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { modelViewMode = 4; }
+	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 4; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + L)");
 
 	ImGui::PopStyleVar();
 
-	if (modelViewMode == 2 || modelViewMode == 4)
+	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
 	{
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 		ImGui::Text("Diffuse Colour");
-		ImGui::ColorEdit3("Diffuse Color", &diffuseColour[0]);
+		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0]);
 		ImGui::Text("Ambient Colour");
-		ImGui::ColorEdit3("Ambient Color", &ambientColour[0]);
+		ImGui::ColorEdit3("Ambient Color", &previewStateUtility.ambientColour[0]);
 		ImGui::Text("Light Colour");
-		ImGui::ColorEdit3("Light Color", &lightColour[0]);
+		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0]);
 		ImGui::PopItemWidth();
 		static char diffuseTextureImageLocation[500] = "Resources\\Textures\\crate.jpg";
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -1026,10 +1029,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1242,7 +1245,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
@@ -1270,6 +1273,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const float px_width = inputTexData.getWidth();
 	const float px_height = inputTexData.getHeight();
 	const float distanceRemap = brushData.brushScale / px_height;
+	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
@@ -1279,7 +1283,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < distanceRemap)
 			{
-				distance = (1.0f - (distance / distanceRemap)) * brushData.brushOffset;
+				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
 				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
@@ -1405,5 +1409,5 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
-	zoomLevel += zoomLevel * 0.1f * yoffset;
+	normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
 }

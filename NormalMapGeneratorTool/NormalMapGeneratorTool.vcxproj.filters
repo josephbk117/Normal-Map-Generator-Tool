@@ -161,6 +161,9 @@
     <ClInclude Include="src\UndoRedoSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ViewBasedUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\3dmodel.vs">

@@ -194,6 +194,7 @@
     <ClInclude Include="src\TextureLoader.h" />
     <ClInclude Include="src\Transform.h" />
     <ClInclude Include="src\TextureData.h" />
+    <ClInclude Include="src\ViewBasedUtilities.h" />
     <ClInclude Include="src\WindowTransformUtility.h" />
     <ClInclude Include="src\stb_image_write.h" />
     <ClInclude Include="src\WindowSystem.h" />
