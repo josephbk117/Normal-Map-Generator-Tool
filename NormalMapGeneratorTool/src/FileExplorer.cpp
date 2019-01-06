@@ -64,11 +64,13 @@ void FileExplorer::display()
 					case FileType::TEXT:
 						filterEnd.push_back(".txt");
 						break;
+					case FileType::MODEL:
+						filterEnd.push_back(".obj");
+						break;
 					default:
 						break;
 					}
 				}
-
 				if (filter.PassFilter(strPath.c_str()))
 				{
 					bool canShow = true;

@@ -35,7 +35,8 @@
 //TODO : Better Blurring
 //TODO : Add custom theme capability (with json support)
 //TODO : Custom Brush Support
-//TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| ) 
+//TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
+//TODO : Filters added with file explorer
 
 enum class LoadingOption
 {
@@ -56,9 +57,6 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 
 const int WINDOW_SIZE_MIN = 480;
 
-FrameBufferSystem fbs;
-FrameBufferSystem previewFbs;
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 bool isKeyPressed(int key);
@@ -71,13 +69,13 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-inline void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags);
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
+inline void BottomBarDisplay(const ImGuiWindowFlags &window_flags);
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
-inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData);
+inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
 inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
+inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
@@ -90,6 +88,10 @@ bool isUsingCustomTheme = false;
 
 ImFont* menuBarLargerText = NULL;
 MeshLoadingSystem::MeshLoader modelLoader;
+
+FrameBufferSystem fbs;
+FrameBufferSystem previewFbs;
+
 BrushData brushData;
 TextureData heightMapTexData;
 TextureData diffuseTexDataForPreview;
@@ -472,10 +474,10 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = nullptr;
 
-		BottomBarDisplay(p_open, window_flags);
-		SideBarDisplay(p_open, window_flags, frameDrawingPanel,
+		BottomBarDisplay(window_flags);
+		SideBarDisplay(window_flags, frameDrawingPanel,
 			saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
-		DisplayBrushSettingsUserInterface(isBlurOn, brushData);
+		DisplayBrushSettingsUserInterface(isBlurOn);
 
 		if (mapDrawViewMode < 3)
 		{
@@ -494,7 +496,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		DisplayPreview(p_open, window_flags, modelViewMode, diffuseColour, ambientColour, lightColour);
+		DisplayPreview(window_flags, modelViewMode, diffuseColour, ambientColour, lightColour);
 		fileExplorer.display();
 		modalWindow.display();
 
@@ -517,18 +519,19 @@ int main(void)
 	windowSys.Destroy();
 	return 0;
 }
-inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
 {
+	bool open = true;
 	static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
 
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
-	ImGui::Begin("Side_Bar", p_open, window_flags);
+	ImGui::Begin("Side_Bar", &open, window_flags);
 	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
-	ImGui::Begin("Settings", p_open, window_flags);
+	ImGui::Begin("Settings", &open, window_flags);
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
@@ -612,11 +615,12 @@ inline void SideBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags, 
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-void BottomBarDisplay(bool * p_open, const ImGuiWindowFlags &window_flags)
+void BottomBarDisplay(const ImGuiWindowFlags &window_flags)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 25), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
-	ImGui::Begin("Bottom_Bar", p_open, window_flags);
+	bool open = true;
+	ImGui::Begin("Bottom_Bar", &open, window_flags);
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
 	ImGui::Text(VERSION_NAME.c_str());
 	ImGui::End();
@@ -700,7 +704,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 		isMaximized = false;
 	}
 }
-inline void DisplayBrushSettingsUserInterface(bool &isBlurOn, BrushData &brushData)
+inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 {
 	ImGui::Text("BRUSH SETTINGS");
 	ImGui::Separator();
@@ -778,15 +782,17 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(bool * p_open, const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
 {
+	bool open = true;
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
-	ImGui::Begin("Preview_Bar", p_open, window_flags);
+	ImGui::Begin("Preview_Bar", &open, window_flags);
 	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
 
 	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS", "CUSTOM MODEL" };
@@ -1027,6 +1033,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 		glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
 		glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
 		glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
+		//viewport current mouse coords
+		glm::vec2 vpCurMouse(wnCurMouse.x * 2.0f - 1.0f, wnCurMouse.y * 2.0f - 1.0f);
+		//viewport previous mouse coords
+		glm::vec2 vpPrevMouse(wnPrevMouse.x * 2.0f - 1.0f, wnPrevMouse.y * 2.0f - 1.0f);
 
 		float minDistThresholdForDraw = brushData.brushRate;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
@@ -1041,12 +1051,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 			bottomLeftCorner.x = midPointWorldPos.x - frameDrawingPanel.getTransform()->getScale().x;
 			bottomLeftCorner.y = midPointWorldPos.y - frameDrawingPanel.getTransform()->getScale().y;
 
-			if (wnCurMouse.x * 2.0f - 1.0f > bottomLeftCorner.x && wnCurMouse.x * 2.0f - 1.0f < topRightCorner.x &&
-				wnCurMouse.y * 2.0f - 1.0f > bottomLeftCorner.y && wnCurMouse.y * 2.0f - 1.0f < topRightCorner.y &&
+			if (vpCurMouse.x > bottomLeftCorner.x && vpCurMouse.x < topRightCorner.x &&
+				vpCurMouse.y > bottomLeftCorner.y && vpCurMouse.y < topRightCorner.y &&
 				distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
 			{
-				float curX = ((wnCurMouse.x * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-				float curY = ((wnCurMouse.y * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+				float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+				float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 				const float maxWidth = heightMapTexData.getWidth();
 				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
@@ -1056,12 +1066,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					float density = 0.01f;
 					if (distOfPrevAndCurrentMouseCoord > density)
 					{
-						float prevX = ((wnPrevMouse.x * 2.0f - 1.0f) - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-						float prevY = ((wnPrevMouse.y * 2.0f - 1.0f) - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+						float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+						float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 						glm::vec2 prevPoint(prevX, prevY);
 						glm::vec2 toPoint(curX, curY);
-						glm::vec2 curPoint = prevPoint;
+						glm::vec2 iterCurPoint = prevPoint;
 
 						float density = 0.01f;
 						glm::vec2 diff = (prevPoint - toPoint);
@@ -1070,12 +1080,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{
-							float left = glm::clamp(curPoint.x * maxWidth - convertedBrushScale, 0.0f, maxWidth);
-							float right = glm::clamp(curPoint.x * maxWidth + convertedBrushScale, 0.0f, maxWidth);
-							float bottom = glm::clamp(curPoint.y * maxWidth - convertedBrushScale, 0.0f, maxWidth);
-							float top = glm::clamp(curPoint.y * maxWidth + convertedBrushScale, 0.0f, maxWidth);
-							curPoint += incValue;
-							SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
+							float left = glm::clamp(iterCurPoint.x * maxWidth - convertedBrushScale, 0.0f, maxWidth);
+							float right = glm::clamp(iterCurPoint.x * maxWidth + convertedBrushScale, 0.0f, maxWidth);
+							float bottom = glm::clamp(iterCurPoint.y * maxWidth - convertedBrushScale, 0.0f, maxWidth);
+							float top = glm::clamp(iterCurPoint.y * maxWidth + convertedBrushScale, 0.0f, maxWidth);
+							iterCurPoint += incValue;
+							SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
 						}
 					}
 					else
