@@ -747,8 +747,14 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f, "%.2f", 1.0f)) {}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Shift + |UP / DOWN|)");
 	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 1.0f, "%.2f", 1.0f)) {}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Shift + |LEFT / RIGHT|)");
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Alt + |LEFT / RIGHT|)");
 	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getHeight() / 2, "%0.2f", 1.0f)) {}
