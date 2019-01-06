@@ -37,13 +37,15 @@
 //TODO : Custom Brush Support
 //TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
+//TODO : Rotate preview model with mouse
+//TODO : Prevent editor interaction while interacting with UI
 
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v0.90 Alpha";
+const std::string VERSION_NAME = "v0.92 Alpha";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -68,14 +70,14 @@ void SaveNormalMapToFile(const std::string &locationStr);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &normalmapPanel, bool isBlurOn);
-inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-inline void BottomBarDisplay(const ImGuiWindowFlags &window_flags);
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
+inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
+inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
+inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour);
 inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &specularity, float &specularityStrength, glm::vec3 &lightDirection);
 inline void DisplayNormalSettingsUserInterface(float &normalMapStrength, bool &flipX_Ydir, bool &redChannelActive, bool &greenChannelActive, bool &blueChannelActive);
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
-inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized);
-inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode);
+inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
@@ -84,10 +86,11 @@ float modelPreviewRotationSpeed = 0.1f;
 float modelPreviewZoomLevel = -5.0f;
 float modelRoughness = 5.0f;
 float modelReflectivity = 0.5f;
-bool isUsingCustomTheme = false;
+int modelViewMode = 2;
+int mapDrawViewMode = 1;
 
-ImFont* menuBarLargerText = NULL;
 MeshLoadingSystem::MeshLoader modelLoader;
+ImFont* menuBarLargerText = NULL;
 
 FrameBufferSystem fbs;
 FrameBufferSystem previewFbs;
@@ -267,8 +270,6 @@ int main(void)
 	float lightIntensity = 0.5f;
 	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
 	zoomLevel = 1;
-	int mapDrawViewMode = 1;
-	int modelViewMode = 2;
 	bool flipX_Ydir = false;
 	bool redChannelActive = true;
 	bool greenChannelActive = true;
@@ -294,7 +295,7 @@ int main(void)
 
 	bool shouldSaveNormalMap = false;
 	bool changeSize = false;
-	glm::vec2  prevWindowSize = glm::vec2(500, 500);
+	glm::vec2 prevWindowSize = glm::vec2(500, 500);
 
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
@@ -310,7 +311,7 @@ int main(void)
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
 		const glm::vec2 curPos = windowSys.GetCursorPos();
-		HandleKeyboardInput(normalMapStrength, deltaTime, mapDrawViewMode, frameDrawingPanel, isMaximized);
+		HandleKeyboardInput(normalMapStrength, deltaTime, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
@@ -461,7 +462,7 @@ int main(void)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		WindowTopBarDisplay(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
+		DisplayWindowTopBar(minimizeTextureId, restoreTextureId, isMaximized, closeTextureId);
 
 		ImGuiWindowFlags window_flags = 0;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -474,9 +475,8 @@ int main(void)
 		window_flags |= ImGuiWindowFlags_NoTitleBar;
 		bool *p_open = nullptr;
 
-		BottomBarDisplay(window_flags);
-		SideBarDisplay(window_flags, frameDrawingPanel,
-			saveLocation, shouldSaveNormalMap, changeSize, mapDrawViewMode);
+		DisplayBottomBar(window_flags);
+		DisplaySideBar(window_flags, frameDrawingPanel, saveLocation, shouldSaveNormalMap, changeSize);
 		DisplayBrushSettingsUserInterface(isBlurOn);
 
 		if (mapDrawViewMode < 3)
@@ -496,7 +496,7 @@ int main(void)
 		ImGui::PopStyleVar();
 
 		//________Preview Display_______
-		DisplayPreview(window_flags, modelViewMode, diffuseColour, ambientColour, lightColour);
+		DisplayPreview(window_flags, diffuseColour, ambientColour, lightColour);
 		fileExplorer.display();
 		modalWindow.display();
 
@@ -519,7 +519,7 @@ int main(void)
 	windowSys.Destroy();
 	return 0;
 }
-inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize, int &mapDrawViewMode)
+inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize)
 {
 	bool open = true;
 	static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
@@ -543,14 +543,14 @@ inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 			windowSys.SetFullscreen(false);
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Press T)");
+		ImGui::SetTooltip("(Ctrl + T)");
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		zoomLevel = 1;
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Reset position and scale of panel (Press R)");
+		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + R)");
 
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -596,7 +596,7 @@ inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Press J)");
+		ImGui::SetTooltip("(Ctrl + H)");
 
 	ImGui::SameLine(0, 5);
 	if (mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
@@ -604,18 +604,18 @@ inline void SideBarDisplay(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { mapDrawViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Press K)");
+		ImGui::SetTooltip("(Ctrl + J)");
 
 	ImGui::SameLine(0, 5);
 	if (mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { mapDrawViewMode = 2; }
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Press L)");
+		ImGui::SetTooltip("(Ctrl + K)");
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-void BottomBarDisplay(const ImGuiWindowFlags &window_flags)
+void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 25), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
@@ -646,8 +646,9 @@ void SetStatesForSavingNormalMap()
 	glViewport(0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight());
 	fbs.updateTextureDimensions(heightMapTexData.getWidth(), heightMapTexData.getHeight());
 }
-void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDrawViewMode, DrawingPanel &frameDrawingPanel, bool &isMaximized)
+void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
+	//Normal map strength and zoom controls for normal map
 	if (isKeyPressed(GLFW_KEY_A))
 		normalMapStrength += 2.5f * deltaTime;
 	if (isKeyPressed(GLFW_KEY_D))
@@ -658,13 +659,25 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 		zoomLevel -= zoomLevel * 1.5f * deltaTime;
 	zoomLevel = glm::clamp(zoomLevel, 0.1f, 5.0f);
 
-	if (isKeyPressed(GLFW_KEY_J))
+	//Set normal map view mode in editor
+	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		mapDrawViewMode = 3;
-	if (isKeyPressed(GLFW_KEY_K))
+	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		mapDrawViewMode = 1;
-	if (isKeyPressed(GLFW_KEY_L))
+	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		mapDrawViewMode = 2;
 
+	//Set normal map view mode in model preview
+	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		modelViewMode = 3;
+	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		modelViewMode = 1;
+	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		modelViewMode = 2;
+	if (isKeyPressed(GLFW_KEY_L) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+		modelViewMode = 4;
+
+	//Normal map movement
 	if (isKeyPressed(GLFW_KEY_LEFT))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
 	if (isKeyPressed(GLFW_KEY_RIGHT))
@@ -676,6 +689,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 	if (isKeyPressed(GLFW_KEY_8))
 		frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
 
+	//Undo
 	if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
@@ -684,7 +698,8 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 
-	if (isKeyPressedDown(GLFW_KEY_T))
+	//Window fullscreen toggle
+	if (isKeyPressedDown(GLFW_KEY_T) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		if (!windowSys.IsFullscreen())
 			windowSys.SetFullscreen(true);
@@ -692,12 +707,14 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, int &mapDra
 			windowSys.SetFullscreen(false);
 	}
 
-	if (isKeyPressedDown(GLFW_KEY_R))
+	//Normal map panel reset
+	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		zoomLevel = 1;
 	}
 
+	//Minimize window
 	if (isKeyPressed(GLFW_KEY_F9))
 	{
 		windowSys.SetWindowRes(1600, 800);
@@ -782,7 +799,7 @@ inline void DisplayLightSettingsUserInterface(float &lightIntensity, float &spec
 	if (ImGui::SliderFloat("## Z Angle", &lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewMode, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
+inline void DisplayPreview(const ImGuiWindowFlags &window_flags, glm::vec3 &diffuseColour, glm::vec3 &ambientColour, glm::vec3 &lightColour)
 {
 	bool open = true;
 
@@ -858,24 +875,32 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewM
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 3; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Alt + H)");
 
 	ImGui::SameLine(0, 5);
 	if (modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { modelViewMode = 1; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Alt + J)");
 
 	ImGui::SameLine(0, 5);
 	if (modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { modelViewMode = 2; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Alt + K)");
 
 	ImGui::SameLine(0, 5);
 	if (modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { modelViewMode = 4; }
 	ImGui::PopStyleColor();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(Alt + L)");
 
 	ImGui::PopStyleVar();
 
@@ -917,7 +942,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags, int &modelViewM
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-inline void WindowTopBarDisplay(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
+inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
