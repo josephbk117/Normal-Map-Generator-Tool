@@ -6,7 +6,9 @@ class ShaderProgram
 public:
 	ShaderProgram();
 	~ShaderProgram();
+	//Compiler vertex shader and fragment shader
 	void compileShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
+	//Link shaders and create program
 	void linkShaders();
 	void addAttribute(const std::string& attributeName);
 	void use();

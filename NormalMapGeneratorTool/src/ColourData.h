@@ -5,10 +5,12 @@ struct ColourData
 private:
 	glm::vec4 colour;
 public:
+	//Default white
 	ColourData() noexcept
 	{
 		colour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
+	//Takes input in 32 bit space
 	ColourData(float r, float g, float b, float a)
 	{
 		colour = glm::vec4(r, g, b, a);
