@@ -526,6 +526,16 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + T)");
+	ImGui::Spacing();
+	if (ImGui::Button("Clear View", ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f, 40)))
+	{
+		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getHeight() * heightMapTexData.getWidth() * heightMapTexData.getComponentCount());
+		undoRedoSystem.record(heightMapTexData.getTextureData());
+		heightMapTexData.setTextureDirty();
+	}
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Clear the panel(Ctrl + Alt + R)");
+	ImGui::SameLine();
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
@@ -710,11 +720,22 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 			windowSys.SetFullscreen(false);
 	}
 
-	//Normal map panel reset
+	//Normal map panel reset/clear
 	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
-		frameDrawingPanel.getTransform()->setPosition(0, 0);
-		normalViewStateUtility.zoomLevel = 1;
+		//clear
+		if (isKeyPressed(GLFW_KEY_LEFT_ALT))
+		{
+			std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getHeight() * heightMapTexData.getWidth() * heightMapTexData.getComponentCount());
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+			heightMapTexData.setTextureDirty();
+		}
+		//reset
+		else
+		{
+			frameDrawingPanel.getTransform()->setPosition(0, 0);
+			normalViewStateUtility.zoomLevel = 1;
+		}
 	}
 
 	//Minimize window
@@ -1035,10 +1056,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)

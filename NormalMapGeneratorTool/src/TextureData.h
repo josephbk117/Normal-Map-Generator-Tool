@@ -21,10 +21,11 @@ public:
 	unsigned int GetTexId();
 	void setTexelColor(int r, int g, int b, int a, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
+	void setTexelRangeWithColour(int beginIndex, int endIndex, ColourData& colourData);
 	void updateTexture();
 	void updateTextureData(unsigned char* data);
-	ColourData getTexelColor(int x, int y);
-	void setTextureDirty();
+	ColourData getTexelColor(int x, int y)noexcept;
+	void setTextureDirty()noexcept;
 
 	~TextureData();
 };

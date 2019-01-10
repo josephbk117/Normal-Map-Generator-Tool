@@ -69,10 +69,25 @@ void TextureData::setTexelColor(ColourData & colourData, int x, int y)
 	x = glm::clamp(x, 0, width);
 	y = glm::clamp(y, 0, height);
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
-	data[i] = colourData.getColour_8_Bit().r;
-	data[i + 1] = colourData.getColour_8_Bit().g;
-	data[i + 2] = colourData.getColour_8_Bit().b;
-	data[i + 3] = colourData.getColour_8_Bit().a;
+	glm::vec4 colour = colourData.getColour_8_Bit();
+	data[i] = colour.r;
+	data[i + 1] = colour.g;
+	data[i + 2] = colour.b;
+	data[i + 3] = colour.a;
+}
+
+void TextureData::setTexelRangeWithColour(int beginIndex, int endIndex, ColourData & colourData)
+{
+	int count = beginIndex;
+	glm::vec4 colour = colourData.getColour_8_Bit();
+	for (int i = beginIndex; i < endIndex; i++)
+	{
+		data[i] = colour.r;
+		data[i + 1] = colour.g;
+		data[i + 2] = colour.b;
+		data[i + 3] = colour.a;
+		count += 4;
+	}
 }
 
 void TextureData::updateTexture()
@@ -92,7 +107,7 @@ void TextureData::updateTextureData(unsigned char * data)
 	std::memcpy(this->data, data, width*height*componentCount);
 }
 
-ColourData TextureData::getTexelColor(int x, int y)
+ColourData TextureData::getTexelColor(int x, int y)noexcept
 {
 	int i = ((float)width * (float)y + (float)x) * 4.0f;
 	ColourData colData;
@@ -100,7 +115,7 @@ ColourData TextureData::getTexelColor(int x, int y)
 	return colData;
 }
 
-void TextureData::setTextureDirty()
+void TextureData::setTextureDirty()noexcept
 {
 	requiresUpdate = true;
 }
