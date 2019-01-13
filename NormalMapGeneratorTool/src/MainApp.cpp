@@ -6,6 +6,8 @@
 #include <queue>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
+#include <GLM\gtc\quaternion.hpp>
+#include <GLM\gtx\quaternion.hpp>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -40,6 +42,7 @@
 //TODO : Filters added with file explorer
 //TODO : Rotate preview model with mouse
 //TODO : Prevent editor interaction while interacting with UI
+//TODO : Add grid lines in preview
 
 enum class LoadingOption
 {
@@ -57,6 +60,7 @@ const std::string CUBE_MODEL_PATH = MODELS_PATH + "Cube.obj";
 const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
 const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
 const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
+const std::string PLANE_MODEL_PATH = MODELS_PATH + "Plane.obj";
 
 const int WINDOW_SIZE_MIN = 480;
 
@@ -170,6 +174,7 @@ int main(void)
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
+	ModelObject* previewPlane = modelLoader.CreateModelFromFile(PLANE_MODEL_PATH);
 
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -216,6 +221,10 @@ int main(void)
 	ShaderProgram brushPreviewShader;
 	brushPreviewShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "brushPreview.fs");
 	brushPreviewShader.linkShaders();
+
+	ShaderProgram gridLineShader;
+	gridLineShader.compileShaders(SHADERS_PATH + "modelView.vs", SHADERS_PATH + "gridLines.fs");
+	gridLineShader.linkShaders();
 
 	Camera camera;
 	camera.init(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
@@ -294,7 +303,7 @@ int main(void)
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
-		const glm::vec2 curPos = windowSys.GetCursorPos();
+		const glm::vec2 curMouseCoord = windowSys.GetCursorPos();
 		HandleKeyboardInput(normalViewStateUtility.normalMapStrength, deltaTime, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
@@ -306,7 +315,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		normalmapShader.use();
 
-		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curPos, windowSys.GetWindowRes());
+		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curMouseCoord, windowSys.GetWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -329,7 +338,7 @@ int main(void)
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
-		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curPos.x, curPos.y, isMaximized, prevGlobalFirstMouseCoord);
+		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
 		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
@@ -375,17 +384,38 @@ int main(void)
 
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
-		frameDrawingPanel.setTextureID(fbs.getBufferTexture());
+		frameDrawingPanel.setTextureID(fbs.getColourTexture());
 		frameDrawingPanel.draw();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		previewFbs.BindFrameBuffer();
+
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		static float rot = 0;
-		rot += 0.1f;
+		static glm::vec2 prevMcord;
+		//Camera rotate around instead of this
+
+		static glm::quat quaternion;
+		static glm::vec2 totOffset;
+		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
+		static glm::mat4 rotation;
+		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f)
+		{
+			rot += glm::length(offset) * 0.1f * deltaTime;
+			totOffset.x += offset.x;
+			totOffset.y += offset.y;
+			glm::vec3 point = glm::inverse(quaternion) * glm::normalize(glm::vec3(totOffset.y, -totOffset.x, 0));
+			rotation = glm::rotate(glm::toMat4(quaternion), rot, point);
+
+			//quaternion = glm::toQuat(rotation);
+		}
+
+		prevMcord = windowSys.GetCursorPos();
+
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::rotate(glm::mat4(), glm::radians(rot += (previewStateUtility.modelPreviewRotationSpeed - 0.1f)), glm::vec3(glm::sin(rot * 0.1f), 0.2f, 1.0f)));
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, rotation);
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform,
+			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
@@ -412,7 +442,15 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
+
 		glActiveTexture(GL_TEXTURE0);
+		gridLineShader.use();
+		
+		gridLineShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::scale(rotation, glm::vec3(100, 1, 100)));
+		gridLineShader.applyShaderUniformMatrix(modelVieviewUniform,
+			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		gridLineShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		previewPlane->draw();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
@@ -432,8 +470,8 @@ int main(void)
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
-		brushPanel.getTransform()->setPosition(((curPos.x / windowSys.GetWindowRes().x)*2.0f) - 1.0f,
-			-(((curPos.y / windowSys.GetWindowRes().y)*2.0f) - 1.0f));
+		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.GetWindowRes().x)*2.0f) - 1.0f,
+			-(((curMouseCoord.y / windowSys.GetWindowRes().y)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
 		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, glm::pow(brushData.brushOffset, 2) * 10.0f);
@@ -493,6 +531,7 @@ int main(void)
 
 	delete modelPreviewObj;
 	delete cubeForSkybox;
+	delete previewPlane;
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -840,7 +879,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
-	ImGui::Image((ImTextureID)previewFbs.getBufferTexture(), ImVec2(300, 300));
+	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 
 	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS", "CUSTOM MODEL" };
 	static const char* current_item = items[0];
@@ -1064,7 +1103,7 @@ void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
 	{
-		fbs.BindBufferTexture();
+		fbs.BindColourTexture();
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 		const int nSize = heightMapTexData.getWidth() * heightMapTexData.getHeight() * 3;
@@ -1272,7 +1311,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 

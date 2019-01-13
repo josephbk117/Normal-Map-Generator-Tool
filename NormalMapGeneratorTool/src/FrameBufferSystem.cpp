@@ -36,14 +36,24 @@ void FrameBufferSystem::BindFrameBuffer() noexcept
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
-void FrameBufferSystem::BindBufferTexture() noexcept
+void FrameBufferSystem::BindColourTexture() noexcept
 {
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 }
 
-unsigned int FrameBufferSystem::getBufferTexture() noexcept
+unsigned int FrameBufferSystem::getColourTexture() noexcept
 {
 	return textureColorbuffer;
+}
+
+void FrameBufferSystem::BindDepthTexture() noexcept
+{
+	glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
+}
+
+unsigned int FrameBufferSystem::getDepthTexture() noexcept
+{
+	return textureDepthBuffer;
 }
 
 void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeight) noexcept

@@ -206,6 +206,7 @@
     <None Include="Resources\3dmodel.vs" />
     <None Include="Resources\Shaders\brushPreview.fs" />
     <None Include="Resources\Shaders\frameBuffer.fs" />
+    <None Include="Resources\Shaders\gridLines.fs" />
     <None Include="Resources\Shaders\modelView.fs" />
     <None Include="Resources\Shaders\modelView.vs" />
     <None Include="Resources\Shaders\modelViewPBR.fs" />

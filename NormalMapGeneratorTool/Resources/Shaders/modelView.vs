@@ -3,7 +3,7 @@ in vec3 aPos;
 in vec3 aNormal;
 in vec2 aTexCoords;
 in vec3 aTangent;
-in vec3 aBitangent;  
+in vec3 aBitangent;
 
 out vec3 FragPos;
 out vec3 Normal;

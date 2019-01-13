@@ -14,9 +14,14 @@ public:
 	//Initialize frame buffer with certain resolution
 	void init(int windowWidth, int windowHeight);
 	void BindFrameBuffer() noexcept;
-	//Bind the texture which is linked with the framebuffer
-	void BindBufferTexture() noexcept;
-	unsigned int getBufferTexture() noexcept;
+	//Bind the colour buffer texture which is linked with the framebuffer
+	void BindColourTexture() noexcept;
+	//Get colour buffer texture
+	unsigned int getColourTexture() noexcept;
+	//Bind the depth buffer texture which is linked with the framebuffer
+	void BindDepthTexture() noexcept;
+	//Get depth buffer texture
+	unsigned int getDepthTexture() noexcept;
 	//Change resolution of existing frame buffer
 	void updateTextureDimensions(int windowWidth, int windowHeight) noexcept;
 	//Change resolution of existing frame buffer
