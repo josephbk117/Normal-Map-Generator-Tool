@@ -223,7 +223,7 @@ int main(void)
 	brushPreviewShader.linkShaders();
 
 	ShaderProgram gridLineShader;
-	gridLineShader.compileShaders(SHADERS_PATH + "modelView.vs", SHADERS_PATH + "gridLines.fs");
+	gridLineShader.compileShaders(SHADERS_PATH + "gridLines.vs", SHADERS_PATH + "gridLines.fs");
 	gridLineShader.linkShaders();
 
 	Camera camera;
@@ -444,13 +444,17 @@ int main(void)
 			modelPreviewObj->draw();
 
 		glActiveTexture(GL_TEXTURE0);
+
 		gridLineShader.use();
-		
-		gridLineShader.applyShaderUniformMatrix(modelViewmodelUniform, glm::scale(rotation, glm::vec3(100, 1, 100)));
-		gridLineShader.applyShaderUniformMatrix(modelVieviewUniform,
+		int model = gridLineShader.getUniformLocation("model");
+		int view = gridLineShader.getUniformLocation("view");
+		int projection = gridLineShader.getUniformLocation("projection");
+		gridLineShader.applyShaderUniformMatrix(model, glm::scale(rotation, glm::vec3(100, 1, 100)));
+		gridLineShader.applyShaderUniformMatrix(view,
 			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
-		gridLineShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		gridLineShader.applyShaderUniformMatrix(projection, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)

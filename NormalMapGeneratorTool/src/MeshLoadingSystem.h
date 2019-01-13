@@ -770,6 +770,7 @@ namespace MeshLoadingSystem
 			ModelObject* modelObj = new ModelObject();
 			modelObj->UpdateMeshData(vertexDataArray, resourceObjvertices.size() * 14 * sizeof(float), &indices[0], indices.size());
 			delete[] vertexDataArray;
+			LoadedVertices.clear();
 			return modelObj;
 		}
 		// Loaded Mesh Objects

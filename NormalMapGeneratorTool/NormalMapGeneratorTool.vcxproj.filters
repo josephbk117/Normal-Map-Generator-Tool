@@ -195,6 +195,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Resources\Shaders\gridLines.fs" />
+    <None Include="Resources\Shaders\gridLines.vs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">
@@ -253,5 +254,12 @@
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="Resources\3D Models\Primitives\Cube.obj" />
+    <Object Include="Resources\3D Models\Primitives\Cylinder.obj" />
+    <Object Include="Resources\3D Models\Primitives\Plane.obj" />
+    <Object Include="Resources\3D Models\Primitives\Sphere.obj" />
+    <Object Include="Resources\3D Models\Primitives\Torus.obj" />
   </ItemGroup>
 </Project>

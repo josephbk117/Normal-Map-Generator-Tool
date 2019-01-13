@@ -207,6 +207,7 @@
     <None Include="Resources\Shaders\brushPreview.fs" />
     <None Include="Resources\Shaders\frameBuffer.fs" />
     <None Include="Resources\Shaders\gridLines.fs" />
+    <None Include="Resources\Shaders\gridLines.vs" />
     <None Include="Resources\Shaders\modelView.fs" />
     <None Include="Resources\Shaders\modelView.vs" />
     <None Include="Resources\Shaders\modelViewPBR.fs" />
@@ -237,6 +238,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="Resources\3D Models\Primitives\Cube.obj" />
+    <Object Include="Resources\3D Models\Primitives\Cylinder.obj" />
+    <Object Include="Resources\3D Models\Primitives\Plane.obj" />
+    <Object Include="Resources\3D Models\Primitives\Sphere.obj" />
+    <Object Include="Resources\3D Models\Primitives\Torus.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
