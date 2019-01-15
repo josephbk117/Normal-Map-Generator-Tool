@@ -391,28 +391,21 @@ int main(void)
 
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		static glm::vec2 prevMcord;
-		//Camera rotate around instead of this
 
+		static glm::vec2 prevMcord;
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		static glm::mat4 rotation;
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f)
 		{
-			float rot = glm::length(offset) * 0.5f * deltaTime;
-			glm::vec3 point;
-			if (glm::abs(offset.x) > glm::abs(offset.y))
-				point = rotation * glm::vec4(0, -1 * glm::sign(offset.x), 0, 0);
-			else
-				point = rotation * glm::vec4(1 * glm::sign(offset.y), 0, 0, 0);
+			float rot = glm::length(offset) * deltaTime;
+			glm::vec3 point = glm::inverse(rotation) * glm::vec4(offset.y, -offset.x, 0, 0);
 			rotation *= glm::rotate(glm::mat4(), rot, point);
 		}
-
 		prevMcord = windowSys.GetCursorPos();
 
 		modelViewShader.use();
 		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, rotation);
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform,
-			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
@@ -439,7 +432,6 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-
 		glActiveTexture(GL_TEXTURE0);
 
 		gridLineShader.use();
@@ -447,8 +439,7 @@ int main(void)
 		int view = gridLineShader.getUniformLocation("view");
 		int projection = gridLineShader.getUniformLocation("projection");
 		gridLineShader.applyShaderUniformMatrix(model, glm::scale(rotation, glm::vec3(100, 1, 100)));
-		gridLineShader.applyShaderUniformMatrix(view,
-			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		gridLineShader.applyShaderUniformMatrix(view, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		gridLineShader.applyShaderUniformMatrix(projection, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
 
@@ -1116,7 +1107,7 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getWidth(), heightMapTexData.getHeight(), 3, dataBuffer);
 		delete dataBuffer;
 	}
-}
+	}
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
 	static int prevState = GLFW_RELEASE;
@@ -1324,12 +1315,12 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.GetWindowRes().x, 1.0f / windowSys.GetWindowRes().y) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
-	}
+		}
 	else
 	{
 		prevMiddleMouseButtonCoord = windowSys.GetCursorPos();
 	}
-}
+	}
 
 inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
