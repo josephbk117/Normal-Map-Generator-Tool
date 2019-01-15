@@ -12,7 +12,7 @@ void main()
 	float valX = TexCoords.x * 1000.0;
 	float valY = TexCoords.y * 1000.0;
 	float val = 0.0;
-	if(mod(valX, 10) >= 9 || mod(valY, 10) >= 9)
-		val = 1.0;
+	val = step(mod(valX, 10),9) * step(mod(valY, 10), 9);
+	val = 1.0 - val;
 	FragColor = vec4(val,val,val, (1.0 - (Depth * 0.02)) * val);
 }

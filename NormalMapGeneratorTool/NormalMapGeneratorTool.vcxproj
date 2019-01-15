@@ -239,13 +239,6 @@
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Object Include="Resources\3D Models\Primitives\Cube.obj" />
-    <Object Include="Resources\3D Models\Primitives\Cylinder.obj" />
-    <Object Include="Resources\3D Models\Primitives\Plane.obj" />
-    <Object Include="Resources\3D Models\Primitives\Sphere.obj" />
-    <Object Include="Resources\3D Models\Primitives\Torus.obj" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

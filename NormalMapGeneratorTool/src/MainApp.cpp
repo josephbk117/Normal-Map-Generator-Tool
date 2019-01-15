@@ -391,23 +391,20 @@ int main(void)
 
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		static float rot = 0;
 		static glm::vec2 prevMcord;
 		//Camera rotate around instead of this
 
-		static glm::quat quaternion;
-		static glm::vec2 totOffset;
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		static glm::mat4 rotation;
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f)
 		{
-			rot += glm::length(offset) * 0.1f * deltaTime;
-			totOffset.x += offset.x;
-			totOffset.y += offset.y;
-			glm::vec3 point = glm::inverse(quaternion) * glm::normalize(glm::vec3(totOffset.y, -totOffset.x, 0));
-			rotation = glm::rotate(glm::toMat4(quaternion), rot, point);
-
-			//quaternion = glm::toQuat(rotation);
+			float rot = glm::length(offset) * 0.5f * deltaTime;
+			glm::vec3 point;
+			if (glm::abs(offset.x) > glm::abs(offset.y))
+				point = rotation * glm::vec4(0, -1 * glm::sign(offset.x), 0, 0);
+			else
+				point = rotation * glm::vec4(1 * glm::sign(offset.y), 0, 0, 0);
+			rotation *= glm::rotate(glm::mat4(), rot, point);
 		}
 
 		prevMcord = windowSys.GetCursorPos();
@@ -454,7 +451,7 @@ int main(void)
 			glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		gridLineShader.applyShaderUniformMatrix(projection, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
-		
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)

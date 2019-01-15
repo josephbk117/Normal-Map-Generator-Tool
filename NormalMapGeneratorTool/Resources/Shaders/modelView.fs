@@ -12,7 +12,7 @@ uniform vec3 diffuseColour;
 uniform vec3 ambientColour;
 uniform vec3 lightColour;
 uniform vec3 lightDir;
-uniform float _CameraZoom;
+uniform vec3 _CameraPosition;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
 uniform float _HeightmapDimY;
@@ -170,12 +170,12 @@ void main()
 			vec3 diffuse = lightColour * lightDot * _LightIntensity;
 
 			//Reflection
-			vec3 I = normalize(FragPos - vec3(0, 0, _CameraZoom));
+			vec3 I = normalize(FragPos - _CameraPosition);
 			vec3 R = reflect(I, _norm);
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
     
 			// specular
-			vec3 viewDir = normalize(FragPos - vec3( 0, 0, _CameraZoom));
+			vec3 viewDir = normalize(FragPos - _CameraPosition);
 			vec3 halfwayDir = normalize(lightDir + viewDir);  
 			float spec = pow(max(dot(_norm, halfwayDir), 0.0), _Specularity);
 
