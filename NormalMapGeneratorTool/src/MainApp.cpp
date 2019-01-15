@@ -165,6 +165,7 @@ int main(void)
 	}
 	glewExperimental = GL_TRUE;
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	glEnable(GL_BLEND);
 
 	SetupImGui();
 	themeManager.Init();
@@ -249,9 +250,9 @@ int main(void)
 	int brushPreviewStrengthUniform = brushPreviewShader.getUniformLocation("_BrushStrength");
 	int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
 
-	int modelViewmodelUniform = modelViewShader.getUniformLocation("model");
-	int modelVieviewUniform = modelViewShader.getUniformLocation("view");
-	int modelViewprojectionUniform = modelViewShader.getUniformLocation("projection");
+	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
+	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
+	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
 	int modelCameraZoomUniform = modelViewShader.getUniformLocation("_CameraZoom");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
@@ -393,20 +394,19 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		static glm::vec2 prevMcord;
-		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		static glm::mat4 rotation;
+		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f)
 		{
-			float rot = glm::length(offset) * deltaTime;
 			glm::vec3 point = glm::inverse(rotation) * glm::vec4(offset.y, -offset.x, 0, 0);
-			rotation *= glm::rotate(glm::mat4(), rot, point);
+			rotation *= glm::rotate(glm::mat4(), glm::length(offset) * (float)deltaTime, point);
 		}
 		prevMcord = windowSys.GetCursorPos();
 
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelViewmodelUniform, rotation);
-		modelViewShader.applyShaderUniformMatrix(modelVieviewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
-		modelViewShader.applyShaderUniformMatrix(modelViewprojectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, rotation);
+		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
@@ -459,7 +459,6 @@ int main(void)
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio,
 				(brushData.brushScale / heightMapTexData.getHeight())*scale) * normalViewStateUtility.zoomLevel * 2.0f);
 		}
-		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.GetWindowRes().x)*2.0f) - 1.0f,
