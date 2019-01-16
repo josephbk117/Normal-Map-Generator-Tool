@@ -170,12 +170,12 @@ void main()
 			vec3 diffuse = lightColour * lightDot * _LightIntensity;
 
 			//Reflection
-			vec3 I = normalize(FragPos - _CameraPosition);
+			vec3 I = normalize(FragPos - vec3(0,0,-_CameraPosition.z));//_CameraPosition);
 			vec3 R = reflect(I, _norm);
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
     
 			// specular
-			vec3 viewDir = normalize(FragPos - _CameraPosition);
+			vec3 viewDir = normalize(FragPos -vec3(0,0,-_CameraPosition.z));// _CameraPosition);
 			vec3 halfwayDir = normalize(lightDir + viewDir);  
 			float spec = pow(max(dot(_norm, halfwayDir), 0.0), _Specularity);
 

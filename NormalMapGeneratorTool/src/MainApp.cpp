@@ -63,7 +63,6 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 const std::string PLANE_MODEL_PATH = MODELS_PATH + "Plane.obj";
 
 const int WINDOW_SIZE_MIN = 480;
-bool canPerformZoom = false;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
@@ -106,6 +105,7 @@ WindowSystem windowSys;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
+WindowSide windowSideVal;
 
 struct BoundsAndPos
 {
@@ -346,16 +346,12 @@ int main(void)
 
 		//Have to set various bounds on mouse location to determine context driven mouse actions
 
-		WindowSide windowSideVal;
 		windowSideVal = WindowTransformUtility::GetWindowAreaAtMouseCoord(curMouseCoord.x, curMouseCoord.y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		if (windowSideVal == WindowSide::CENTER)
 		{
-			canPerformZoom = true;
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
 		}
-		else
-			canPerformZoom = false;
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 
 		heightMapTexData.updateTexture();
@@ -409,7 +405,7 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		static glm::vec2 prevMcord;
-		static glm::mat4 rotation;
+		static glm::mat4 rotation = glm::rotate(glm::rotate(glm::mat4(), -0.35f, glm::vec3(1, 0, 0)), 0.25f, glm::vec3(0, 1, 0));
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT)
 		{
@@ -1481,6 +1477,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
-	if (canPerformZoom)
+	if (windowSideVal == WindowSide::CENTER)
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
+	else if(windowSideVal == WindowSide::RIGHT)
+		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }
