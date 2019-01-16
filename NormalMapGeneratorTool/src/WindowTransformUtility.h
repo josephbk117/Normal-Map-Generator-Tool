@@ -1,16 +1,16 @@
 #pragma once
-enum class WindowSide { NONE = -1, LEFT = 0, TOP_LEFT = 1, TOP = 2, TOP_RIGHT = 3, RIGHT = 4, BOTTOM_RIGHT = 5, BOTTOM = 6, BOTTOM_LEFT = 7 };
+enum class WindowSide { NONE = -1, LEFT = 0, TOP_LEFT = 1, TOP = 2, TOP_RIGHT = 3, RIGHT = 4, BOTTOM_RIGHT = 5, BOTTOM = 6, BOTTOM_LEFT = 7, CENTER = 8 };
 class WindowTransformUtility
 {
 public:
 	static const int BORDER_SIZE = 5;
 
-	static WindowSide GetWindowSideAtMouseCoord(const glm::vec2 &curPos, const glm::vec2 &winRes)
+	static WindowSide GetWindowSideBorderAtMouseCoord(const glm::vec2 &curPos, const glm::vec2 &winRes)
 	{
-		return GetWindowSideAtMouseCoord(curPos.x, curPos.y, winRes.x, winRes.y);
+		return GetWindowSideBorderAtMouseCoord(curPos.x, curPos.y, winRes.x, winRes.y);
 	}
 
-	static WindowSide GetWindowSideAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
+	static WindowSide GetWindowSideBorderAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
 	{
 		if (mouseX < BORDER_SIZE)
 		{
@@ -38,5 +38,26 @@ public:
 		}
 		else
 			return WindowSide::NONE;
+	}
+
+	static WindowSide GetWindowAreaAtMouseCoord(int mouseX, int mouseY, int windowWidth, int windowHeight)
+	{
+		float vpMouseX = mouseX / (float)windowWidth;
+		float vpMouseY = mouseY / (float)windowHeight;
+
+		const float sideBoundAsPerc = 325.0f / windowWidth;
+
+		if (vpMouseX > sideBoundAsPerc && vpMouseX < 1.0f - sideBoundAsPerc)
+		{
+			return WindowSide::CENTER;
+		}
+		else
+		{
+			if (vpMouseX > 0.0f && vpMouseX <= sideBoundAsPerc)
+				return WindowSide::LEFT;
+			else if (vpMouseX >= 1.0f - sideBoundAsPerc && vpMouseX <= 1.0f)
+				return WindowSide::RIGHT;
+		}
+		return WindowSide::NONE;
 	}
 };

@@ -63,6 +63,7 @@ const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
 const std::string PLANE_MODEL_PATH = MODELS_PATH + "Plane.obj";
 
 const int WINDOW_SIZE_MIN = 480;
+bool canPerformZoom = false;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
@@ -269,6 +270,10 @@ int main(void)
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 
+	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
+	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
+	int gridLineProjectionMatrixUniform = gridLineShader.getUniformLocation("projection");
+
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
@@ -316,7 +321,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		normalmapShader.use();
 
-		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideAtMouseCoord(curMouseCoord, windowSys.GetWindowRes());
+		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideBorderAtMouseCoord(curMouseCoord, windowSys.GetWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -339,9 +344,19 @@ int main(void)
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
+		//Have to set various bounds on mouse location to determine context driven mouse actions
+
+		WindowSide windowSideVal;
+		windowSideVal = WindowTransformUtility::GetWindowAreaAtMouseCoord(curMouseCoord.x, curMouseCoord.y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+		if (windowSideVal == WindowSide::CENTER)
+		{
+			canPerformZoom = true;
+			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
+			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
+		}
+		else
+			canPerformZoom = false;
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
-		HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
-		HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 
 		heightMapTexData.updateTexture();
 
@@ -387,7 +402,7 @@ int main(void)
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
 		frameDrawingPanel.setTextureID(fbs.getColourTexture());
 		frameDrawingPanel.draw();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		previewFbs.BindFrameBuffer();
 
 		glEnable(GL_DEPTH_TEST);
@@ -396,7 +411,7 @@ int main(void)
 		static glm::vec2 prevMcord;
 		static glm::mat4 rotation;
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
-		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f)
+		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT)
 		{
 			glm::vec3 point = glm::inverse(rotation) * glm::vec4(offset.y, -offset.x, 0, 0);
 			rotation *= glm::rotate(glm::mat4(), glm::length(offset) * (float)deltaTime, point);
@@ -435,12 +450,9 @@ int main(void)
 		glActiveTexture(GL_TEXTURE0);
 
 		gridLineShader.use();
-		int model = gridLineShader.getUniformLocation("model");
-		int view = gridLineShader.getUniformLocation("view");
-		int projection = gridLineShader.getUniformLocation("projection");
-		gridLineShader.applyShaderUniformMatrix(model, glm::scale(rotation, glm::vec3(100, 1, 100)));
-		gridLineShader.applyShaderUniformMatrix(view, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
-		gridLineShader.applyShaderUniformMatrix(projection, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(rotation, glm::vec3(100, 1, 100)));
+		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -843,6 +855,7 @@ inline void DisplayNormalSettingsUserInterface()
 	if (ImGui::Button("B", ImVec2(width, 40))) { normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive; }
 	ImGui::PopStyleColor();
 }
+
 inline void DisplayLightSettingsUserInterface()
 {
 	ImGui::Text("LIGHT SETTINGS");
@@ -859,6 +872,7 @@ inline void DisplayLightSettingsUserInterface()
 	if (ImGui::SliderFloat("## Z Angle", &normalViewStateUtility.lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
+
 inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 {
 	bool open = true;
@@ -1106,7 +1120,8 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getWidth(), heightMapTexData.getHeight(), 3, dataBuffer);
 		delete dataBuffer;
 	}
-	}
+}
+
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
 	static int prevState = GLFW_RELEASE;
@@ -1314,12 +1329,12 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.GetWindowRes().x, 1.0f / windowSys.GetWindowRes().y) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
-		}
+	}
 	else
 	{
 		prevMiddleMouseButtonCoord = windowSys.GetCursorPos();
 	}
-	}
+}
 
 inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
@@ -1466,5 +1481,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
-	normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
+	if (canPerformZoom)
+		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
 }
