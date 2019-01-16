@@ -3,7 +3,6 @@
 struct PreviewStateUtility
 {
 public:
-	float modelPreviewRotationSpeed = 0.1f;
 	float modelPreviewZoomLevel = -5.0f;
 	float modelRoughness = 5.0f;
 	float modelReflectivity = 0.5f;

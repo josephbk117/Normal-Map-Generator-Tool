@@ -929,7 +929,6 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Load 3d model for preview");
 
-	ImGui::SliderFloat("##Rotation speed", &previewStateUtility.modelPreviewRotationSpeed, 0, 1, "Rotation Speed:%.2f");
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::SliderFloat("##Roughness", &previewStateUtility.modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
 	ImGui::SliderFloat("##Reflectivity", &previewStateUtility.modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");
