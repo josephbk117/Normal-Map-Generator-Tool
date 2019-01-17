@@ -40,9 +40,7 @@
 //TODO : Custom Brush Support
 //TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
-//TODO : Rotate preview model with mouse
-//TODO : Prevent editor interaction while interacting with UI
-//TODO : Add grid lines in preview
+//TODO : Add Uniform Buffers
 
 enum class LoadingOption
 {
@@ -880,7 +878,39 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
+	static bool isPreviewOpen = true;
+	if (ImGui::Button("Maximize", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 40)))
+	{
+		isPreviewOpen = true;
+		ImGui::OpenPopup("Preview");
+	}
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
+
+	ImGui::SetNextWindowSizeConstraints(ImVec2(600, 400), ImVec2(1600, 1600));
+	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen))
+	{
+		float aspectRatio = 0.0f;
+		float width = ImGui::GetContentRegionAvail().x;
+		float height = ImGui::GetContentRegionAvail().y;
+
+		aspectRatio = width / height;
+		if (width > height)
+			width /= aspectRatio;
+		else
+			height *= aspectRatio;
+		if (ImGui::GetWindowWidth() > ImGui::GetWindowHeight())
+		{
+			ImGui::Dummy(ImVec2(((ImGui::GetContentRegionAvail().x - width) * 0.5f) - 10, 0));
+			ImGui::SameLine();
+			ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(width, height));
+		}
+		else
+		{
+			ImGui::Dummy(ImVec2(((ImGui::GetContentRegionAvail().x - width) * 0.5f) - 10, (ImGui::GetContentRegionAvail().y - height) * 0.5f));
+			ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(width, height));
+		}
+		ImGui::EndPopup();
+	}
 
 	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS", "CUSTOM MODEL" };
 	static const char* current_item = items[0];
@@ -1478,6 +1508,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 {
 	if (windowSideVal == WindowSide::CENTER)
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
-	else if(windowSideVal == WindowSide::RIGHT)
+	else if (windowSideVal == WindowSide::RIGHT)
 		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }
