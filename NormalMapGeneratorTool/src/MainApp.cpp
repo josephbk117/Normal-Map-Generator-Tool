@@ -41,6 +41,7 @@
 //TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
+//TODO : Add sobel filter based normal map generation
 
 enum class LoadingOption
 {
@@ -243,6 +244,7 @@ int main(void)
 	int GreenChannelUniform = normalmapShader.getUniformLocation("_Channel_G");
 	int BlueChannelUniform = normalmapShader.getUniformLocation("_Channel_B");
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
+	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
 	int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
@@ -275,8 +277,8 @@ int main(void)
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
-	brushData.brushScale = 10.0f;
-	brushData.brushOffset = 0.5f;
+	brushData.brushScale = 25.0f;
+	brushData.brushOffset = 0.25f;
 	brushData.brushStrength = 1.0f;
 	brushData.brushMinHeight = 0.0f;
 	brushData.brushMaxHeight = 1.0f;
@@ -369,6 +371,7 @@ int main(void)
 		normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
 		normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
 		normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
+		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
 		normalmapPanel.draw();
 
 		static char saveLocation[500] = "D:\\scr.tga";
@@ -828,6 +831,24 @@ inline void DisplayNormalSettingsUserInterface()
 {
 	ImGui::Text("NORMAL SETTINGS");
 	ImGui::Separator();
+	
+	const char* items[] = { "Tri-Sample", "Sobel" };
+	static int item_current = 0;
+	ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
+	switch (item_current)
+	{
+	case 0:
+		normalViewStateUtility.methodIndex = 0;
+		break;
+	case 1:
+		normalViewStateUtility.methodIndex = 1;
+		break;
+	default:
+		break;
+	}
+	ImGui::SameLine();
+	ImGui::Text("Method");
+
 	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir; }

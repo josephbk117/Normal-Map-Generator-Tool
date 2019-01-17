@@ -25,5 +25,6 @@ public:
 	bool redChannelActive = true;
 	bool greenChannelActive = true;
 	bool blueChannelActive = true;
+	bool methodIndex = false;
 	glm::vec3 getNormalizedLightDir() { return glm::vec3(lightDirection.x / 180.0f, lightDirection.y / 180.0f, lightDirection.z / 180.0f); }
 };

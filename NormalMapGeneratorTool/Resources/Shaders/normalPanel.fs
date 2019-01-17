@@ -15,29 +15,88 @@ uniform bool _flipX_Ydir;
 uniform int _Channel_R;
 uniform int _Channel_G;
 uniform int _Channel_B;
+uniform int _MethodIndex; // 0 - Mathod 1, 1 - Method 2
 
 void main()
 {
     if(_normalMapModeOn == 1 || _normalMapModeOn == 2)
     {
         float currentPx = texture(textureOne,textureUV).x;
-        float n = texture(textureOne,vec2(textureUV.x, textureUV.y + 1.0/_HeightmapDimY)).r;
-        float s = texture(textureOne,vec2(textureUV.x, textureUV.y - 1.0/_HeightmapDimY)).r;
-        float e = texture(textureOne,vec2(textureUV.x - 1.0/_HeightmapDimX, textureUV.y)).r;
-        float w = texture(textureOne,vec2(textureUV.x + 1.0/_HeightmapDimX, textureUV.y)).r;
+		float xOffset = 1.0/_HeightmapDimX;
+		float yOffset = 1.0/_HeightmapDimY;
 
-        vec3 norm = normalize(vec3( 0.5, 0.5, 1.0));
-        vec3 temp = vec3(1.0, 0, 0);
-        //form a basis with norm being one of the axes:
-        vec3 perp1 = normalize(cross(norm, temp));
-        vec3 perp2 = normalize(cross(norm, perp1));
-        //use the basis to move the normal in its own space by the offset
-        vec3 normalOffset = -_HeightmapStrength * currentPx * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
-        norm += normalOffset;
-        norm = normalize(norm);
+        float n = texture(textureOne,vec2(textureUV.x, textureUV.y + yOffset)).r;
+        float s = texture(textureOne,vec2(textureUV.x, textureUV.y - yOffset)).r;
+        float e = texture(textureOne,vec2(textureUV.x - xOffset, textureUV.y)).r;
+        float w = texture(textureOne,vec2(textureUV.x + xOffset, textureUV.y)).r;
+
+        vec3 norm;
+
+		if(_MethodIndex == 0) //For method 1
+		{
+			n *= _HeightmapStrength * 0.01;
+			s *= _HeightmapStrength * 0.01;
+			e *= _HeightmapStrength * 0.01;
+			w *= _HeightmapStrength * 0.01;
+			//Point 1 north
+			vec3 point1 = vec3(0, n, 0);
+			point1.xz = vec2(textureUV.x, textureUV.y + yOffset);
+			//Point 2 west
+			vec3 point2 = vec3(0, w, 0);
+			point2.xz = vec2(textureUV.x + xOffset, textureUV.y);
+			//Point 3 center
+			vec3 point3 = vec3(0, currentPx, 0);
+			point3.xz = textureUV;
+			//Point 4 south
+			vec3 point4 = vec3(0, s, 0);
+			point4.xz = vec2(textureUV.x, textureUV.y - yOffset);
+			//Point 5 east
+			vec3 point5 = vec3(0, e, 0);
+			point5.xz = vec2(textureUV.x - xOffset, textureUV.y);
+
+			vec3 v1 = point1 - point3;
+			vec3 v2 = point2 - point3;
+
+			vec3 v3 = point4 - point3;
+			vec3 v4 = point5 - point3;
+
+			vec3 v5 = point5 - point3;
+			vec3 v6 = point1 - point3;
+
+			vec3 v7 = point2 - point3;
+			vec3 v8 = point4 - point3;
+
+			vec3 frNorm = normalize(cross(v1, v2));
+			vec3 secNorm = normalize(cross(v3, v4));
+			vec3 thrNorm = normalize(cross(v5, v6));
+			vec3 fourNorm = normalize(cross(v7, v8));
+
+			norm = frNorm + secNorm + thrNorm + fourNorm;
+			norm.xyz = norm.xzy;
+		}
+		else //For method 2
+		{
+			float ne = texture(textureOne,vec2(textureUV.x - xOffset, textureUV.y + yOffset)).r;
+			float nw = texture(textureOne,vec2(textureUV.x + xOffset, textureUV.y + yOffset)).r;
+			float se = texture(textureOne,vec2(textureUV.x - xOffset, textureUV.y - yOffset)).r;
+			float sw = texture(textureOne,vec2(textureUV.x + xOffset, textureUV.y - yOffset)).r;
+			//           -1 0 1
+			//           -2 0 2
+			//           -1 0 1
+			float dX = nw + 2*w + sw -ne - 2*e - se;
+			//           -1 -2 -1
+			//            0  0  0
+			//            1  2  1
+			float dY = se + 2*s + sw -ne - 2*n - nw;
+			dX *= _HeightmapStrength * currentPx;
+			dY *= _HeightmapStrength * currentPx;
+			norm = vec3(dX, dY, 1.0);
+		}
+
+		norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
-		norm = (2.0 * norm) - 1.0; // from -1.0 to +1.0 range
+
         float diffuse = max(dot(norm, lightDir) * 0.5 + 0.5, 0.0) * _LightIntensity;
 
         if(_normalMapModeOn == 2)
