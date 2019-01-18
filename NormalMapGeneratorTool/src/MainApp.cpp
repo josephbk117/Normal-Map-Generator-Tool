@@ -12,6 +12,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
+#include "stb_image_write.h"
 
 #include "Camera.h"
 #include "DrawingPanel.h"
@@ -29,8 +30,6 @@
 #include "ThemeManager.h"
 #include "ModalWindow.h"
 #include "ViewBasedUtilities.h"
-
-#include "stb_image_write.h"
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
@@ -38,11 +37,10 @@
 //TODO : Better Blurring
 //TODO : Add custom theme capability (with json support)
 //TODO : Custom Brush Support
-//TODO : Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
+//TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
-//TODO : Add sobel filter based normal map generation
-
+//TODO : Make Redo work
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
@@ -728,6 +726,14 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		if (undoRedoSystem.getCurrentSectionPosition() == 0)
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
+	//Redo
+	if (isKeyPressedDown(GLFW_KEY_Y) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	{
+		heightMapTexData.updateTextureData(undoRedoSystem.retrieve(false));
+		heightMapTexData.updateTexture();
+		if (undoRedoSystem.getCurrentSectionPosition() == 0)
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+	}
 
 	//Brush data
 	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
@@ -1096,6 +1102,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 			if (ImGui::MenuItem("Redo", "CTRL+Y"))
 			{
+				heightMapTexData.updateTextureData(undoRedoSystem.retrieve(false));
+				heightMapTexData.updateTexture();
 			}
 			if (isRedoDisabled)
 				ImGui::PopStyleVar();

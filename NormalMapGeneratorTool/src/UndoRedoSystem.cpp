@@ -38,17 +38,27 @@ void UndoRedoSystem::record(unsigned char * data)
 		std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
 	}
 	sectionsFilled = glm::min(sectionsFilled + 1, (int)(maxAllocatedMemoryInBytes / bytesPerSection));
+	if (maxSectionsFilled < sectionsFilled)
+		maxSectionsFilled = sectionsFilled;
 }
 
-unsigned char * UndoRedoSystem::retrieve()
+unsigned char * UndoRedoSystem::retrieve(bool grabPrevious)
 {
-	--sectionsFilled;
-	if (sectionsFilled - 1 < 0)
+	if (grabPrevious)
 	{
-		std::cout << "\nOut of UNDO/REDO Memory bounds (Lower bound)";
-		sectionsFilled = 1;
+		--sectionsFilled;
+		if (sectionsFilled - 1 < 0)
+		{
+			std::cout << "\nOut of UNDO/REDO Memory bounds (Lower bound)";
+			sectionsFilled = 1;
+		}
 	}
-	std::cout << "\nSections filled : " << sectionsFilled;
+	else
+	{
+		sectionsFilled = glm::min(sectionsFilled + 1, (int)(maxAllocatedMemoryInBytes / bytesPerSection));
+		if (sectionsFilled > maxSectionsFilled)
+			sectionsFilled = maxSectionsFilled;
+	}
 	return data + (sectionsFilled - 1) * bytesPerSection;
 }
 
