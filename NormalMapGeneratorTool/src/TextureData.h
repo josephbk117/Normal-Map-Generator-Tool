@@ -1,6 +1,9 @@
 #pragma once
 #include <GL\glew.h>
 #include "ColourData.h"
+/*Holds raw data about a texture
+Resolution data, Channel count and access to individual pixels are provided
+*/
 class TextureData
 {
 private:
@@ -25,6 +28,7 @@ public:
 	void updateTexture();
 	void updateTextureData(unsigned char* data);
 	ColourData getTexelColor(int x, int y)noexcept;
+	//Set the texture as dirty so that it can be updated
 	void setTextureDirty()noexcept;
 
 	~TextureData();

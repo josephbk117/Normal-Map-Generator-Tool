@@ -104,12 +104,12 @@ void TextureData::updateTexture()
 
 void TextureData::updateTextureData(unsigned char * data)
 {
-	std::memcpy(this->data, data, width*height*componentCount);
+	std::memcpy(this->data, data, width * height * componentCount);
 }
 
 ColourData TextureData::getTexelColor(int x, int y)noexcept
 {
-	int i = ((float)width * (float)y + (float)x) * 4.0f;
+	int i = ((float)width * (float)y + (float)x) * componentCount;
 	ColourData colData;
 	colData.setColour_8_Bit(data[i], data[i + 1], data[i + 2], data[i + 3]);
 	return colData;

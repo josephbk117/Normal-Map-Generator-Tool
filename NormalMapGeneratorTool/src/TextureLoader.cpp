@@ -34,7 +34,7 @@ glm::vec2 TextureManager::getImageDimensions(const std::string & path)
 	return glm::vec2(width, height);
 }
 
-unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool gamma)
+unsigned int TextureManager::loadTextureFromFile(const std::string & path)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -75,7 +75,7 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool 
 	return textureID;
 	}
 
-unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>& paths, bool gamma)
+unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>& paths)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -108,7 +108,7 @@ unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>&
 	return textureID;
 }
 
-unsigned int TextureManager::loadTextureFromData(TextureData & textureData, bool gamma)
+unsigned int TextureManager::loadTextureFromData(TextureData & textureData)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);

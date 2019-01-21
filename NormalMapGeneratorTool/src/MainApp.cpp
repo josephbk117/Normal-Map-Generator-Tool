@@ -42,6 +42,7 @@
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
+//TODO : Handling image importing of different resolutions and still UNDO/REDO should work. ( *possible : Stack of range markings of section sizes )
 
 enum class LoadingOption
 {
@@ -185,10 +186,10 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
-	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png", false);
-	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png", false);
-	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png", false);
-	unsigned int logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png", false);
+	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
+	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
+	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
+	unsigned int logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png");
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -198,11 +199,11 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
-	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths, false);
-	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg", false));
+	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
+	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg"));
 
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
-	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
+	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
@@ -605,7 +606,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData, false));
+				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 			}
 		});
@@ -1063,7 +1064,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					diffuseTextureImageLocation[i] = str[i];
 				if (currentLoadingOption == LoadingOption::TEXTURE)
 				{
-					diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str, false));
+					diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
 				}
 			});
 		}
