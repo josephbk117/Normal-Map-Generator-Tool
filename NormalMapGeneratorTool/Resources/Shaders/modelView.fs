@@ -23,7 +23,7 @@ uniform float _Reflectivity;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 uniform bool _flipX_Ydir;
-
+uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
@@ -129,32 +129,87 @@ vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float meta
 }
 
 
-
-
 void main()
 {
-	 if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
+	if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
     {
-		vec3 norm = vec3(0.5,0.5,1.0);
 		float currentPx = texture(inTexture,TexCoords).x;
-		float n = texture(inTexture,vec2(TexCoords.x,TexCoords.y + 1.0/512.0/*_HeightmapDimY*/)).x;
-		float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - 1.0/512.0/*_HeightmapDimY*/)).x;
-		float e = texture(inTexture,vec2(TexCoords.x - 1.0/512.0/*_HeightmapDimX*/, TexCoords.y)).x;
-		float w = texture(inTexture,vec2(TexCoords.x + 1.0/512.0/*_HeightmapDimX*/, TexCoords.y)).x;
+		float xOffset = 1.0/512.0;//1.0/_HeightmapDimX;
+		float yOffset = 1.0/512.0;//1.0/_HeightmapDimY;
 
-		vec3 temp = norm;
-		if(norm.x==1) temp.y += 0.5;
-		else temp.x += 0.5;
-		temp = normalize(temp);
-		//form a basis with norm being one of the axes:
-		vec3 perp1 = normalize(cross(norm,temp));
-		vec3 perp2 = normalize(cross(norm,perp1));
-		//use the basis to move the normal in its own space by the offset
-		vec3 normalOffset = -_HeightmapStrength * currentPx * ( ( (n-currentPx) - (s-currentPx) ) * perp1 + ( ( e - currentPx ) - ( w - currentPx ) ) * perp2 );
-		norm += normalOffset;
+        float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
+        float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;
+        float e = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y)).r;
+        float w = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y)).r;
+
+        vec3 norm;
+
+		if(_MethodIndex == 0) //For method 1
+		{
+			n *= _HeightmapStrength * 0.01;
+			s *= _HeightmapStrength * 0.01;
+			e *= _HeightmapStrength * 0.01;
+			w *= _HeightmapStrength * 0.01;
+			//Point 1 north
+			vec3 point1 = vec3(0, n, 0);
+			point1.xz = vec2(TexCoords.x, TexCoords.y + yOffset);
+			//Point 2 west
+			vec3 point2 = vec3(0, w, 0);
+			point2.xz = vec2(TexCoords.x + xOffset, TexCoords.y);
+			//Point 3 center
+			vec3 point3 = vec3(0, currentPx, 0);
+			point3.xz = TexCoords;
+			//Point 4 south
+			vec3 point4 = vec3(0, s, 0);
+			point4.xz = vec2(TexCoords.x, TexCoords.y - yOffset);
+			//Point 5 east
+			vec3 point5 = vec3(0, e, 0);
+			point5.xz = vec2(TexCoords.x - xOffset, TexCoords.y);
+
+			vec3 v1 = point1 - point3;
+			vec3 v2 = point2 - point3;
+
+			vec3 v3 = point4 - point3;
+			vec3 v4 = point5 - point3;
+
+			vec3 v5 = point5 - point3;
+			vec3 v6 = point1 - point3;
+
+			vec3 v7 = point2 - point3;
+			vec3 v8 = point4 - point3;
+
+			vec3 frNorm = normalize(cross(v1, v2));
+			vec3 secNorm = normalize(cross(v3, v4));
+			vec3 thrNorm = normalize(cross(v5, v6));
+			vec3 fourNorm = normalize(cross(v7, v8));
+
+			norm = frNorm + secNorm + thrNorm + fourNorm;
+			norm.rgb = norm.rbg;
+			norm.rg = -norm.rg;
+		}
+		else //For method 2
+		{
+			float ne = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y + yOffset)).r;
+			float nw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y + yOffset)).r;
+			float se = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y - yOffset)).r;
+			float sw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y - yOffset)).r;
+			//           -1 0 1
+			//           -2 0 2
+			//           -1 0 1
+			float dX = nw + 2*w + sw -ne - 2*e - se;
+			//           -1-2-1
+			//            0 0 0
+			//            1 2 1
+			float dY = se + 2*s + sw -ne - 2*n - nw;
+			dX *= _HeightmapStrength * currentPx;
+			dY *= _HeightmapStrength * currentPx;
+			norm = vec3(dX, dY, 1.0);
+			norm.g = -norm.g;
+		}
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
+
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
 			norm = (2.0 * norm) - 1.0;
@@ -188,7 +243,7 @@ void main()
 		}
         else
 		{
-            FragColor = vec4(norm,1.0);
+            FragColor = vec4(norm * 0.5 + 0.5,1.0);
 		}
     }
     else if(_normalMapModeOn == 3)

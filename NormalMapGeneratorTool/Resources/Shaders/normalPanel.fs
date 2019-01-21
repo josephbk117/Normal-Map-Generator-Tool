@@ -15,7 +15,7 @@ uniform bool _flipX_Ydir;
 uniform int _Channel_R;
 uniform int _Channel_G;
 uniform int _Channel_B;
-uniform int _MethodIndex; // 0 - Mathod 1, 1 - Method 2
+uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 
 void main()
 {

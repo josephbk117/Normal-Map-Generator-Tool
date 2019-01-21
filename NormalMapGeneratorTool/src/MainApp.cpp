@@ -42,15 +42,13 @@
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximixe panel opens
-//TODO : Add same shader to model preview
-//TODO : Add normal map direction rotation
 
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v0.92 Alpha";
+const std::string VERSION_NAME = "v0.95 Alpha";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -271,6 +269,7 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
+	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
 	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
@@ -437,6 +436,7 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
 		modelViewShader.applyShaderVector3(modelAmbientColourUniform, previewStateUtility.ambientColour);
+		modelViewShader.applyShaderBool(modelMethodIndexUniform, normalViewStateUtility.methodIndex);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
