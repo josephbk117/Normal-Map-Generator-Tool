@@ -72,7 +72,8 @@ void main()
 			vec3 fourNorm = normalize(cross(v7, v8));
 
 			norm = frNorm + secNorm + thrNorm + fourNorm;
-			norm.xyz = norm.xzy;
+			norm.rgb = norm.rbg;
+			norm.rg = -norm.rg;
 		}
 		else //For method 2
 		{
@@ -84,15 +85,15 @@ void main()
 			//           -2 0 2
 			//           -1 0 1
 			float dX = nw + 2*w + sw -ne - 2*e - se;
-			//           -1 -2 -1
-			//            0  0  0
-			//            1  2  1
+			//           -1-2-1
+			//            0 0 0
+			//            1 2 1
 			float dY = se + 2*s + sw -ne - 2*n - nw;
 			dX *= _HeightmapStrength * currentPx;
 			dY *= _HeightmapStrength * currentPx;
 			norm = vec3(dX, dY, 1.0);
+			norm.g = -norm.g;
 		}
-
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;

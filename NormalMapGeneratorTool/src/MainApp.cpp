@@ -40,7 +40,11 @@
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
-//TODO : Make Redo work
+//TODO : Add shadows and an optional plane
+//TODO : Mouse control when preview maximixe panel opens
+//TODO : Add same shader to model preview
+//TODO : Add normal map direction rotation
+
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
