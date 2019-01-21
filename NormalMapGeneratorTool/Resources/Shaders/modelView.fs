@@ -134,8 +134,8 @@ void main()
 	if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
     {
 		float currentPx = texture(inTexture,TexCoords).x;
-		float xOffset = 1.0/512.0;//1.0/_HeightmapDimX;
-		float yOffset = 1.0/512.0;//1.0/_HeightmapDimY;
+		float xOffset = 1.0/_HeightmapDimX;
+		float yOffset = 1.0/_HeightmapDimY;
 
         float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
         float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;

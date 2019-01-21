@@ -41,7 +41,7 @@
 //TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
-//TODO : Mouse control when preview maximixe panel opens
+//TODO : Mouse control when preview maximize panel opens
 
 enum class LoadingOption
 {
@@ -255,6 +255,8 @@ int main(void)
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
 	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
 	int modelCameraZoomUniform = modelViewShader.getUniformLocation("_CameraZoom");
+	int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
+	int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
@@ -423,6 +425,8 @@ int main(void)
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
+		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getWidth());
+		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getHeight());
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, normalViewStateUtility.lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, normalViewStateUtility.specularity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
