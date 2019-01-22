@@ -43,6 +43,8 @@
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
 //TODO : Handling image importing of different resolutions and still UNDO/REDO should work. ( *possible : Stack of range markings of section sizes )
+//TODO : Loading images with non 32 bit depth don't work
+//TODO : Loading images with non-sqaure resolution causes crash
 
 enum class LoadingOption
 {
@@ -605,9 +607,15 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 				imageLoadLocation[i] = str[i];
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
-				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
-				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+				//TextureManager::getTextureDataFromFile(str, heightMapTexData);
+				//heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+				//normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+
+				std::vector<unsigned char> d;
+				int w, h;
+				TextureManager::getRawImageDataFromFile(str, d, w, h, false);
+				heightMapTexData.updateTextureData(&d[0]);
+				heightMapTexData.setTextureDirty();
 			}
 		});
 	}
