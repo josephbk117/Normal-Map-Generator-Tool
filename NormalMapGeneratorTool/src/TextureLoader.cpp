@@ -27,8 +27,6 @@ void TextureManager::getTextureDataFromFile(const std::string & path, TextureDat
 
 glm::vec2 TextureManager::getImageDimensions(const std::string & path)
 {
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
 	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 4);

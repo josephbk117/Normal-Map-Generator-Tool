@@ -607,9 +607,8 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				//TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				//heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
-				//normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
+				//heightMapTexData.updateTexture();
 				std::vector<unsigned char> d;
 				int w, h;
 				TextureManager::getRawImageDataFromFile(str, d, w, h, false);
@@ -853,7 +852,7 @@ inline void DisplayNormalSettingsUserInterface()
 {
 	ImGui::Text("NORMAL SETTINGS");
 	ImGui::Separator();
-	
+
 	const char* items[] = { "Tri-Sample", "Sobel" };
 	static int item_current = 0;
 	ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));

@@ -30,12 +30,12 @@ void FileExplorer::display()
 		isDirty = false;
 	}
 	ImGui::OpenPopup("File Explorer");
-	ImGuiWindowFlags window_flags = 0;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(470, 420), ImVec2(800, 600));
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
+	ImGui::SetNextWindowSizeConstraints(ImVec2(500, 540), ImVec2(1200, 1200));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
-		if (ImGui::Button("CLOSE"))
+		if (ImGui::Button("CLOSE", ImVec2(80, 30)))
 		{
 			shouldDisplay = false;
 			ImGui::CloseCurrentPopup();
@@ -44,10 +44,12 @@ void FileExplorer::display()
 		for (unsigned int i = 0; i < roots.size(); i++)
 		{
 			ImGui::SameLine();
-			if (ImGui::Button(roots[i].c_str())) { path = roots[i]; isDirty = true; }
+			if (ImGui::Button(roots[i].c_str(), ImVec2(30, 30))) { path = roots[i]; isDirty = true; }
 		}
+		ImGui::SameLine();
 		static ImGuiTextFilter filter;
-		filter.Draw();
+		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth()*0.65f);
+		ImGui::Spacing();
 		if (!std::experimental::filesystem::is_empty(path))
 		{
 			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight() - 50), true, ImGuiWindowFlags_HorizontalScrollbar);
@@ -109,6 +111,7 @@ void FileExplorer::display()
 				isDirty = true;
 			}
 		}
+		ImGui::Spacing();
 		if (ImGui::Button("BACK"))
 		{
 			const int locationOfLastSlash = path.find_last_of('//');
@@ -134,6 +137,8 @@ void FileExplorer::display()
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::PopStyleVar();
+		ImGui::SameLine();
+		ImGui::Text(path.c_str());
 		ImGui::EndPopup();
 	}
 }
