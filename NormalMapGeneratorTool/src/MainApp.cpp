@@ -43,7 +43,6 @@
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
 //TODO : Handling image importing of different resolutions and still UNDO/REDO should work. ( *possible : Stack of range markings of section sizes )
-//TODO : Loading images with non 32 bit depth don't work
 //TODO : Loading images with non-sqaure resolution causes crash
 
 enum class LoadingOption
