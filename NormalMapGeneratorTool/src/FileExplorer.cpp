@@ -50,11 +50,21 @@ void FileExplorer::display()
 		static ImGuiTextFilter filter;
 		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth()*0.65f);
 		ImGui::Spacing();
+		static int columnCount = 1;
+		ImGui::PushItemWidth(80);
+		ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+		ImGui::SliderInt("Columns", &columnCount, 1, 5);
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar();
+		ImGui::PopItemWidth();
+		ImGui::Spacing();
 		if (!std::experimental::filesystem::is_empty(path))
 		{
 			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight() - 50), true, ImGuiWindowFlags_HorizontalScrollbar);
-			for (std::string strPath : paths)
+			for (int i = 0; i < paths.size(); i++)
 			{
+				std::string strPath = paths[i];
 				std::vector<std::string> filterEnd;
 				if (fileFilter != FileType::NONE)
 				{
@@ -86,7 +96,10 @@ void FileExplorer::display()
 					}
 					if (canShow)
 					{
-						if (ImGui::Button(strPath.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
+						float width = (ImGui::GetContentRegionAvailWidth() * 1.0f / columnCount) - 5;
+						if (i % columnCount != 0)
+							ImGui::SameLine();
+						if (ImGui::Button(strPath.c_str(), ImVec2(width, 30)))
 						{
 							if (!pathTypeCheck(filterEnd, strPath))
 								isDirty = true;
