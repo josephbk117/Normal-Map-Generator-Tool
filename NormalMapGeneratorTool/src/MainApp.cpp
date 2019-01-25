@@ -475,17 +475,23 @@ int main(void)
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
-			float scale = 1.0f;
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth())*scale,
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()),
 				(brushData.brushScale / heightMapTexData.getHeight())*aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
+
+			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1));
+			else
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth()));
 		}
 		else
 		{
-			float scale = 1.0f;
-			if (windowSys.GetWindowRes().y < heightMapTexData.getHeight())
-				scale = 1;
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio,
-				(brushData.brushScale / heightMapTexData.getHeight())*scale) * normalViewStateUtility.zoomLevel * 2.0f);
+				(brushData.brushScale / heightMapTexData.getHeight())) * normalViewStateUtility.zoomLevel * 2.0f);
+
+			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1));
+			else
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth()));
 		}
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
@@ -1392,7 +1398,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
