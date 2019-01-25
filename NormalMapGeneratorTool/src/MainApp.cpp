@@ -44,6 +44,7 @@
 //TODO : Mouse control when preview maximize panel opens
 //TODO : Handling image importing of different resolutions and still UNDO/REDO should work. ( *possible : Stack of range markings of section sizes )
 //TODO : Loading images with non-sqaure resolution causes crash
+//TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 
 enum class LoadingOption
 {
@@ -338,9 +339,19 @@ int main(void)
 		const float aspectRatio = windowSys.GetAspectRatio();
 		glm::vec2 aspectRatioHolder;
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
-			aspectRatioHolder = glm::vec2(1, aspectRatio);
+		{
+			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
+				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1);
+			else
+				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth());
+		}
 		else
-			aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1);
+		{
+			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1);
+			else
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth());
+		}
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.5f));
 		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
@@ -607,12 +618,11 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				//TextureManager::getTextureDataFromFile(str, heightMapTexData);
-
 				//heightMapTexData.updateTexture();
 				std::vector<unsigned char> d;
 				int w, h;
 				TextureManager::getRawImageDataFromFile(str, d, w, h, false);
-				heightMapTexData.updateTextureData(&d[0]);
+				heightMapTexData.setTextureData(&d[0], w, h, 4);
 				heightMapTexData.setTextureDirty();
 			}
 		});
@@ -1169,10 +1179,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1386,7 +1396,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 

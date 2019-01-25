@@ -10,10 +10,13 @@ TextureData::TextureData()
 
 void TextureData::setTextureData(unsigned char * data, int width, int height, int componentCount)
 {
-	this->data = data;
 	this->width = width;
 	this->height = height;
 	this->componentCount = componentCount;
+	if (this->data != nullptr)
+		delete[] this->data;
+	this->data = new unsigned char[width * height * componentCount];
+	std::memcpy(this->data, data, width * height * componentCount);
 }
 
 unsigned char * TextureData::getTextureData()
