@@ -413,7 +413,7 @@ int main(void)
 		static glm::vec2 prevMcord;
 		static glm::mat4 rotation = glm::rotate(glm::rotate(glm::mat4(), -0.35f, glm::vec3(1, 0, 0)), 0.25f, glm::vec3(0, 1, 0));
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
-		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT)
+		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
 		{
 			glm::vec3 point = glm::inverse(rotation) * glm::vec4(offset.y, -offset.x, 0, 0);
 			rotation *= glm::rotate(glm::mat4(), glm::length(offset) * (float)deltaTime, point);
