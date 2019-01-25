@@ -927,9 +927,9 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::OpenPopup("Preview");
 	}
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
-
-	ImGui::SetNextWindowSizeConstraints(ImVec2(600, 400), ImVec2(1600, 1600));
-	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen))
+	ImGui::SetNextWindowPosCenter();
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.GetWindowRes().x * 0.95f, windowSys.GetWindowRes().y * 0.95f));
+	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen, ImGuiWindowFlags_NoMove))
 	{
 		float aspectRatio = 0.0f;
 		float width = ImGui::GetContentRegionAvail().x;
