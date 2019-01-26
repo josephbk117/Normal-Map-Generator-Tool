@@ -1219,13 +1219,13 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 	if (state == GLFW_PRESS && !fileExplorer.shouldDisplay)
 	{
-		glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
-		glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
-		glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
+		const glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
+		const glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
+		const glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
 		//viewport current mouse coords
-		glm::vec2 vpCurMouse(wnCurMouse.x * 2.0f - 1.0f, wnCurMouse.y * 2.0f - 1.0f);
+		const glm::vec2 vpCurMouse(wnCurMouse.x * 2.0f - 1.0f, wnCurMouse.y * 2.0f - 1.0f);
 		//viewport previous mouse coords
-		glm::vec2 vpPrevMouse(wnPrevMouse.x * 2.0f - 1.0f, wnPrevMouse.y * 2.0f - 1.0f);
+		const glm::vec2 vpPrevMouse(wnPrevMouse.x * 2.0f - 1.0f, wnPrevMouse.y * 2.0f - 1.0f);
 
 		float minDistThresholdForDraw = brushData.brushRate;
 		float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
@@ -1249,7 +1249,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 
 				const float maxWidth = heightMapTexData.getRes().x;
 				const float maxHeight = heightMapTexData.getRes().y;
-				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
+				glm::vec2 convertedBrushScale(brushData.brushScale / maxWidth, brushData.brushScale / maxHeight);
 
 				if (!isBlurOn)
 				{
@@ -1268,31 +1268,32 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						glm::vec2 incValue = glm::normalize(diff) * density;
 						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 10.0f));
 
+						convertedBrushScale *= 2.0f; // Find out issue with needing this
 						for (int i = 0; i < numberOfPoints; i++)
 						{
-							float left = glm::clamp(iterCurPoint.x * maxWidth - convertedBrushScale, 0.0f, maxWidth);
-							float right = glm::clamp(iterCurPoint.x * maxWidth + convertedBrushScale, 0.0f, maxWidth);
-							float bottom = glm::clamp(iterCurPoint.y * maxHeight - convertedBrushScale, 0.0f, maxHeight);
-							float top = glm::clamp(iterCurPoint.y * maxHeight + convertedBrushScale, 0.0f, maxHeight);
+							float left = glm::clamp((iterCurPoint.x - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+							float right = glm::clamp((iterCurPoint.x + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+							float bottom = glm::clamp((iterCurPoint.y - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
+							float top = glm::clamp((iterCurPoint.y + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 							iterCurPoint += incValue;
 							SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
 						}
 					}
 					else
 					{
-						float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-						float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-						float bottom = glm::clamp((curY - convertedBrushScale) * maxHeight, 0.0f, maxHeight);
-						float top = glm::clamp((curY + convertedBrushScale) * maxHeight, 0.0f, maxHeight);
+						float left = glm::clamp((curX - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+						float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+						float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
+						float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 						SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 					}
 				}
 				else if (isBlurOn)
 				{
-					float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-					float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-					float bottom = glm::clamp((curY - convertedBrushScale) * maxHeight, 0.0f, maxHeight);
-					float top = glm::clamp((curY + convertedBrushScale) * maxHeight, 0.0f, maxHeight);
+					float left = glm::clamp((curX - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+					float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
+					float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
+					float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
@@ -1428,9 +1429,6 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 
 inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	ColourData colData;
-	float rVal;
-	float distance;
 	const glm::vec2 pixelPos(xpos, ypos);
 	const float px_width = inputTexData.getRes().x;
 	const float px_height = inputTexData.getRes().y;
@@ -1440,9 +1438,9 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	{
 		for (int j = startY; j < endY; j++)
 		{
-			colData = inputTexData.getTexelColor(i, j);
-			rVal = colData.getColour_32_Bit().r;
-			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+			ColourData colData = inputTexData.getTexelColor(i, j);
+			float rVal = colData.getColour_32_Bit().r;
+			float distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
 			if (distance < distanceRemap)
 			{
 				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
