@@ -1268,7 +1268,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						glm::vec2 incValue = glm::normalize(diff) * density;
 						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 10.0f));
 
-						convertedBrushScale *= 2.0f; // Find out issue with needing this
+						//convertedBrushScale *= 2.0f; // Find out issue with needing this
 						for (int i = 0; i < numberOfPoints; i++)
 						{
 							float left = glm::clamp((iterCurPoint.x - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
@@ -1432,15 +1432,22 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const glm::vec2 pixelPos(xpos, ypos);
 	const float px_width = inputTexData.getRes().x;
 	const float px_height = inputTexData.getRes().y;
-	const float distanceRemap = brushData.brushScale / px_height;
+	const float distanceRemap = 1.0f / brushData.brushScale;
 	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
+
+	float xMag = endX - startX;
+	float yMag = endY - startY;
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
 		{
 			ColourData colData = inputTexData.getTexelColor(i, j);
 			float rVal = colData.getColour_32_Bit().r;
-			float distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
+
+			float x = (i - startX) / xMag;
+			float y = (j - startY) / yMag;
+
+			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f)) * (1.0 / brushData.brushScale);
 			if (distance < distanceRemap)
 			{
 				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
