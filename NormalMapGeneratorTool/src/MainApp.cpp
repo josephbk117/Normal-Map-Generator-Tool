@@ -398,7 +398,7 @@ int main(void)
 			SaveNormalMapToFile(saveLocation);
 			shouldSaveNormalMap = false;
 			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " +
-				std::to_string(heightMapTexData.getRes().x) + "x" + std::to_string(heightMapTexData.getRes().y));
+				std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y));
 			continue;
 		}
 
@@ -1189,10 +1189,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1244,10 +1244,11 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				vpCurMouse.y > bottomLeftCorner.y && vpCurMouse.y < topRightCorner.y &&
 				distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
 			{
-				float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-				float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+				const float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+				const float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 				const float maxWidth = heightMapTexData.getRes().x;
+				const float maxHeight = heightMapTexData.getRes().y;
 				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
 
 				if (!isBlurOn)
@@ -1271,8 +1272,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						{
 							float left = glm::clamp(iterCurPoint.x * maxWidth - convertedBrushScale, 0.0f, maxWidth);
 							float right = glm::clamp(iterCurPoint.x * maxWidth + convertedBrushScale, 0.0f, maxWidth);
-							float bottom = glm::clamp(iterCurPoint.y * maxWidth - convertedBrushScale, 0.0f, maxWidth);
-							float top = glm::clamp(iterCurPoint.y * maxWidth + convertedBrushScale, 0.0f, maxWidth);
+							float bottom = glm::clamp(iterCurPoint.y * maxHeight - convertedBrushScale, 0.0f, maxHeight);
+							float top = glm::clamp(iterCurPoint.y * maxHeight + convertedBrushScale, 0.0f, maxHeight);
 							iterCurPoint += incValue;
 							SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
 						}
@@ -1281,8 +1282,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 					{
 						float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
 						float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-						float bottom = glm::clamp((curY - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-						float top = glm::clamp((curY + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+						float bottom = glm::clamp((curY - convertedBrushScale) * maxHeight, 0.0f, maxHeight);
+						float top = glm::clamp((curY + convertedBrushScale) * maxHeight, 0.0f, maxHeight);
 						SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 					}
 				}
@@ -1290,8 +1291,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				{
 					float left = glm::clamp((curX - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
 					float right = glm::clamp((curX + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-					float bottom = glm::clamp((curY - convertedBrushScale) * maxWidth, 0.0f, maxWidth);
-					float top = glm::clamp((curY + convertedBrushScale) * maxWidth, 0.0f, maxWidth);
+					float bottom = glm::clamp((curY - convertedBrushScale) * maxHeight, 0.0f, maxHeight);
+					float top = glm::clamp((curY + convertedBrushScale) * maxHeight, 0.0f, maxHeight);
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
@@ -1406,7 +1407,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
