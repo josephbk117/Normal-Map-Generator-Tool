@@ -42,11 +42,11 @@
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
-//TODO : Loading images with non-sqaure resolution causes crash
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 //TODO : Keep import and exporting to modal dialogs as well as provide additional options while doing so
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
+//TODO : Some issue with blurring
 
 enum class LoadingOption
 {
