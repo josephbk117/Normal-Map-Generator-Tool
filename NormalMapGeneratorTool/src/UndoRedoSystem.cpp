@@ -35,7 +35,7 @@ void UndoRedoSystem::record(unsigned char * data)
 	}
 	else
 	{
-		std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
+		//std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
 	}
 	sectionsFilled = glm::min(sectionsFilled + 1, (int)(maxAllocatedMemoryInBytes / bytesPerSection));
 	if (maxSectionsFilled < sectionsFilled)

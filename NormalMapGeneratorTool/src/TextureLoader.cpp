@@ -125,7 +125,7 @@ unsigned int TextureManager::loadTextureFromData(TextureData & textureData)
 		else if (textureData.getComponentCount() == 4)
 			format = GL_RGBA;
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, textureData.getWidth(), textureData.getHeight(), 0, format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, textureData.getRes().x, textureData.getRes().y, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);

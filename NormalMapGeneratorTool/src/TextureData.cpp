@@ -24,14 +24,9 @@ unsigned char * TextureData::getTextureData()
 	return data;
 }
 
-const int TextureData::getWidth() noexcept
+glm::vec2 TextureData::getRes() noexcept
 {
-	return width;
-}
-
-const int TextureData::getHeight() noexcept
-{
-	return height;
+	return glm::vec2(width, height);
 }
 
 int TextureData::getComponentCount() noexcept
@@ -101,7 +96,7 @@ void TextureData::updateTexture()
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
 	GLenum format = TextureManager::getTextureFormatFromData(componentCount);
 	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data); //Issue is here 
 	glBindTexture(GL_TEXTURE_2D, currentTexture);
 }
 

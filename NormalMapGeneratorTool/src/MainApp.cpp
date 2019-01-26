@@ -121,8 +121,8 @@ std::queue<BoundsAndPos> mouseCoordQueue;
 
 void ApplyChangesToPanel()
 {
-	const float maxWidth = heightMapTexData.getWidth();
-	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
+	const float maxWidth = heightMapTexData.getRes().x;
+	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
 
 	while (!windowSys.IsWindowClosing())
 	{
@@ -340,17 +340,17 @@ int main(void)
 		glm::vec2 aspectRatioHolder;
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
-			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
-				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1);
+			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
+				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1);
 			else
-				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth());
+				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
 		else
 		{
-			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
-				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1);
+			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1);
 			else
-				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth());
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.5f));
@@ -380,8 +380,8 @@ int main(void)
 		normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
 		normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
 		normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
-		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getWidth());
-		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getHeight());
+		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
+		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
 		normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
 		normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
@@ -396,7 +396,7 @@ int main(void)
 			SaveNormalMapToFile(saveLocation);
 			shouldSaveNormalMap = false;
 			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " +
-				std::to_string(heightMapTexData.getWidth()) + "x" + std::to_string(heightMapTexData.getHeight()));
+				std::to_string(heightMapTexData.getRes().x) + "x" + std::to_string(heightMapTexData.getRes().y));
 			continue;
 		}
 
@@ -438,8 +438,8 @@ int main(void)
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
-		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getWidth());
-		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getHeight());
+		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
+		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getRes().y);
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, normalViewStateUtility.lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, normalViewStateUtility.specularity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
@@ -475,23 +475,25 @@ int main(void)
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
 		{
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()),
-				(brushData.brushScale / heightMapTexData.getHeight())*aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
+			glm::vec2 heightRes = heightMapTexData.getRes();
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x),
+				(brushData.brushScale / heightRes.y)*aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
 
-			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1));
+			if (heightRes.x > heightRes.y)
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightRes.x / heightRes.y, 1));
 			else
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth()));
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightRes.y / heightRes.x));
 		}
 		else
 		{
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightMapTexData.getWidth()) / aspectRatio,
-				(brushData.brushScale / heightMapTexData.getHeight())) * normalViewStateUtility.zoomLevel * 2.0f);
+			glm::vec2 heightRes = heightMapTexData.getRes();
+			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x) / aspectRatio,
+				(brushData.brushScale / heightRes.y)) * normalViewStateUtility.zoomLevel * 2.0f);
 
-			if (heightMapTexData.getWidth() > heightMapTexData.getHeight())
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getWidth() / heightMapTexData.getHeight(), 1));
+			if (heightRes.x > heightRes.y)
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1));
 			else
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getHeight() / heightMapTexData.getWidth()));
+				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x));
 		}
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
@@ -593,7 +595,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::Spacing();
 	if (ImGui::Button("Clear View", ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f, 40)))
 	{
-		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getHeight() * heightMapTexData.getWidth() * heightMapTexData.getComponentCount());
+		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 		undoRedoSystem.record(heightMapTexData.getTextureData());
 		heightMapTexData.setTextureDirty();
 	}
@@ -703,8 +705,8 @@ void SetupImGui()
 }
 void SetStatesForSavingNormalMap()
 {
-	glViewport(0, 0, heightMapTexData.getWidth(), heightMapTexData.getHeight());
-	fbs.updateTextureDimensions(heightMapTexData.getWidth(), heightMapTexData.getHeight());
+	glViewport(0, 0, heightMapTexData.getRes().x, heightMapTexData.getRes().y);
+	fbs.updateTextureDimensions(heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 }
 void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
@@ -780,7 +782,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_ALT))
 		brushData.brushStrength -= 0.01f;
 	brushData.brushOffset = glm::clamp(brushData.brushOffset, 0.01f, 1.0f);
-	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f);
+	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getRes().y * 0.5f);
 	brushData.brushStrength = glm::clamp(brushData.brushStrength, 0.0f, 1.0f);
 
 	//Flip normal map x-y axis
@@ -802,7 +804,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		//clear
 		if (isKeyPressed(GLFW_KEY_LEFT_ALT))
 		{
-			std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getHeight() * heightMapTexData.getWidth() * heightMapTexData.getComponentCount());
+			std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 			heightMapTexData.setTextureDirty();
 		}
@@ -843,7 +845,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	if (isBlurOn)
 		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
-	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getHeight()*0.5f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getRes().y*0.5f, "%.2f", 1.0f)) {}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Shift + |UP / DOWN|)");
 	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 1.0f, "%.2f", 1.0f)) {}
@@ -854,7 +856,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		ImGui::SetTooltip("(Alt + |LEFT / RIGHT|)");
 	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getHeight() / 2, "%0.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getRes().y / 2, "%0.2f", 1.0f)) {}
 	static BrushData bCopy = BrushData();
 	if (bCopy != brushData)
 		bCopy = brushData;
@@ -1196,13 +1198,13 @@ void SaveNormalMapToFile(const std::string &locationStr)
 		fbs.BindColourTexture();
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		const int nSize = heightMapTexData.getWidth() * heightMapTexData.getHeight() * 3;
+		const int nSize = heightMapTexData.getRes().x * heightMapTexData.getRes().y * 3;
 		char* dataBuffer = new char[nSize];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getWidth(), heightMapTexData.getHeight(), 3, dataBuffer);
+		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getRes().x, heightMapTexData.getRes().y, 3, dataBuffer);
 		delete dataBuffer;
 	}
 }
@@ -1213,7 +1215,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 	static bool didActuallyDraw = false;
 	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
 
-	if (state == GLFW_PRESS)
+	if (state == GLFW_PRESS && !fileExplorer.shouldDisplay)
 	{
 		glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
 		glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
@@ -1243,8 +1245,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
 				float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
-				const float maxWidth = heightMapTexData.getWidth();
-				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getHeight()) * maxWidth * 3.5f;
+				const float maxWidth = heightMapTexData.getRes().x;
+				const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
 
 				if (!isBlurOn)
 				{
@@ -1398,7 +1400,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
@@ -1427,8 +1429,8 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	float rVal;
 	float distance;
 	const glm::vec2 pixelPos(xpos, ypos);
-	const float px_width = inputTexData.getWidth();
-	const float px_height = inputTexData.getHeight();
+	const float px_width = inputTexData.getRes().x;
+	const float px_height = inputTexData.getRes().y;
 	const float distanceRemap = brushData.brushScale / px_height;
 	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
 	for (int i = startX; i < endX; i++)
@@ -1454,8 +1456,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 {
 	float distance;
 	glm::vec2 pixelPos(xpos, ypos);
-	const float px_width = inputTexData.getWidth();
-	const float px_height = inputTexData.getHeight();
+	const float px_width = inputTexData.getRes().x;
+	const float px_height = inputTexData.getRes().y;
 	const float distanceRemap = brushData.brushScale / px_height;
 
 	//Temp allocation of image section

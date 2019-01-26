@@ -1,5 +1,6 @@
 #pragma once
 #include <GL\glew.h>
+#include <GLM\common.hpp>
 #include "ColourData.h"
 /*Holds raw data about a texture
 Resolution data, Channel count and access to individual pixels are provided
@@ -17,8 +18,7 @@ public:
 	TextureData();
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
 	unsigned char* getTextureData();
-	const int getWidth()noexcept;
-	const int getHeight()noexcept;
+	glm::vec2 getRes()noexcept;
 	int getComponentCount()noexcept;
 	void SetTexId(unsigned int texId);
 	unsigned int GetTexId();
