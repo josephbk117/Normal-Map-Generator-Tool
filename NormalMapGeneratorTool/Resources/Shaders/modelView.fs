@@ -150,6 +150,8 @@ void main()
 			s *= _HeightmapStrength * 0.01;
 			e *= _HeightmapStrength * 0.01;
 			w *= _HeightmapStrength * 0.01;
+
+			yOffset = xOffset = 0.002;//Uniform distance for triangle points
 			//Point 1 north
 			vec3 point1 = vec3(0, n, 0);
 			point1.xz = vec2(TexCoords.x, TexCoords.y + yOffset);
