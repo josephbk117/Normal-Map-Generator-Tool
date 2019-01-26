@@ -45,6 +45,8 @@
 //TODO : Handling image importing of different resolutions and still UNDO/REDO should work. ( *possible : Stack of range markings of section sizes )
 //TODO : Loading images with non-sqaure resolution causes crash
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
+//TODO : Keep import and exporting to modal dialogs as well as provide additional options while doing so
+//TODO : Look into converting normal map to heightmap for editing purposes
 
 enum class LoadingOption
 {
@@ -625,13 +627,13 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 				imageLoadLocation[i] = str[i];
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
-				//TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				//heightMapTexData.updateTexture();
-				std::vector<unsigned char> d;
-				int w, h;
-				TextureManager::getRawImageDataFromFile(str, d, w, h, false);
-				heightMapTexData.setTextureData(&d[0], w, h, 4);
+				TextureManager::getTextureDataFromFile(str, heightMapTexData);
+				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 				heightMapTexData.setTextureDirty();
+				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+
+				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
+				undoRedoSystem.record(heightMapTexData.getTextureData());
 			}
 		});
 	}

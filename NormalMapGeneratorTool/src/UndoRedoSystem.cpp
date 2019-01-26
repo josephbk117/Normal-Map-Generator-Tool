@@ -5,13 +5,32 @@ UndoRedoSystem::UndoRedoSystem(unsigned int maxMemoryToAllocate, unsigned int by
 {
 	this->maxAllocatedMemoryInBytes = maxMemoryToAllocate;
 	this->bytesPerSection = bytesPerSection;
-	data = new unsigned char[maxMemoryToAllocate];
+	data = new unsigned char[this->maxAllocatedMemoryInBytes];
 }
 
 UndoRedoSystem::UndoRedoSystem(const glm::vec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
 {
 	this->bytesPerSection = sampleImageRes.x * sampleImageRes.y * componentCount;
 	this->maxAllocatedMemoryInBytes = this->bytesPerSection * numberOfUndoSteps;
+	data = new unsigned char[maxAllocatedMemoryInBytes];
+}
+
+UndoRedoSystem::UndoRedoSystem(const UndoRedoSystem & undoRedo)
+{
+	std::memcpy(data, undoRedo.data, undoRedo.maxAllocatedMemoryInBytes);
+	maxAllocatedMemoryInBytes = undoRedo.maxAllocatedMemoryInBytes;
+	bytesPerSection = undoRedo.bytesPerSection;
+	sectionsFilled = undoRedo.sectionsFilled;
+	maxSectionsFilled = undoRedo.maxSectionsFilled;
+}
+
+void UndoRedoSystem::updateAllocation(const glm::vec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
+{
+	delete[] data;
+	this->bytesPerSection = sampleImageRes.x * sampleImageRes.y * componentCount;
+	this->maxAllocatedMemoryInBytes = this->bytesPerSection * numberOfUndoSteps;
+	sectionsFilled = 0;
+	maxSectionsFilled = 0;
 	data = new unsigned char[maxAllocatedMemoryInBytes];
 }
 
@@ -35,7 +54,7 @@ void UndoRedoSystem::record(unsigned char * data)
 	}
 	else
 	{
-		//std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
+		std::memcpy(this->data + sectionsFilled * bytesPerSection, data, bytesPerSection);
 	}
 	sectionsFilled = glm::min(sectionsFilled + 1, (int)(maxAllocatedMemoryInBytes / bytesPerSection));
 	if (maxSectionsFilled < sectionsFilled)
@@ -60,6 +79,16 @@ unsigned char * UndoRedoSystem::retrieve(bool grabPrevious)
 			sectionsFilled = maxSectionsFilled;
 	}
 	return data + (sectionsFilled - 1) * bytesPerSection;
+}
+
+void UndoRedoSystem::clear()
+{
+	maxAllocatedMemoryInBytes = 512 * 512 * 4 * 20;
+	bytesPerSection = 512 * 512 * 4;
+	sectionsFilled = 0;
+	maxSectionsFilled = 0;
+	delete[] data;
+	data = nullptr;
 }
 
 UndoRedoSystem::~UndoRedoSystem()

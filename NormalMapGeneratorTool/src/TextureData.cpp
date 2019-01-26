@@ -14,7 +14,10 @@ void TextureData::setTextureData(unsigned char * data, int width, int height, in
 	this->height = height;
 	this->componentCount = componentCount;
 	if (this->data != nullptr)
+	{
 		delete[] this->data;
+		this->data = nullptr;
+	}
 	this->data = new unsigned char[width * height * componentCount];
 	std::memcpy(this->data, data, width * height * componentCount);
 }
