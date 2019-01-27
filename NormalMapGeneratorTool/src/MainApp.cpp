@@ -48,7 +48,8 @@
 //TODO : Some issue with blurring
 //TODO : Add preferences tab : max undo slots, max image epxort size(requires app restart)
 //TODO : Undo/Redo slider at bottom bar
-//TODO : Single click works for blur but not for normal drawing
+//TODO : File explorer currect directory editing through text
+//TODO : Reset view should make non 1:1 images fit in screen
 
 enum class LoadingOption
 {
@@ -617,31 +618,6 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
-	ImGui::InputText("## Load location", imageLoadLocation, sizeof(imageLoadLocation));
-	ImGui::PopItemWidth();
-	ImGui::SameLine(0, 5);
-	if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth(), 27)))
-	{
-		currentLoadingOption = LoadingOption::TEXTURE;
-		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
-		{
-			for (unsigned int i = 0; i < str.length(); i++)
-				imageLoadLocation[i] = str[i];
-			if (currentLoadingOption == LoadingOption::TEXTURE)
-			{
-				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
-				heightMapTexData.setTextureDirty();
-				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
-
-				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
-				undoRedoSystem.record(heightMapTexData.getTextureData());
-			}
-		});
-	}
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Load grey-scale height map");
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
 	ImGui::InputText("## Save location", saveLocation, 500);
 	ImGui::PopItemWidth();
 	ImGui::SameLine(0, 5);
@@ -770,6 +746,24 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		heightMapTexData.updateTexture();
 		if (undoRedoSystem.getCurrentSectionPosition() == 0)
 			undoRedoSystem.record(heightMapTexData.getTextureData());
+	}
+	//Open new image
+	if (isKeyPressedDown(GLFW_KEY_O) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	{
+		currentLoadingOption = LoadingOption::TEXTURE;
+		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+		{
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				TextureManager::getTextureDataFromFile(str, heightMapTexData);
+				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+				heightMapTexData.setTextureDirty();
+				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+
+				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
+				undoRedoSystem.record(heightMapTexData.getTextureData());
+			}
+		});
 	}
 
 	//Brush data
@@ -1115,10 +1109,24 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		ImGui::PushFont(menuBarLargerText);
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Open Project", "CTRL+O"))
+			if (ImGui::MenuItem("Open Image", "CTRL+O"))
 			{
+				currentLoadingOption = LoadingOption::TEXTURE;
+				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+					{
+						TextureManager::getTextureDataFromFile(str, heightMapTexData);
+						heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+						heightMapTexData.setTextureDirty();
+						normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+
+						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
+						undoRedoSystem.record(heightMapTexData.getTextureData());
+					}
+				});
 			}
-			if (ImGui::MenuItem("Open Scene")) {}
+			if (ImGui::MenuItem("Preferences")) {}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
@@ -1191,10 +1199,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1417,7 +1425,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
