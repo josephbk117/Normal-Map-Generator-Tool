@@ -47,6 +47,9 @@
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Some issue with blurring
+//TODO : Add preferences tab : max undo slots, max image epxort size(requires app restart)
+//TODO : Undo/Redo slider at bottom bar
+//TODO : Single click works for blur but not for normal drawing
 
 enum class LoadingOption
 {
@@ -1290,11 +1293,19 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				}
 				else if (isBlurOn)
 				{
-					float left = glm::clamp((curX - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-					float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-					float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-					float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+					float left = (curX - convertedBrushScale.x) * maxWidth;
+					float right = (curX + convertedBrushScale.x) * maxWidth;
+					float bottom = (curY - convertedBrushScale.y) * maxHeight;
+					float top = (curY + convertedBrushScale.y) * maxHeight;
+
+					if (left >= 0 && right <= maxWidth && top <= maxHeight && bottom >= 0)
+					{
+						left = glm::clamp(left, 0.0f, maxWidth);
+						right = glm::clamp(right, 0.0f, maxWidth);
+						bottom = glm::clamp(bottom, 0.0f, maxHeight);
+						top = glm::clamp(top, 0.0f, maxHeight);
+						SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+					}
 				}
 				didActuallyDraw = true;
 				heightMapTexData.setTextureDirty();
@@ -1462,12 +1473,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 
 inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	float distance;
-	glm::vec2 pixelPos(xpos, ypos);
-	const float px_width = inputTexData.getRes().x;
-	const float px_height = inputTexData.getRes().y;
-	const float distanceRemap = brushData.brushScale / px_height;
-
+	const float distanceRemap = (0.95f / brushData.brushScale) - 0.01f;
 	//Temp allocation of image section
 
 	const int _width = endX - startX;
@@ -1479,43 +1485,47 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	{
 		for (int j = startY; j < endY; j++)
 		{
-			int index = (i - startX)*_width + (j - startY);
+			int index = (i - startX) * _width + (j - startY);
 			if (index >= 0 && index < totalPixelCount)
 				tempPixelData[index] = inputTexData.getTexelColor(i, j);
 		}
 	}
+	float xMag = endX - startX;
+	float yMag = endY - startY;
 
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
 		{
-			distance = glm::distance(pixelPos, glm::vec2((double)i / px_width, (double)j / px_height));
-			if (distance < distanceRemap - 0.01f)
+			float x = (i - startX) / xMag;
+			float y = (j - startY) / yMag;
+			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f));
+			distance = glm::clamp(distance, 0.0f, 1.0f);
+			if (distance < 0.9f)
 			{
-				int index = (i - startX)*(endX - startX) + (j - startY);
+				int index = (i - startX) * xMag + (j - startY);
 				if (index < 0 || index >= totalPixelCount)
 					continue;
 
-				index = (i - startX)*(endX - startX) + (j - startY);
 				float avg = tempPixelData[index].getColour_32_Bit().r * 0.5f;
 
-				int leftIndex = ((i - 1) - startX)*(endX - startX) + (j - startY);
-				int rightIndex = ((i + 1) - startX)*(endX - startX) + (j - startY);
-				int topIndex = (i - startX)*(endX - startX) + ((j + 1) - startY);
-				int bottomIndex = (i - startX)*(endX - startX) + ((j - 1) - startY);
+				int leftIndex = ((i - 1) - startX) * xMag + (j - startY);
+				int rightIndex = ((i + 1) - startX) * xMag + (j - startY);
+				int topIndex = (i - startX) * xMag + ((j + 1) - startY);
+				int bottomIndex = (i - startX) * xMag + ((j - 1) - startY);
 
-				int topLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j + 1) - startY);
-				int bottomLeftIndex = ((i - 1) - startX)*(endX - startX) + ((j - 1) - startY);
-				int topRightIndex = ((i + 1) - startX)*(endX - startX) + ((j + 1) - startY);
-				int bottomRightIndex = ((i + 1) - startX)*(endX - startX) + ((j - 1) - startY);
+				int topLeftIndex = ((i - 1) - startX) * xMag + ((j + 1) - startY);
+				int bottomLeftIndex = ((i - 1) - startX) * xMag + ((j - 1) - startY);
+				int topRightIndex = ((i + 1) - startX) * xMag + ((j + 1) - startY);
+				int bottomRightIndex = ((i + 1) - startX) * xMag + ((j - 1) - startY);
 
 				int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
 				for (unsigned int i = 0; i < 8; i++)
-					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColour_32_Bit().r * 0.0625f : 0.01f;
+					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColour_32_Bit().r * 0.0625f : 0.0f;
 				float pixelCol = tempPixelData[index].getColour_32_Bit().r;
-				float finalColor = 0.0025f * pixelCol;
-				finalColor += avg;
+				float finalColor = 0;
+				finalColor = avg;
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
 				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
 				ColourData colData;
