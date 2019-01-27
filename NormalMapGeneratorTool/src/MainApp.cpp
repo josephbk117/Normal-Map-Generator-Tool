@@ -34,7 +34,6 @@
 #include "MeshLoadingSystem.h"
 
 //TODO : Rotation editor values
-//TODO : Better Blurring
 //TODO : Add custom theme capability (with json support)
 //TODO : Custom Brush Support
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
@@ -81,7 +80,7 @@ void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int 
 void SaveNormalMapToFile(const std::string &locationStr);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &normalmapPanel, bool isBlurOn);
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
 inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
@@ -371,7 +370,7 @@ int main(void)
 		if (windowSideVal == WindowSide::CENTER)
 		{
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
-			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, prevMouseCoord, frameDrawingPanel, isBlurOn);
+			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, frameDrawingPanel, isBlurOn);
 		}
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 
@@ -1214,15 +1213,16 @@ void SaveNormalMapToFile(const std::string &locationStr)
 	}
 }
 
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2 &prevMouseCoord, DrawingPanel &frameDrawingPanel, bool isBlurOn)
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
+	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
+	static glm::vec2 prevMouseCoord = INVALID;
 	static int prevState = GLFW_RELEASE;
 	static bool didActuallyDraw = false;
-	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
+	const glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
 
 	if (state == GLFW_PRESS && !fileExplorer.shouldDisplay)
 	{
-		const glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
 		const glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
 		const glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
 		//viewport current mouse coords
@@ -1257,7 +1257,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 				if (!isBlurOn)
 				{
 					float density = 0.01f;
-					if (distOfPrevAndCurrentMouseCoord > density)
+					if (distOfPrevAndCurrentMouseCoord > density && prevMouseCoord != INVALID)
 					{
 						float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
 						float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
@@ -1266,12 +1266,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 						glm::vec2 toPoint(curX, curY);
 						glm::vec2 iterCurPoint = prevPoint;
 
-						float density = 0.01f;
 						glm::vec2 diff = (prevPoint - toPoint);
 						glm::vec2 incValue = glm::normalize(diff) * density;
 						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 10.0f));
 
-						//convertedBrushScale *= 2.0f; // Find out issue with needing this
 						for (int i = 0; i < numberOfPoints; i++)
 						{
 							float left = glm::clamp((iterCurPoint.x - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
@@ -1321,10 +1319,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, glm::vec2
 	{
 		if (prevState == GLFW_PRESS && didActuallyDraw)
 		{
+			prevMouseCoord = INVALID;
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 			didActuallyDraw = false;
 		}
-		prevMouseCoord = glm::vec2(-10, -10);
 	}
 	prevState = state;
 }
