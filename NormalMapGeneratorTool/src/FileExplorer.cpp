@@ -31,7 +31,7 @@ void FileExplorer::display()
 	}
 	ImGui::OpenPopup("File Explorer");
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(500, 540), ImVec2(1200, 1200));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(540, 540), ImVec2(1200, 1200));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
@@ -48,13 +48,17 @@ void FileExplorer::display()
 		}
 		ImGui::SameLine();
 		static ImGuiTextFilter filter;
-		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth()*0.65f);
-		ImGui::Spacing();
+		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth() * 0.5f);
 		static int columnCount = 1;
-		ImGui::PushItemWidth(80);
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 70, 0));
+		ImGui::PushItemWidth(60);
+		ImGui::SameLine();
 		ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-		ImGui::SliderInt("Columns", &columnCount, 1, 5);
+		ImGui::SliderInt("##Columns", &columnCount, 1, 5);
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Column count");
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();

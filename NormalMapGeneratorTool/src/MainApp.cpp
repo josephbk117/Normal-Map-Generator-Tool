@@ -46,7 +46,7 @@
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Some issue with blurring
-//TODO : Add preferences tab : max undo slots, max image epxort size(requires app restart)
+//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image format
 //TODO : Undo/Redo slider at bottom bar
 //TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
@@ -659,12 +659,26 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 }
 void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 25), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 25), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 35), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 50), ImGuiSetCond_Always);
 	bool open = true;
 	ImGui::Begin("Bottom_Bar", &open, window_flags);
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
 	ImGui::Text(VERSION_NAME.c_str());
+	ImGui::SameLine();
+	static int iig;
+	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 200, 0));
+	ImGui::SameLine();
+	ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+	ImGui::PushItemWidth(100);
+	ImGui::SliderInt("Undo/Redo", &iig, 0, 20);
+	ImGui::PopItemWidth();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Undo/Redo Slider");
+	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
+
 	ImGui::End();
 }
 void SetupImGui()
