@@ -84,7 +84,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
-inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char  saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
+inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
 inline void DisplayPreview(const ImGuiWindowFlags &window_flags);
 inline void DisplayLightSettingsUserInterface();
 inline void DisplayNormalSettingsUserInterface();
@@ -666,13 +666,30 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
 	ImGui::Text(VERSION_NAME.c_str());
 	ImGui::SameLine();
-	static int iig;
+
+	static int currentSection = undoRedoSystem.getCurrentSectionPosition();
+	static int prevSection = currentSection;
+	static int prevUndoSectionPosition;
+
 	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 200, 0));
 	ImGui::SameLine();
 	ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
 	ImGui::PushItemWidth(100);
-	ImGui::SliderInt("Undo/Redo", &iig, 0, 20);
+	if (ImGui::SliderInt("Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1))
+	{
+		bool isForward = (currentSection - prevSection) >= 0 ? false : true;
+		heightMapTexData.updateTextureData(undoRedoSystem.retrieve(isForward));
+		heightMapTexData.updateTexture();
+		prevSection = currentSection;
+	}
+
+	if (undoRedoSystem.getCurrentSectionPosition() >= prevUndoSectionPosition)
+	{
+		currentSection = undoRedoSystem.getCurrentSectionPosition();
+		prevUndoSectionPosition = currentSection;
+	}
+
 	ImGui::PopItemWidth();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Undo/Redo Slider");
@@ -1146,7 +1163,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		if (ImGui::BeginMenu("Edit"))
 		{
 			bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
-			bool isRedoDisabled = undoRedoSystem.getCurrentSectionPosition() >= 1 && undoRedoSystem.getCurrentSectionPosition() <= undoRedoSystem.getMaxUndoSteps() - 1 ? false : true;
+			bool isRedoDisabled = undoRedoSystem.getCurrentSectionPosition() >= 1 && undoRedoSystem.getCurrentSectionPosition() <= undoRedoSystem.getMaxSectionsFilled() - 1 ? false : true;
 
 			if (isUndoDisabled)
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
@@ -1278,7 +1295,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 				if (!isBlurOn)
 				{
-					float density = 0.01f;
+					float density = 0.01f; //*Think density should axis dependant
 					if (distOfPrevAndCurrentMouseCoord > density && prevMouseCoord != INVALID)
 					{
 						float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
@@ -1290,7 +1307,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 						glm::vec2 diff = (prevPoint - toPoint);
 						glm::vec2 incValue = glm::normalize(diff) * density;
-						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 10.0f));
+						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f));
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{

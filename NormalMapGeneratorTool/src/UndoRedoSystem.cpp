@@ -44,6 +44,11 @@ const unsigned int UndoRedoSystem::getCurrentSectionPosition()
 	return sectionsFilled;
 }
 
+unsigned int UndoRedoSystem::getMaxSectionsFilled()
+{
+	return maxSectionsFilled;
+}
+
 void UndoRedoSystem::record(unsigned char * data)
 {
 	if (sectionsFilled + 1 > maxAllocatedMemoryInBytes / bytesPerSection)

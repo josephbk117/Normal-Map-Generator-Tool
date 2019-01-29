@@ -15,6 +15,7 @@ public:
 	void updateAllocation(const glm::vec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
 	const unsigned int getMaxUndoSteps();
 	const unsigned int getCurrentSectionPosition();
+	unsigned int getMaxSectionsFilled();
 	void record(unsigned char* data);
 	unsigned char* retrieve(bool grabPrevious = true);
 	void clear();
