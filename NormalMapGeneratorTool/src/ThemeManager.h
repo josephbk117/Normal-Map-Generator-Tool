@@ -150,7 +150,7 @@ private:
 public:
 	enum class Theme
 	{
-		DEFAULT, DARK, LIGHT, BLUE
+		DEFAULT, DARK, LIGHT, BLUE, GREEN
 	};
 	ImVec4 PrimaryColour;
 	//Applied on title and menu bar
@@ -239,8 +239,36 @@ public:
 			StyleColorsLight();
 			break;
 		case Theme::BLUE:
-			ImGui::StyleColorsClassic();
+			PrimaryColour = ImVec4(0.2f, 0.5f, 0.6f, 1.1f);
+			TitleColour = ImVec4(0.2f, 0.4f, 0.5f, 1.1f);
+			SecondaryColour = ImVec4(0.2f, 0.3f, 0.4f, 1.1f);
+			AccentColour1 = ImVec4(0.1f, 0.2f, 0.3f, 1.1f);
+			AccentColour2 = ImVec4(1, 1, 1, 1.1f);
+			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
+			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
+			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.8f, 1.00f);
+			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
+			Sate1Colour = ImVec4(0.10f, 0.10f, 0.80f, 0.46f);
+			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.97f);
+			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.2f);
+			StyleColorsLight();
 			break;
+		case Theme::GREEN:
+			PrimaryColour = ImVec4(0.15f, 0.15f, 0.15f, 1.1f);
+			TitleColour = ImVec4(0.13f, 0.13f, 0.13f, 1.1f);
+			SecondaryColour = ImVec4(0.55f, 0.75f, 0.25f, 1.1f);
+			AccentColour1 = ImVec4(0.25f, 0.25f, 0.25f, 1.1f);
+			AccentColour2 = ImVec4(0.85f, 1.0f, 0.85f, 1.1f);
+			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
+			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
+			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
+			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
+			Sate1Colour = ImVec4(0.80f, 0.80f, 0.80f, 0.46f);
+			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.67f);
+			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
+			StyleColorsDark();
 		default:
 			break;
 		}

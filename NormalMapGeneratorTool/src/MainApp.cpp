@@ -1198,7 +1198,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme" };
+		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme","    Green Theme" };
 		static int item_current = 0;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
@@ -1218,6 +1218,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		case 3:
 			themeManager.EnableInBuiltTheme(ThemeManager::Theme::BLUE);
 			break;
+		case 4:
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::GREEN);
 		default:
 			break;
 		}
