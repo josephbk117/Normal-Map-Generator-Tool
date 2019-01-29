@@ -54,7 +54,7 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v0.95 Alpha";
+const std::string VERSION_NAME = "v1.0 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -409,6 +409,22 @@ int main(void)
 				imageFormat = ImageFormat::PNG;
 			else if (fileExt == ".jpg")
 				imageFormat = ImageFormat::JPEG;
+			else //Un-supported format
+			{
+				//SaveNormalMapToFile(saveLocation, imageFormat);
+				shouldSaveNormalMap = false;
+				if (fileExt == "")
+				{
+					modalWindow.setModalDialog("ERROR", "The provided path : " + path + "\nIs incomplete, Check if the path is valid");
+
+				}
+				else
+				{
+					modalWindow.setModalDialog("ERROR", "The extension '" + fileExt + "' is not supported\n Choose from .png, .jpg, .tga or .bmp");
+				}
+				fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+				continue;
+			}
 			//Image validation stage over
 			SaveNormalMapToFile(saveLocation, imageFormat);
 			shouldSaveNormalMap = false;
