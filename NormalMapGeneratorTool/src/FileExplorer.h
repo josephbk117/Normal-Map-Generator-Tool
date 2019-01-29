@@ -17,6 +17,8 @@ public:
 	void display();
 	void displayDialog( FileType filter = FileType::NONE) noexcept;
 	void displayDialog( FileType filter, std::function<void(std::string)> func) noexcept;
+	bool doesPathExist(const std::string& path)noexcept;
+	std::string getFileExtension(const std::string & path);
 	~FileExplorer();
 private:
 	std::vector<std::string> paths;

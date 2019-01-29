@@ -166,26 +166,21 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	return format;
 }
 
-void TextureManager::SaveImage(const std::string & path, const glm::vec2& imageRes, ImageFormat imageFormat, char * data)
+void TextureManager::SaveImage(std::string path, const glm::vec2 & imageRes, ImageFormat imageFormat, char * data)
 {
-	std::string extPath = path;
 	switch (imageFormat)
 	{
 	case ImageFormat::BMP:
-		extPath = extPath + ".bmp";
-		stbi_write_bmp(extPath.c_str(), imageRes.x, imageRes.y, 3, data);
+		stbi_write_bmp(path.c_str(), imageRes.x, imageRes.y, 3, data);
 		return;
 	case ImageFormat::TGA:
-		extPath = extPath + ".tga";
-		stbi_write_tga(extPath.c_str(), imageRes.x, imageRes.y, 3, data);
+		stbi_write_tga(path.c_str(), imageRes.x, imageRes.y, 3, data);
 		return;
 	case ImageFormat::PNG:
-		extPath = extPath + ".png";
-		stbi_write_png(extPath.c_str(), imageRes.x, imageRes.y, 3, data, 0);
+		stbi_write_png(path.c_str(), imageRes.x, imageRes.y, 3, data, 0);
 		return;
 	case ImageFormat::JPEG:
-		extPath = extPath + ".jpg";
-		stbi_write_jpg(extPath.c_str(), imageRes.x, imageRes.y, 3, data, 100);
+		stbi_write_jpg(path.c_str(), imageRes.x, imageRes.y, 3, data, 100);
 		return;
 	default:
 		return;

@@ -78,7 +78,7 @@ bool isKeyReleased(int key);
 bool isKeyPressedDown(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
-void SaveNormalMapToFile(const std::string &locationStr);
+void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
@@ -395,12 +395,26 @@ int main(void)
 		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
 		normalmapPanel.draw();
 
-		static char saveLocation[500] = "D:\\scr.tga";
+		static char saveLocation[500] = "C:\\NoraNormalMap.tga";
 		if (shouldSaveNormalMap)
 		{
-			SaveNormalMapToFile(saveLocation);
+			ImageFormat imageFormat;
+			//Image validation stage start
+			std::string path(saveLocation);
+			std::string fileExt = fileExplorer.getFileExtension(saveLocation);
+			std::cout << "\nFile ext : " << fileExt;
+			if (fileExt == ".tga")
+				imageFormat = ImageFormat::TGA;
+			else if (fileExt == ".bmp")
+				imageFormat = ImageFormat::BMP;
+			else if (fileExt == ".png")
+				imageFormat = ImageFormat::PNG;
+			else if (fileExt == ".jpg")
+				imageFormat = ImageFormat::JPEG;
+			//Image validation stage over
+			SaveNormalMapToFile(saveLocation, imageFormat);
 			shouldSaveNormalMap = false;
-			modalWindow.setModalDialog("INFO", "Image exported to : " + std::string(saveLocation) + "\nResolution : " +
+			modalWindow.setModalDialog("INFO", "Image exported to : " + path + "\nResolution : " +
 				std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y));
 			continue;
 		}
@@ -575,8 +589,6 @@ int main(void)
 inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize)
 {
 	bool open = true;
-	static char imageLoadLocation[500] = "Resources\\Textures\\goli.png";
-
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
 	ImGui::Begin("Side_Bar", &open, window_flags);
@@ -623,7 +635,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::SameLine(0, 5);
 	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Save current view-mode image to file (F10)");
+		ImGui::SetTooltip("[.png | .tga | .bmp | .jpg] Save current view-mode image to file (F10)");
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	ImGui::Spacing();
@@ -1230,11 +1242,11 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
-void SaveNormalMapToFile(const std::string &locationStr)
+	}
+void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
 	{
@@ -1247,7 +1259,7 @@ void SaveNormalMapToFile(const std::string &locationStr)
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), ImageFormat::PNG, dataBuffer);
+		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete dataBuffer;
 	}
 }
@@ -1452,7 +1464,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+	}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);

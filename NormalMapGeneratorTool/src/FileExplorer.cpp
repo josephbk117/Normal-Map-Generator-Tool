@@ -173,6 +173,22 @@ void FileExplorer::displayDialog(FileType filter, std::function<void(std::string
 	functionToCall = func;
 }
 
+bool FileExplorer::doesPathExist(const std::string & path) noexcept
+{
+	return std::experimental::filesystem::exists(path);
+}
+
+std::string FileExplorer::getFileExtension(const std::string & path)
+{
+	// Create a Path object from given string
+	std::experimental::filesystem::path pathObj(path);
+	// Check if file name in the path object has extension
+	if (pathObj.has_extension())// Fetch the extension from path object and return
+		return pathObj.extension().string();
+	// In case of no extension return empty string
+	return "";
+}
+
 FileExplorer::~FileExplorer()
 {
 }
