@@ -42,12 +42,10 @@
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
-//TODO : Keep import and exporting to modal dialogs as well as provide additional options while doing so
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Some issue with blurring
 //TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image format
-//TODO : Undo/Redo slider at bottom bar
 //TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
 
@@ -622,7 +620,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
-		normalViewStateUtility.zoomLevel = 1;
+		normalViewStateUtility.zoomLevel = 1.0f;
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + R)");
@@ -691,7 +689,9 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	if (ImGui::SliderInt("Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1))
 	{
 		bool isForward = (currentSection - prevSection) >= 0 ? false : true;
-		heightMapTexData.updateTextureData(undoRedoSystem.retrieve(isForward));
+		int count = glm::abs(currentSection - prevSection);
+		for (int i = 0; i < count; i++)
+			heightMapTexData.updateTextureData(undoRedoSystem.retrieve(isForward));
 		heightMapTexData.updateTexture();
 		prevSection = currentSection;
 	}
@@ -1464,7 +1464,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-	}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
