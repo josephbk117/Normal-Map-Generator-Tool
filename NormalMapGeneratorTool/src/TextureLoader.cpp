@@ -1,5 +1,6 @@
 #include "TextureLoader.h"
 #include "stb_image.h"
+#include "stb_image_write.h"
 #include "TextureData.h"
 #include <GL\glew.h>
 #include <iostream>
@@ -75,7 +76,7 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path)
 #endif
 	stbi_image_free(data);
 	return textureID;
-	}
+}
 
 unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>& paths)
 {
@@ -139,7 +140,7 @@ unsigned int TextureManager::loadTextureFromData(TextureData & textureData)
 		std::cout << "\nTexture failed to load with texture data " << std::endl;
 #endif
 	return textureID;
-	}
+}
 
 GLenum TextureManager::getTextureFormatFromData(TextureData & textureData)
 {
@@ -163,4 +164,30 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	else if (componentCount == 4)
 		format = GL_RGBA;
 	return format;
+}
+
+void TextureManager::SaveImage(const std::string & path, const glm::vec2& imageRes, ImageFormat imageFormat, char * data)
+{
+	std::string extPath = path;
+	switch (imageFormat)
+	{
+	case ImageFormat::BMP:
+		extPath = extPath + ".bmp";
+		stbi_write_bmp(extPath.c_str(), imageRes.x, imageRes.y, 3, data);
+		return;
+	case ImageFormat::TGA:
+		extPath = extPath + ".tga";
+		stbi_write_tga(extPath.c_str(), imageRes.x, imageRes.y, 3, data);
+		return;
+	case ImageFormat::PNG:
+		extPath = extPath + ".png";
+		stbi_write_png(extPath.c_str(), imageRes.x, imageRes.y, 3, data, 0);
+		return;
+	case ImageFormat::JPEG:
+		extPath = extPath + ".jpg";
+		stbi_write_jpg(extPath.c_str(), imageRes.x, imageRes.y, 3, data, 100);
+		return;
+	default:
+		return;
+	}
 }

@@ -1230,10 +1230,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr)
 {
 	if (locationStr.length() > 4)
@@ -1247,7 +1247,7 @@ void SaveNormalMapToFile(const std::string &locationStr)
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-		stbi_write_bmp(locationStr.c_str(), heightMapTexData.getRes().x, heightMapTexData.getRes().y, 3, dataBuffer);
+		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), ImageFormat::PNG, dataBuffer);
 		delete dataBuffer;
 	}
 }

@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <vector>
 #include <GLM\common.hpp>
+enum class ImageFormat { PNG = 100, JPEG, BMP, TGA };
+
 class TextureManager
 {
 public:
@@ -17,4 +19,5 @@ public:
 	static unsigned int loadTextureFromData(TextureData & textureData);
 	static GLenum getTextureFormatFromData(TextureData & textureData);
 	static GLenum getTextureFormatFromData(int componentCount);
+	static void SaveImage(const std::string & path, const glm::vec2& imageRes, ImageFormat imageFormat, char * data);
 };
