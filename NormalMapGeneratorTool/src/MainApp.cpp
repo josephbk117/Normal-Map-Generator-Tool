@@ -54,7 +54,7 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v1.0 Beta";
+const std::string VERSION_NAME = "v0.96 Alpha";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
@@ -414,14 +414,9 @@ int main(void)
 				//SaveNormalMapToFile(saveLocation, imageFormat);
 				shouldSaveNormalMap = false;
 				if (fileExt == "")
-				{
 					modalWindow.setModalDialog("ERROR", "The provided path : " + path + "\nIs incomplete, Check if the path is valid");
-
-				}
 				else
-				{
 					modalWindow.setModalDialog("ERROR", "The extension '" + fileExt + "' is not supported\n Choose from .png, .jpg, .tga or .bmp");
-				}
 				fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 				continue;
 			}
@@ -631,7 +626,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 		heightMapTexData.setTextureDirty();
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Clear the panel(Ctrl + Alt + R)");
+		ImGui::SetTooltip("Clear the panel(Ctrl + Alt + V)");
 	ImGui::SameLine();
 	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
@@ -639,7 +634,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 		normalViewStateUtility.zoomLevel = 1.0f;
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + R)");
+		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + V)");
 
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -760,6 +755,14 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
 	normalViewStateUtility.zoomLevel = glm::clamp(normalViewStateUtility.zoomLevel, 0.1f, 5.0f);
 
+	//Normal map channel toggles
+	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive;
+	if (isKeyPressedDown(GLFW_KEY_G) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive;
+	if (isKeyPressedDown(GLFW_KEY_B) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+		normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive;
+
 	//Set normal map view mode in editor
 	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 3;
@@ -787,8 +790,6 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
 	if (isKeyPressed(GLFW_KEY_DOWN) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
 		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
-	if (isKeyPressed(GLFW_KEY_8))
-		frameDrawingPanel.getTransform()->rotate(1.0f * deltaTime);
 
 	//Undo
 	if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
@@ -856,7 +857,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 	}
 
 	//Normal map panel reset/clear
-	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (isKeyPressedDown(GLFW_KEY_V) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		//clear
 		if (isKeyPressed(GLFW_KEY_LEFT_ALT))
@@ -873,6 +874,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		}
 	}
 
+	std::cout << "\nRed channel state "<< normalViewStateUtility.redChannelActive;
 	//Minimize window
 	if (isKeyPressed(GLFW_KEY_F9))
 	{
@@ -948,22 +950,30 @@ inline void DisplayNormalSettingsUserInterface()
 	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir; }
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(CTRL + A)");
 	ImGui::PopStyleColor();
 	const float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
 
 	if (!normalViewStateUtility.redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("R", ImVec2(width, 40))) { normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive; } ImGui::SameLine();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(SHIFT + R)");
 	ImGui::PopStyleColor();
 
 	if (!normalViewStateUtility.greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("G", ImVec2(width, 40))) { normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive; } ImGui::SameLine();
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(SHIFT + G)");
 	ImGui::PopStyleColor();
 
 	if (!normalViewStateUtility.blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("B", ImVec2(width, 40))) { normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive; }
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("(SHIFT + B)");
 	ImGui::PopStyleColor();
 }
 
@@ -1260,10 +1270,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1486,7 +1496,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
