@@ -87,7 +87,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags);
 inline void DisplayLightSettingsUserInterface();
 inline void DisplayNormalSettingsUserInterface();
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
-inline void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
+inline void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
@@ -319,7 +319,7 @@ int main(void)
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
 		const glm::vec2 curMouseCoord = windowSys.GetCursorPos();
-		HandleKeyboardInput(normalViewStateUtility.normalMapStrength, deltaTime, frameDrawingPanel, isMaximized);
+		HandleKeyboardInput(deltaTime, frameDrawingPanel, isMaximized);
 
 		fbs.BindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
@@ -742,13 +742,13 @@ void SetStatesForSavingNormalMap()
 	glViewport(0, 0, heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 	fbs.updateTextureDimensions(heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 }
-void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
+void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
 	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		normalMapStrength += 0.05f;
+		normalViewStateUtility.normalMapStrength -= 0.05f;
 	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
-		normalMapStrength -= 0.05f;
+		normalViewStateUtility.normalMapStrength += 0.05f;
 	if (isKeyPressed(GLFW_KEY_W))
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
 	if (isKeyPressed(GLFW_KEY_S))
@@ -874,7 +874,7 @@ void HandleKeyboardInput(float &normalMapStrength, double deltaTime, DrawingPane
 		}
 	}
 
-	std::cout << "\nRed channel state "<< normalViewStateUtility.redChannelActive;
+	std::cout << "\nRed channel state " << normalViewStateUtility.redChannelActive;
 	//Minimize window
 	if (isKeyPressed(GLFW_KEY_F9))
 	{

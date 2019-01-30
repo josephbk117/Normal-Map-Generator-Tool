@@ -194,8 +194,12 @@
     <None Include="Resources\Shaders\modelViewPBR.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\Shaders\gridLines.fs" />
-    <None Include="Resources\Shaders\gridLines.vs" />
+    <None Include="Resources\Shaders\gridLines.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\gridLines.fs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">
