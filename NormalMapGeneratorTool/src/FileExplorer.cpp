@@ -31,7 +31,7 @@ void FileExplorer::display()
 	}
 	ImGui::OpenPopup("File Explorer");
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoScrollbar;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(540, 540), ImVec2(1200, 1200));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(540, 540), ImVec2(1920, 1080));
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	if (ImGui::BeginPopupModal("File Explorer", NULL, window_flags))
 	{
@@ -46,13 +46,23 @@ void FileExplorer::display()
 			ImGui::SameLine();
 			if (ImGui::Button(roots[i].c_str(), ImVec2(30, 30))) { path = roots[i]; isDirty = true; }
 		}
+		static char pathInput[500];
 		ImGui::SameLine();
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 110);
+		ImGui::InputText("##Path Field", pathInput, 500);
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+		if (ImGui::Button("GO", ImVec2(100, 20)))
+		{
+			path = std::string(pathInput);
+			isDirty = true;
+		}
 		static ImGuiTextFilter filter;
-		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth() * 0.5f);
+		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth() - 200);
 		static int columnCount = 1;
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 70, 0));
-		ImGui::PushItemWidth(60);
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 90, 0));
+		ImGui::PushItemWidth(80);
 		ImGui::SameLine();
 		ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);

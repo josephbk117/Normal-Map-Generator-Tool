@@ -48,6 +48,7 @@
 //TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image format
 //TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
+//TODO : Convert text to icon for most buttons
 
 enum class LoadingOption
 {
@@ -874,7 +875,6 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		}
 	}
 
-	std::cout << "\nRed channel state " << normalViewStateUtility.redChannelActive;
 	//Minimize window
 	if (isKeyPressed(GLFW_KEY_F9))
 	{
