@@ -22,9 +22,15 @@ void FileExplorer::display()
 {
 	if (!shouldDisplay)
 		return;
+
+	static char pathInput[500];
 	if (isDirty)
 	{
 		paths.clear();
+		for (int i = 0; i < path.length(); i++)
+		{
+			pathInput[i] = path[i];
+		}
 		for (auto & p : std::experimental::filesystem::directory_iterator(path))
 			paths.push_back(p.path().generic_string());
 		isDirty = false;
@@ -46,13 +52,13 @@ void FileExplorer::display()
 			ImGui::SameLine();
 			if (ImGui::Button(roots[i].c_str(), ImVec2(30, 30))) { path = roots[i]; isDirty = true; }
 		}
-		static char pathInput[500];
+
 		ImGui::SameLine();
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 110);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 40);
 		ImGui::InputText("##Path Field", pathInput, 500);
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
-		if (ImGui::Button("GO", ImVec2(100, 20)))
+		if (ImGui::Button("GO", ImVec2(30, 30)))
 		{
 			path = std::string(pathInput);
 			isDirty = true;
