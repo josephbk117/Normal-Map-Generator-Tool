@@ -205,6 +205,28 @@ std::string FileExplorer::getFileExtension(const std::string & path)
 	return "";
 }
 
+std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string & path, bool withEntirePath)
+{
+	std::vector<std::string> paths;
+	if (withEntirePath)
+	{
+		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		{
+			if (std::experimental::filesystem::is_regular_file(p))
+				paths.push_back(p.path().generic_string());
+		}
+	}
+	else
+	{
+		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		{
+			if (std::experimental::filesystem::is_regular_file(p))
+				paths.push_back(p.path().filename().generic_string());
+		}
+	}
+	return paths;
+}
+
 FileExplorer::~FileExplorer()
 {
 }

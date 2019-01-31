@@ -1,5 +1,6 @@
 #include "TextureData.h"
 #include "TextureLoader.h"
+#include <iostream>
 TextureData::TextureData()
 {
 	data = nullptr;
@@ -111,6 +112,16 @@ void TextureData::updateTextureData(unsigned char * data)
 ColourData TextureData::getTexelColor(int x, int y)noexcept
 {
 	int i = ((float)width * (float)y + (float)x) * componentCount;
+	ColourData colData;
+	colData.setColour_8_Bit(data[i], data[i + 1], data[i + 2], data[i + 3]);
+	return colData;
+}
+
+ColourData TextureData::getTexColorAsUV(float x, float y) noexcept
+{
+	x *= width;
+	y *= height;
+	int i = ((float)width * y + x) * componentCount;
 	ColourData colData;
 	colData.setColour_8_Bit(data[i], data[i + 1], data[i + 2], data[i + 3]);
 	return colData;

@@ -45,7 +45,7 @@
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Some issue with blurring
-//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image format
+//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ]
 //TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
@@ -55,10 +55,11 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v0.96 Alpha";
+const std::string VERSION_NAME = "v0.98 Alpha";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
+const std::string BRUSH_TEXTURES_PATH = "Resources\\Brushes\\";
 const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
 const std::string SHADERS_PATH = "Resources\\Shaders\\";
 const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
@@ -76,6 +77,7 @@ bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool isKeyPressedDown(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
+void SetPixelValuesWithBrushTexture(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
@@ -192,6 +194,7 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
+	//Windowing related images
 	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
 	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
 	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
@@ -892,6 +895,42 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 
+	static std::string currentBrush = "Circle";
+	static std::vector<std::string> grungeBrushPaths = fileExplorer.getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Grunge", false);
+	static std::vector<std::string> patternBrushPaths = fileExplorer.getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Patterns", false);
+
+	if (ImGui::BeginMenu(currentBrush.c_str()))
+	{
+		if (ImGui::BeginMenu("Geometric"))
+		{
+			if (ImGui::MenuItem("Circle")) {}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Grunge"))
+		{
+			for (int i = 0; i < grungeBrushPaths.size(); i++)
+			{
+				if (ImGui::MenuItem(grungeBrushPaths[i].c_str()))
+				{
+
+				}
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Pattern"))
+		{
+			for (int i = 0; i < patternBrushPaths.size(); i++)
+			{
+				if (ImGui::MenuItem(patternBrushPaths[i].c_str()))
+				{
+
+				}
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenu();
+	}
+
 	if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
 		isBlurOn = !isBlurOn;
 	ImGui::SameLine();
@@ -1270,10 +1309,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1356,7 +1395,9 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 							float bottom = glm::clamp((iterCurPoint.y - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 							float top = glm::clamp((iterCurPoint.y + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 							iterCurPoint += incValue;
-							SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+							//SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+							SetPixelValuesWithBrushTexture(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+
 						}
 					}
 					else
@@ -1365,7 +1406,9 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 						float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
 						float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 						float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-						SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+						//SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+						SetPixelValuesWithBrushTexture(heightMapTexData, left, right, bottom, top, curX, curY);
+
 					}
 				}
 				else if (isBlurOn)
@@ -1492,11 +1535,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
@@ -1540,10 +1583,41 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			{
 				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
-				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);
+				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);//inputTexData.getTexelColor((int)( x * heightMapTexData.getRes().x),(int)( y * heightMapTexData.getRes().y)).getColour_32_Bit().r;
 				ColourData col(rVal, rVal, rVal, 1.0f);
 				inputTexData.setTexelColor(col, i, j);
 			}
+		}
+	}
+}
+
+inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
+{
+	const glm::vec2 pixelPos(xpos, ypos);
+	const float px_width = inputTexData.getRes().x;
+	const float px_height = inputTexData.getRes().y;
+	const float distanceRemap = 1.0f / brushData.brushScale;
+	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
+
+	float xMag = endX - startX;
+	float yMag = endY - startY;
+	for (int i = startX; i < endX; i++)
+	{
+		for (int j = startY; j < endY; j++)
+		{
+			ColourData colData = inputTexData.getTexelColor(i, j);
+			float rVal = colData.getColour_32_Bit().r;
+
+			float x = (i - startX) / xMag;
+			float y = (j - startY) / yMag;
+
+			rVal += (inputTexData.getTexelColor
+			((int)(x * heightMapTexData.getRes().x), (int)(y * heightMapTexData.getRes().y)).getColour_32_Bit().r *
+				((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal)) *
+				brushData.brushStrength;
+			rVal = glm::clamp(rVal, 0.0f, 1.0f);
+			ColourData col(rVal, rVal, rVal, 1.0f);
+			inputTexData.setTexelColor(col, i, j);
 		}
 	}
 }

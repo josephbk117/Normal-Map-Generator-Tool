@@ -28,6 +28,7 @@ public:
 	void updateTexture();
 	void updateTextureData(unsigned char* data);
 	ColourData getTexelColor(int x, int y)noexcept;
+	ColourData getTexColorAsUV(float x, float y)noexcept;
 	//Set the texture as dirty so that it can be updated
 	void setTextureDirty()noexcept;
 
