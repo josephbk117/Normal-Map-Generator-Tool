@@ -77,7 +77,7 @@ bool isKeyPressed(int key);
 bool isKeyReleased(int key);
 bool isKeyPressedDown(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
-void SetPixelValuesWithBrushTexture(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos);
+void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
@@ -903,7 +903,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	{
 		if (ImGui::BeginMenu("Geometric"))
 		{
-			if (ImGui::MenuItem("Circle")) {}
+			if (ImGui::MenuItem("Circle")) { brushData.textureData.clearRawData(); }
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Grunge"))
@@ -912,7 +912,8 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 			{
 				if (ImGui::MenuItem(grungeBrushPaths[i].c_str()))
 				{
-
+					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths[i], brushData.textureData);
+					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -923,7 +924,8 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 			{
 				if (ImGui::MenuItem(patternBrushPaths[i].c_str()))
 				{
-
+					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths[i], brushData.textureData);
+					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -1309,10 +1311,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1395,9 +1397,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 							float bottom = glm::clamp((iterCurPoint.y - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 							float top = glm::clamp((iterCurPoint.y + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 							iterCurPoint += incValue;
-							//SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
-							SetPixelValuesWithBrushTexture(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
-
+							if (brushData.hasBrushTexture())
+								SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+							else
+								SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
 						}
 					}
 					else
@@ -1406,8 +1409,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 						float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
 						float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
 						float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-						//SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
-						SetPixelValuesWithBrushTexture(heightMapTexData, left, right, bottom, top, curX, curY);
+						if (brushData.hasBrushTexture())
+							SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
+						else
+							SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 
 					}
 				}
@@ -1535,11 +1540,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
@@ -1591,16 +1596,11 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	}
 }
 
-inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
+inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	const glm::vec2 pixelPos(xpos, ypos);
-	const float px_width = inputTexData.getRes().x;
-	const float px_height = inputTexData.getRes().y;
-	const float distanceRemap = 1.0f / brushData.brushScale;
-	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
-
 	float xMag = endX - startX;
 	float yMag = endY - startY;
+
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
@@ -1611,8 +1611,8 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, int startX
 			float x = (i - startX) / xMag;
 			float y = (j - startY) / yMag;
 
-			rVal += (inputTexData.getTexelColor
-			((int)(x * heightMapTexData.getRes().x), (int)(y * heightMapTexData.getRes().y)).getColour_32_Bit().r *
+			rVal += (brushTexture.getTexelColor
+			((int)(x * brushTexture.getRes().x), (int)(y * brushTexture.getRes().y)).getColour_32_Bit().r *
 				((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal)) *
 				brushData.brushStrength;
 			rVal = glm::clamp(rVal, 0.0f, 1.0f);

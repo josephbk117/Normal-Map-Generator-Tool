@@ -31,6 +31,7 @@ public:
 	ColourData getTexColorAsUV(float x, float y)noexcept;
 	//Set the texture as dirty so that it can be updated
 	void setTextureDirty()noexcept;
+	void clearRawData();
 
 	~TextureData();
 };

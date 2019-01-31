@@ -132,9 +132,17 @@ void TextureData::setTextureDirty()noexcept
 	requiresUpdate = true;
 }
 
+void TextureData::clearRawData()
+{
+	if (data != nullptr)
+		delete[] data;
+	data = nullptr;
+}
+
 TextureData::~TextureData()
 {
 	if (texId != 0)
 		glDeleteTextures(1, &texId);
-	delete[] data;
+	if (data != nullptr)
+		delete[] data;
 }

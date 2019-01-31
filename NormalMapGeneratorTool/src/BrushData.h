@@ -1,4 +1,5 @@
 #pragma once
+#include "TextureData.h"
 struct BrushData
 {
 	float brushScale = 0.05f;
@@ -8,15 +9,22 @@ struct BrushData
 	float brushMaxHeight = 1.0f;
 	float brushRate = 0.0f;
 	bool heightMapPositiveDir = false;
+	TextureData textureData;
 
 	bool operator!= (const BrushData &bD)
 	{
 		if (brushScale != bD.brushScale || brushOffset != bD.brushOffset ||
 			brushStrength != bD.brushStrength || brushMinHeight != bD.brushMinHeight ||
-			brushMaxHeight != bD.brushMaxHeight || brushRate != bD.brushRate || heightMapPositiveDir != bD.heightMapPositiveDir)
+			brushMaxHeight != bD.brushMaxHeight || brushRate != bD.brushRate ||
+			heightMapPositiveDir != bD.heightMapPositiveDir || textureData.getTextureData() != textureData.getTextureData())
 		{
 			return true;
 		}
 		return false;
+	}
+
+	bool hasBrushTexture() noexcept
+	{
+		return textureData.getTextureData() != nullptr;
 	}
 };
