@@ -912,6 +912,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 			{
 				if (ImGui::MenuItem(grungeBrushPaths[i].c_str()))
 				{
+					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths[i], brushData.textureData);
 					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
 				}
@@ -924,6 +925,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 			{
 				if (ImGui::MenuItem(patternBrushPaths[i].c_str()))
 				{
+					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths[i], brushData.textureData);
 					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
 				}
