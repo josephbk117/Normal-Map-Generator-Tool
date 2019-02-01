@@ -755,9 +755,9 @@ void SetStatesForSavingNormalMap()
 void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
-	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength -= 0.05f;
-	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength += 0.05f;
 	if (isKeyPressed(GLFW_KEY_W))
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
@@ -792,13 +792,13 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		previewStateUtility.modelViewMode = 4;
 
 	//Normal map movement
-	if (isKeyPressed(GLFW_KEY_LEFT) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
+	if (isKeyPressed(GLFW_KEY_LEFT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
-	if (isKeyPressed(GLFW_KEY_RIGHT) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
+	if (isKeyPressed(GLFW_KEY_RIGHT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
-	if (isKeyPressed(GLFW_KEY_UP) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
+	if (isKeyPressed(GLFW_KEY_UP) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT && !isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
-	if (isKeyPressed(GLFW_KEY_DOWN) && (!isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT)))
+	if (isKeyPressed(GLFW_KEY_DOWN) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT && !isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
 
 	//Undo
@@ -837,17 +837,17 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Brush data
-	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale += 0.1f;
-	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale -= 0.1f;
-	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset += 0.01f;
-	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset -= 0.01f;
-	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength += 0.01f;
-	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength -= 0.01f;
 	brushData.brushOffset = glm::clamp(brushData.brushOffset, 0.01f, 1.0f);
 	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getRes().y * 0.5f);
@@ -961,7 +961,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		ImGui::SetTooltip("(Shift + |LEFT / RIGHT|)");
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Alt + |LEFT / RIGHT|)");
+		ImGui::SetTooltip("(Shift + Ctrl + |UP / DOWN|)");
 	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getRes().y / 2, "%0.2f", 1.0f)) {}
@@ -1319,10 +1319,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1548,11 +1548,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 

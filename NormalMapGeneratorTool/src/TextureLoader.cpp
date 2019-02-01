@@ -14,6 +14,7 @@ void TextureManager::getRawImageDataFromFile(const std::string & path, std::vect
 	const unsigned int size = width * height * nrComponents;
 	for (unsigned int i = 0; i < size; i++)
 		data.push_back(ldata[i]);
+	stbi_image_free(ldata);
 }
 
 void TextureManager::getTextureDataFromFile(const std::string & path, TextureData & textureData)
@@ -24,6 +25,7 @@ void TextureManager::getTextureDataFromFile(const std::string & path, TextureDat
 	nrComponents = 4;
 	if (data)
 		textureData.setTextureData(data, width, height, nrComponents);
+	stbi_image_free(data);
 }
 
 glm::vec2 TextureManager::getImageDimensions(const std::string & path)
@@ -32,7 +34,7 @@ glm::vec2 TextureManager::getImageDimensions(const std::string & path)
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 4);
 	nrComponents = 4;
-	free(data);
+	stbi_image_free(data);
 	return glm::vec2(width, height);
 }
 

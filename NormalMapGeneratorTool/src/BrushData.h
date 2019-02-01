@@ -16,7 +16,7 @@ struct BrushData
 		if (brushScale != bD.brushScale || brushOffset != bD.brushOffset ||
 			brushStrength != bD.brushStrength || brushMinHeight != bD.brushMinHeight ||
 			brushMaxHeight != bD.brushMaxHeight || brushRate != bD.brushRate ||
-			heightMapPositiveDir != bD.heightMapPositiveDir || textureData.getTextureData() != textureData.getTextureData())
+			heightMapPositiveDir != bD.heightMapPositiveDir || &textureData != &bD.textureData)
 		{
 			return true;
 		}
