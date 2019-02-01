@@ -49,6 +49,7 @@
 //TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
+//TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 
 enum class LoadingOption
 {
@@ -257,9 +258,11 @@ int main(void)
 	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
 
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
+	int brushPreviewTextureUniform = brushPreviewShader.getUniformLocation("_BrushTexture");
 	int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
 	int brushPreviewStrengthUniform = brushPreviewShader.getUniformLocation("_BrushStrength");
 	int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
+	int brushPreviewUseTextureUniform = brushPreviewShader.getUniformLocation("_UseTexture");
 
 	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
@@ -535,7 +538,10 @@ int main(void)
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
 		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, glm::pow(brushData.brushOffset, 2) * 10.0f);
 		brushPreviewShader.applyShaderVector3(brushPreviewColourUniform, (brushData.heightMapPositiveDir ? glm::vec3(1) : glm::vec3(0)));
+		brushPreviewShader.applyShaderBool(brushPreviewUseTextureUniform, !brushData.hasBrushTexture());
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
+
+		brushPanel.setTextureID(brushData.textureData.GetTexId());
 		brushPanel.draw();
 
 		ImGui_ImplOpenGL2_NewFrame();
@@ -1313,10 +1319,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1542,11 +1548,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
