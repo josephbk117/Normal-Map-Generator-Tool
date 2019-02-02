@@ -7,8 +7,8 @@ public:
 	float modelRoughness = 5.0f;
 	float modelReflectivity = 0.5f;
 	int modelViewMode = 2;
+	float lightLocation = 0.0f;
 	glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
-	glm::vec3 ambientColour = glm::vec3(0.14f, 0.14f, 0.14f);
 	glm::vec3 lightColour = glm::vec3(1, 1, 1);
 };
 struct NormalViewStateUtility

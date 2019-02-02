@@ -21,7 +21,7 @@ namespace MeshLoadingSystem
 		ModelObject* CreateModelFromFile(const std::string& Path)
 		{
 			Assimp::Importer importer;
-			const aiScene* scene = importer.ReadFile(Path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+			const aiScene* scene = importer.ReadFile(Path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 			// check for errors
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{

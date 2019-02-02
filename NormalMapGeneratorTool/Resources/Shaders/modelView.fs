@@ -9,9 +9,8 @@ uniform sampler2D inTexture;
 uniform sampler2D inTexture2;
 uniform samplerCube skybox;
 uniform vec3 diffuseColour;
-uniform vec3 ambientColour;
 uniform vec3 lightColour;
-uniform vec3 lightDir;
+uniform vec3 lightPos;
 uniform vec3 _CameraPosition;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
@@ -214,28 +213,31 @@ void main()
 
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
-			vec3 normal = TBN * norm;
-			
-			vec3 TangentLightPos = TBN * lightDir;
-			vec3 TangentViewPos  = TBN * _CameraPosition;
-			vec3 TangentFragPos  = TBN * FragPos;
+			norm = normalize(TBN * norm);
+			float dotVal = max(dot(normalize(lightPos), norm), 0.0);
 
-			// get diffuse color
-			vec3 color = (_normalMapModeOn == 4) ? texture(inTexture2, TexCoords).rgb : diffuseColour;
-			// ambient
-			vec3 ambient = 0.01 * color;
-			// diffuse
-			vec3 lightDir = normalize(TangentLightPos - TangentFragPos);
-			float diff = max(dot(lightDir, normal), 0.0) * max(dot(lightDir, Normal), 0.0);
-			vec3 diffuse = diff * color;
+			vec3 diffuse = diffuseColour * ((_normalMapModeOn == 4)?texture(inTexture2, TexCoords).rgb:vec3(1));
+			vec3 ambient = diffuse * 0.1;
+
+			diffuse *=  dotVal;
+
 			// specular
-			vec3 viewDir = normalize(TangentViewPos - TangentFragPos);
-			vec3 reflectDir = reflect(-lightDir, normal);
-			vec3 halfwayDir = normalize(lightDir + viewDir);
-			float spec = pow(max(dot(normal, halfwayDir), 0.0), _Specularity);
+			vec3 viewDir = normalize(_CameraPosition - FragPos);
+			vec3 reflectDir = reflect(-normalize(lightPos), norm);  
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity) * _SpecularStrength;
+			vec3 specular = lightColour * spec;  
 
-			vec3 specular = vec3(1.0) * spec;
-			vec3 result = pow((ambient + diffuse + specular), vec3(1.0/2.2));
+			float distance    = length(lightPos - FragPos);
+			float attenuation = 1.0 / (0.01 + (distance * distance));
+
+			ambient  *= attenuation;
+			diffuse  *= attenuation;
+			specular *= attenuation;
+
+			vec3 diffuseAndAmbient = diffuse + ambient;
+			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
+
+			vec3 result = pow(mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular, vec3(1.0/2.2));
 			FragColor = vec4(result, 1.0);
 		}
         else

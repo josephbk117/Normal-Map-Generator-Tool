@@ -47,6 +47,7 @@
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
+//TODO : Skybox cubemap wrong order
 
 enum class LoadingOption
 {
@@ -265,8 +266,7 @@ int main(void)
 	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
 	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
-	int modelCameraPos = modelViewShader.getUniformLocation("__CameraPosition");
-	int modelLightPosUniform = modelViewShader.getUniformLocation("lightPos");
+	int modelCameraPos = modelViewShader.getUniformLocation("_CameraPosition");
 	int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
 	int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
@@ -276,10 +276,9 @@ int main(void)
 	int modelLightSpecularityStrengthUniform = modelViewShader.getUniformLocation("_SpecularStrength");
 	int modelRoughnessUniform = modelViewShader.getUniformLocation("_Roughness");
 	int modelReflectivityUniform = modelViewShader.getUniformLocation("_Reflectivity");
-	int modelLightDirectionUniform = modelViewShader.getUniformLocation("lightDir");
+	int modelLightPositionUniform = modelViewShader.getUniformLocation("lightPos");
 	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
-	int modelAmbientColourUniform = modelViewShader.getUniformLocation("ambientColour");
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
@@ -475,11 +474,10 @@ int main(void)
 		rot += 0.002f;
 
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(1), rot, glm::vec3(glm::sin(rot), 1, 1)));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(), rot, glm::vec3(glm::sin(rot), 1, 1)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderVector3(modelCameraPos, cameraPosition);
-		modelViewShader.applyShaderVector3(modelLightPosUniform, glm::vec3(0, -5, 0));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
 		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
@@ -489,14 +487,16 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
 		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.modelRoughness);
 		modelViewShader.applyShaderFloat(modelReflectivityUniform, previewStateUtility.modelReflectivity);
-		modelViewShader.applyShaderVector3(modelLightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
+		glm::vec3 lightPos;
+		lightPos.x = sin(previewStateUtility.lightLocation) * 3;
+		lightPos.z = cos(previewStateUtility.lightLocation) * 3;
+		modelViewShader.applyShaderVector3(modelLightPositionUniform, lightPos);
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
 		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 2);
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
-		modelViewShader.applyShaderVector3(modelAmbientColourUniform, previewStateUtility.ambientColour);
 		modelViewShader.applyShaderBool(modelMethodIndexUniform, normalViewStateUtility.methodIndex);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -1191,10 +1191,9 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
 	{
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+		ImGui::SliderFloat("Position", &previewStateUtility.lightLocation, 0, 6.2f,"%.2f");
 		ImGui::Text("Diffuse Colour");
 		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0]);
-		ImGui::Text("Ambient Colour");
-		ImGui::ColorEdit3("Ambient Color", &previewStateUtility.ambientColour[0]);
 		ImGui::Text("Light Colour");
 		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0]);
 		ImGui::PopItemWidth();
