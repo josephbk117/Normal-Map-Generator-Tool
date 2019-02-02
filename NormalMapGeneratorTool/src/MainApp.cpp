@@ -265,7 +265,8 @@ int main(void)
 	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
 	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
-	int modelCameraZoomUniform = modelViewShader.getUniformLocation("_CameraZoom");
+	int modelViewPosUniform = modelViewShader.getUniformLocation("viewPos");
+	int modelLightPosUniform = modelViewShader.getUniformLocation("lightPos");
 	int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
 	int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
@@ -463,13 +464,17 @@ int main(void)
 			rotation *= glm::rotate(glm::mat4(), glm::length(offset) * (float)deltaTime, point);
 		}
 		prevMcord = windowSys.GetCursorPos();
+		static float rot = 0;
+
+		rot += 0.01f;
 
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, rotation);
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(), rot, glm::vec3(glm::sin(rot),1,1)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+		modelViewShader.applyShaderVector3(modelViewPosUniform, glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel));
+		modelViewShader.applyShaderVector3(modelLightPosUniform, glm::vec3(0, 10, 0));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
-		modelViewShader.applyShaderFloat(modelCameraZoomUniform, previewStateUtility.modelPreviewZoomLevel);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
 		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
 		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getRes().y);
@@ -500,7 +505,7 @@ int main(void)
 
 		gridLineShader.use();
 		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(rotation, glm::vec3(100, 1, 100)));
-		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::mat4());
 		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
 

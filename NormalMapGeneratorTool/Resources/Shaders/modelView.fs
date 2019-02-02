@@ -214,13 +214,7 @@ void main()
 
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
-			norm = (2.0 * norm) - 1.0;
-			vec3 Normal = TBN * Normal;
-			//Normal = TBN * Normal;
-			norm  = TBN * norm;
-			vec3 lightDir = TBN * lightDir;
 			vec3 _norm = normalize(Normal * norm);
-			vec3 _CameraPosition = TBN * _CameraPosition;
 			float lightDot = max(dot( _norm, lightDir), 0.0);
 
 			//Object colour
@@ -232,12 +226,12 @@ void main()
 			vec3 diffuse = lightColour * lightDot * _LightIntensity;
 
 			//Reflection
-			vec3 I = normalize(FragPos - vec3(0, 0, -_CameraPosition.z));//_CameraPosition);
+			vec3 I = normalize(FragPos - _CameraPosition);
 			vec3 R = reflect(I, _norm);
 			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
     
 			// specular
-			vec3 viewDir = normalize(FragPos -vec3(0, 0, -_CameraPosition.z));// _CameraPosition);
+			vec3 viewDir = normalize(FragPos - _CameraPosition);
 			vec3 halfwayDir = normalize(lightDir + viewDir);  
 			float spec = pow(max(dot(_norm, halfwayDir), 0.0), _Specularity);
 
@@ -250,18 +244,11 @@ void main()
 		}
         else
 		{
-			//norm = TBN * norm;
             FragColor = vec4(norm * 0.5 + 0.5,1.0);
 		}
     }
     else if(_normalMapModeOn == 3)
     {
-		//vec4 col = texture(inTexture, TexCoords);
-		//vec2 parallaxTexCoord = TexCoords;
-		//vec3 dirToEye = normalize(vec3(0, 0, _CameraZoom) - FragPos);
-		//parallaxTexCoord += (dirToEye * TBN[2]).xy * col.r;
-		
-        //FragColor = texture(inTexture, parallaxTexCoord);
 		FragColor = texture(inTexture, TexCoords);
     }
 }
