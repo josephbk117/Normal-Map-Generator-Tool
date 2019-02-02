@@ -33,9 +33,7 @@
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
-//TODO : Rotation editor values
 //TODO : Add custom theme capability (with json support)
-//TODO : Custom Brush Support
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
@@ -46,7 +44,6 @@
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Some issue with blurring
 //TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ]
-//TODO : File explorer currect directory editing through text
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
@@ -184,6 +181,7 @@ int main(void)
 	glfwSetFramebufferSizeCallback((GLFWwindow*)windowSys.GetWindow(), framebuffer_size_callback);
 	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
+
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 	ModelObject* previewPlane = modelLoader.CreateModelFromFile(PLANE_MODEL_PATH);
 

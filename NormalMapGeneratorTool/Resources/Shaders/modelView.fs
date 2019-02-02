@@ -215,7 +215,12 @@ void main()
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
 			norm = (2.0 * norm) - 1.0;
+			vec3 Normal = TBN * Normal;
+			//Normal = TBN * Normal;
+			norm  = TBN * norm;
+			vec3 lightDir = TBN * lightDir;
 			vec3 _norm = normalize(Normal * norm);
+			vec3 _CameraPosition = TBN * _CameraPosition;
 			float lightDot = max(dot( _norm, lightDir), 0.0);
 
 			//Object colour
@@ -245,6 +250,7 @@ void main()
 		}
         else
 		{
+			//norm = TBN * norm;
             FragColor = vec4(norm * 0.5 + 0.5,1.0);
 		}
     }
