@@ -20,11 +20,11 @@ void main()
     Normal = mat3(transpose(inverse(model))) * aNormal;
     TexCoords = aTexCoords;
 
-	mat3 normalMatrix = transpose(inverse(mat3(model)));
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 N = normalize(normalMatrix * aNormal);
+	//mat3 normalMatrix = transpose(inverse(mat3(model)));
+    vec3 T = (model * vec4(aTangent,0.0)).xyz; //normalize(normalMatrix * aTangent);
+    vec3 N = (model * vec4(aNormal, 0.0)).xyz; //normalize(normalMatrix * aNormal);
     T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(N, T);
+    vec3 B = (model * vec4(aBitangent, 0.0)).xyz;//cross(N, T);
 
     TBN = mat3(T, B, N);
     gl_Position = projection * view * vec4(FragPos, 1.0);

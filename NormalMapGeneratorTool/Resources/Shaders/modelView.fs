@@ -214,33 +214,29 @@ void main()
 
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
-			vec3 _norm = normalize(Normal * norm);
-			float lightDot = max(dot( _norm, lightDir), 0.0);
+			vec3 normal = TBN * norm;
+			
+			vec3 TangentLightPos = TBN * lightDir;
+			vec3 TangentViewPos  = TBN * _CameraPosition;
+			vec3 TangentFragPos  = TBN * FragPos;
 
-			//Object colour
-			vec3 objectColour = diffuseColour;
-			if(_normalMapModeOn == 4)
-				objectColour *= texture(inTexture2,TexCoords).rgb;
-
+			// get diffuse color
+			vec3 color = (_normalMapModeOn == 4) ? texture(inTexture2, TexCoords).rgb : diffuseColour;
+			// ambient
+			vec3 ambient = 0.01 * color;
 			// diffuse
-			vec3 diffuse = lightColour * lightDot * _LightIntensity;
-
-			//Reflection
-			vec3 I = normalize(FragPos - _CameraPosition);
-			vec3 R = reflect(I, _norm);
-			vec3 reflectionCol = textureLod(skybox, R, _Roughness).rgb;
-    
+			vec3 lightDir = normalize(TangentLightPos - TangentFragPos);
+			float diff = max(dot(lightDir, normal), 0.0) * max(dot(lightDir, Normal), 0.0);
+			vec3 diffuse = diff * color;
 			// specular
-			vec3 viewDir = normalize(FragPos - _CameraPosition);
-			vec3 halfwayDir = normalize(lightDir + viewDir);  
-			float spec = pow(max(dot(_norm, halfwayDir), 0.0), _Specularity);
+			vec3 viewDir = normalize(TangentViewPos - TangentFragPos);
+			vec3 reflectDir = reflect(-lightDir, normal);
+			vec3 halfwayDir = normalize(lightDir + viewDir);
+			float spec = pow(max(dot(normal, halfwayDir), 0.0), _Specularity);
 
-			vec3 specular = _SpecularStrength * spec * lightColour;  
-
-			//final colour
-			vec3 result = (ambientColour + diffuse + specular) * mix(objectColour, reflectionCol, _Reflectivity);
-			result = pow(result, vec3(1.0/2.2));
-			FragColor = vec4(result, 1.0);//PBR_Colour(Normal, vec3(0.0, 0.0, -_CameraZoom), FragPos, result, _Reflectivity, _Roughness ,vec3(1,0,2));//
+			vec3 specular = vec3(1.0) * spec;
+			vec3 result = pow((ambient + diffuse + specular), vec3(1.0/2.2));
+			FragColor = vec4(result, 1.0);
 		}
         else
 		{

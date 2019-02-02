@@ -265,7 +265,7 @@ int main(void)
 	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
 	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
-	int modelViewPosUniform = modelViewShader.getUniformLocation("viewPos");
+	int modelCameraPos = modelViewShader.getUniformLocation("__CameraPosition");
 	int modelLightPosUniform = modelViewShader.getUniformLocation("lightPos");
 	int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
 	int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
@@ -455,25 +455,31 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		static float circleAround = 0;
+		static float yAxis = 0.0f;
+		glm::vec3 cameraPosition;
 		static glm::vec2 prevMcord;
-		static glm::mat4 rotation = glm::rotate(glm::rotate(glm::mat4(), -0.35f, glm::vec3(1, 0, 0)), 0.25f, glm::vec3(0, 1, 0));
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
 		{
-			glm::vec3 point = glm::inverse(rotation) * glm::vec4(offset.y, -offset.x, 0, 0);
-			rotation *= glm::rotate(glm::mat4(), glm::length(offset) * (float)deltaTime, point);
+			circleAround += offset.x*0.01f;
+			yAxis += offset.y*0.01f;
 		}
+		yAxis = glm::clamp(yAxis, -100.0f, 100.0f);
+		cameraPosition.x = glm::sin(circleAround) * previewStateUtility.modelPreviewZoomLevel;
+		cameraPosition.z = glm::cos(circleAround) * previewStateUtility.modelPreviewZoomLevel;
+		cameraPosition.y = yAxis;
 		prevMcord = windowSys.GetCursorPos();
 		static float rot = 0;
 
-		rot += 0.01f;
+		rot += 0.002f;
 
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(), rot, glm::vec3(glm::sin(rot),1,1)));
-		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::translate(glm::mat4(), glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel)));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(1), rot, glm::vec3(glm::sin(rot), 1, 1)));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		modelViewShader.applyShaderVector3(modelViewPosUniform, glm::vec3(0.0f, 0.0f, previewStateUtility.modelPreviewZoomLevel));
-		modelViewShader.applyShaderVector3(modelLightPosUniform, glm::vec3(0, 10, 0));
+		modelViewShader.applyShaderVector3(modelCameraPos, cameraPosition);
+		modelViewShader.applyShaderVector3(modelLightPosUniform, glm::vec3(0, -5, 0));
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
 		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
@@ -504,8 +510,8 @@ int main(void)
 		glActiveTexture(GL_TEXTURE0);
 
 		gridLineShader.use();
-		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(rotation, glm::vec3(100, 1, 100)));
-		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::mat4());
+		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
+		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
 
@@ -1322,10 +1328,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1551,11 +1557,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
