@@ -50,6 +50,8 @@
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
 
+//#define NORA_CUSTOM_WINDOW_CHROME
+
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
@@ -212,7 +214,6 @@ int main(void)
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
-
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
 	ShaderProgram normalmapShader;
@@ -375,7 +376,6 @@ int main(void)
 			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, frameDrawingPanel, isBlurOn);
 		}
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
-
 		heightMapTexData.updateTexture();
 
 		normalmapPanel.getTransform()->update();
@@ -1239,6 +1239,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			if (ImGui::MenuItem("Open Image", "CTRL+O"))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
+				
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
@@ -1312,8 +1313,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		ImGui::Indent(windowSys.GetWindowRes().x - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-		if (isUsingCustomTheme)
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
+		//if )
+			//ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
 		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Minimize(); }
 		if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
 		{
@@ -1324,8 +1325,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		}
 		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Close(); }
 		ImGui::PopStyleColor();
-		if (isUsingCustomTheme)
-			ImGui::PopStyleColor();
+		//if (isUsingCustomTheme)
+			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
 	}
@@ -1346,7 +1347,7 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
-		delete dataBuffer;
+		delete[] dataBuffer;
 	}
 }
 
@@ -1473,12 +1474,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
-#if NORA_CUSTOM_WINDOW_CHROME
+#ifdef NORA_CUSTOM_WINDOW_CHROME 
 	if (state == GLFW_PRESS)
 	{
 		if (initPos == glm::vec2(-1000, -1000))
 		{
-			windowSideAtInitPos = WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+			windowSideAtInitPos = WindowTransformUtility::GetWindowAreaAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y); //WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 			initPos = glm::vec2(x, y);
 		}
 

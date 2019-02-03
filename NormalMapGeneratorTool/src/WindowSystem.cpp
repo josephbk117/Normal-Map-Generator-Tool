@@ -1,5 +1,6 @@
 #include "WindowSystem.h"
 #include <iostream>
+//#define NORA_CUSTOM_WINDOW_CHROME
 WindowSystem::WindowSystem()
 {}
 

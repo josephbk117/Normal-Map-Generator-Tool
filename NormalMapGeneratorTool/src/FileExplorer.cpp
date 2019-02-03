@@ -31,8 +31,51 @@ void FileExplorer::display()
 		{
 			pathInput[i] = path[i];
 		}
+		//fileFilter = FileType::IMAGE;
+		std::vector<std::string> filterEnd;
+		switch (fileFilter)
+		{
+		case FileType::IMAGE:
+			std::cout << "\nImage filter";
+			filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
+			break;
+		case FileType::TEXT:
+			filterEnd.push_back(".txt");
+			break;
+		case FileType::MODEL:
+			filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
+			break;
+		case FileType::NONE:
+			std::cout << "\None filter";
+			break;
+		default:
+			break;
+		}
+
 		for (auto & p : std::experimental::filesystem::directory_iterator(path))
-			paths.push_back(p.path().generic_string());
+		{
+			if (std::experimental::filesystem::is_regular_file(p))
+			{
+				bool isCorrectFileType = false;
+				if (fileFilter != FileType::NONE)
+				{
+					for (int i = 0; i < filterEnd.size(); i++)
+					{
+						if (getFileExtension(p.path().generic_string()) == filterEnd[i])
+						{
+							isCorrectFileType = true;
+							break;
+						}
+					}
+				}
+				else
+					isCorrectFileType = true;
+				if (isCorrectFileType)
+					paths.push_back(p.path().generic_string());
+			}
+			else if (std::experimental::filesystem::is_directory(p))
+				paths.push_back(p.path().generic_string());
+		}
 		isDirty = false;
 	}
 	ImGui::OpenPopup("File Explorer");
@@ -85,46 +128,18 @@ void FileExplorer::display()
 			for (int i = 0; i < paths.size(); i++)
 			{
 				std::string strPath = paths[i];
-				std::vector<std::string> filterEnd;
-				if (fileFilter != FileType::NONE)
-				{
-					switch (fileFilter)
-					{
-					case FileType::IMAGE:
-						filterEnd.push_back(".png"); filterEnd.push_back(".jpg");
-						break;
-					case FileType::TEXT:
-						filterEnd.push_back(".txt");
-						break;
-					case FileType::MODEL:
-						filterEnd.push_back(".obj");
-						break;
-					default:
-						break;
-					}
-				}
+
 				if (filter.PassFilter(strPath.c_str()))
 				{
 					bool canShow = true;
-					for (unsigned int i = 0; i < filterEnd.size(); i++)
+					float width = (ImGui::GetContentRegionAvailWidth() * 1.0f / columnCount) - 5;
+					if (i % columnCount != 0)
+						ImGui::SameLine();
+					if (ImGui::Button(strPath.c_str(), ImVec2(width, 30)))
 					{
-						if (!strPath.find(filterEnd.at(i)))
-						{
-							canShow = false;
-							break;
-						}
-					}
-					if (canShow)
-					{
-						float width = (ImGui::GetContentRegionAvailWidth() * 1.0f / columnCount) - 5;
-						if (i % columnCount != 0)
-							ImGui::SameLine();
-						if (ImGui::Button(strPath.c_str(), ImVec2(width, 30)))
-						{
-							if (!pathTypeCheck(filterEnd, strPath))
-								isDirty = true;
-							path = strPath;
-						}
+						//if (!pathTypeCheck(filterEnd, strPath))
+						isDirty = true;
+						path = strPath;
 					}
 				}
 			}
@@ -185,7 +200,7 @@ void FileExplorer::displayDialog(FileType filter) noexcept
 void FileExplorer::displayDialog(FileType filter, std::function<void(std::string)> func) noexcept
 {
 	shouldDisplay = true;
-	this->fileFilter = fileFilter;
+	this->fileFilter = filter;
 	functionToCall = func;
 }
 
