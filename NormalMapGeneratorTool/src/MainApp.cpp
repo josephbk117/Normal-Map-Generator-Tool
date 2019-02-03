@@ -49,6 +49,7 @@
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
+//TODO : Fix camera controls, Limit distance based y axis
 
 enum class LoadingOption
 {
@@ -621,7 +622,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", &open, window_flags);
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 
@@ -689,7 +690,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::SameLine(0, 5);
 	if (normalViewStateUtility.mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("3D Plane", ImVec2(modeButtonWidth, 40))) { normalViewStateUtility.mapDrawViewMode = 2; }
+	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { normalViewStateUtility.mapDrawViewMode = 2; }
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + K)");
 	ImGui::PopStyleColor();
@@ -1059,7 +1060,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 	static bool isPreviewOpen = true;
 	if (ImGui::Button("Maximize", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 40)))
