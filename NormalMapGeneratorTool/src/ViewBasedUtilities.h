@@ -5,9 +5,9 @@ struct PreviewStateUtility
 public:
 	float modelPreviewZoomLevel = -5.0f;
 	float modelRoughness = 5.0f;
-	float modelReflectivity = 0.5f;
+	float modelReflectivity = 0.0f;
 	int modelViewMode = 2;
-	float lightLocation = 0.0f;
+	float lightLocation = 3.141f;
 	glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
 	glm::vec3 lightColour = glm::vec3(1, 1, 1);
 };
@@ -16,7 +16,7 @@ struct NormalViewStateUtility
 public:
 	float zoomLevel = 1;
 	int mapDrawViewMode = 1;
-	float normalMapStrength = 10.0f;
+	float normalMapStrength = 1.0f;
 	float specularity = 10.0f;
 	float specularityStrength = 0.5f;
 	float lightIntensity = 0.5f;

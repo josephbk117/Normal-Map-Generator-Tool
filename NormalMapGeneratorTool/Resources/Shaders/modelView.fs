@@ -228,7 +228,7 @@ void main()
 			vec3 specular = lightColour * spec;  
 
 			float distance    = length(lightPos - FragPos);
-			float attenuation = 1.0 / (0.01 + (distance * distance));
+			float attenuation = 1.0 / (1.0 + (distance * distance));
 
 			ambient  *= attenuation;
 			diffuse  *= attenuation;

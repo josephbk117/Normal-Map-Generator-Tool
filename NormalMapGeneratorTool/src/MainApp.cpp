@@ -47,7 +47,8 @@
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
-//TODO : Skybox cubemap wrong order
+//TODO : Fix memory error while using custom brush texture and exit the application
+//TODO : Parallax map option
 
 enum class LoadingOption
 {
@@ -454,8 +455,8 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		static float circleAround = 0;
-		static float yAxis = 0.0f;
+		static float circleAround = 0.5f;
+		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;
 		static glm::vec2 prevMcord;
 		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
@@ -1037,7 +1038,7 @@ inline void DisplayLightSettingsUserInterface()
 	ImGui::Text("LIGHT SETTINGS");
 	ImGui::Separator();
 	if (ImGui::SliderFloat(" Diffuse Intensity", &normalViewStateUtility.lightIntensity, 0.0f, 1.0f, "%.2f")) {}
-	if (ImGui::SliderFloat(" Specularity", &normalViewStateUtility.specularity, 1.0f, 1000.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Specularity", &normalViewStateUtility.specularity, 1.0f, 100.0f, "%.2f")) {}
 	if (ImGui::SliderFloat(" Specularity Strength", &normalViewStateUtility.specularityStrength, 0.0f, 10.0f, "%.2f")) {}
 	ImGui::Text("Light Direction");
 	ImGui::PushItemWidth((ImGui::GetContentRegionAvailWidth() / 3.0f) - 7);
@@ -1187,8 +1188,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 
 	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
 	{
+		ImGui::SliderAngle("Position", &previewStateUtility.lightLocation, 0.0f, 360.0f);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-		ImGui::SliderFloat("Position", &previewStateUtility.lightLocation, 0, 6.2f,"%.2f");
 		ImGui::Text("Diffuse Colour");
 		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0]);
 		ImGui::Text("Light Colour");
@@ -1324,10 +1325,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1553,11 +1554,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
