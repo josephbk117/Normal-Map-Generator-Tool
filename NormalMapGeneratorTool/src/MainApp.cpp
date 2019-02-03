@@ -464,12 +464,17 @@ int main(void)
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
 		{
 			circleAround += offset.x*0.01f;
-			yAxis += offset.y*0.01f;
+			yAxis -= offset.y*0.01f;
 		}
 		yAxis = glm::clamp(yAxis, -100.0f, 100.0f);
 		cameraPosition.x = glm::sin(circleAround) * previewStateUtility.modelPreviewZoomLevel;
 		cameraPosition.z = glm::cos(circleAround) * previewStateUtility.modelPreviewZoomLevel;
 		cameraPosition.y = yAxis;
+
+		if (glm::distance(cameraPosition, glm::vec3(0)) > previewStateUtility.modelPreviewZoomLevel)
+		{
+			cameraPosition = glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
+		}
 		prevMcord = windowSys.GetCursorPos();
 
 		modelViewShader.use();
