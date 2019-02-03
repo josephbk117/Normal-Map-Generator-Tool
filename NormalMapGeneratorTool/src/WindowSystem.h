@@ -18,6 +18,11 @@ private:
 public:
 	WindowSystem();
 	void Init(const std::string windowTitle, int windowWidth, int windowHeight);
+	void SetFrameBufferResizeCallback(void(*func)(GLFWwindow*, int, int));
+	void SetScrollCallback(void(*func)(GLFWwindow*, double, double));
+	bool IsKeyPressed(int key);
+	bool IsKeyReleased(int key);
+	bool IsKeyPressedDown(int key);
 	void Destroy();
 	void Close();
 	void UpdateWindow();

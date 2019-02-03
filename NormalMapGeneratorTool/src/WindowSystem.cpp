@@ -1,5 +1,5 @@
 #include "WindowSystem.h"
-
+#include <iostream>
 WindowSystem::WindowSystem()
 {}
 
@@ -26,6 +26,54 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 		return;
 	}
 	glfwMakeContextCurrent(window);
+}
+
+void WindowSystem::SetFrameBufferResizeCallback(void(*func)(GLFWwindow *, int, int))
+{
+	glfwSetFramebufferSizeCallback(window, func);
+}
+
+void WindowSystem::SetScrollCallback(void(*func)(GLFWwindow *, double, double))
+{
+	glfwSetScrollCallback(window, func);
+}
+
+bool WindowSystem::IsKeyPressed(int key)
+{
+	int state = glfwGetKey(window, key);
+	if (state == GLFW_PRESS)
+		return true;
+	return false;
+}
+
+bool WindowSystem::IsKeyReleased(int key)
+{
+	int state = glfwGetKey(window, key);
+	if (state == GLFW_RELEASE)
+		return true;
+	return false;
+}
+
+bool WindowSystem::IsKeyPressedDown(int key)
+{
+	static int prevKey = GLFW_KEY_0;
+	int state = glfwGetKey(window, key);
+
+	if (state == GLFW_PRESS)
+	{
+		if (prevKey != key)
+		{
+			prevKey = key;
+			return true;
+		}
+		prevKey = key;
+	}
+	else if (state == GLFW_RELEASE)
+	{
+		if (prevKey == key)
+			prevKey = GLFW_KEY_0;
+	}
+	return false;
 }
 
 void WindowSystem::Destroy()

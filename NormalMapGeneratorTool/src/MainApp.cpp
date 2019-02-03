@@ -73,9 +73,6 @@ const int WINDOW_SIZE_MIN = 480;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
-bool isKeyPressed(int key);
-bool isKeyReleased(int key);
-bool isKeyPressedDown(int key);
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
@@ -180,8 +177,8 @@ int main(void)
 	themeManager.Init();
 	themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
 
-	glfwSetFramebufferSizeCallback((GLFWwindow*)windowSys.GetWindow(), framebuffer_size_callback);
-	glfwSetScrollCallback((GLFWwindow*)windowSys.GetWindow(), scroll_callback);
+	windowSys.SetFrameBufferResizeCallback(framebuffer_size_callback);
+	windowSys.SetScrollCallback(scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
@@ -434,7 +431,7 @@ int main(void)
 			continue;
 		}
 
-		if (isKeyPressedDown(GLFW_KEY_F10))
+		if (windowSys.IsKeyPressedDown(GLFW_KEY_F10))
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
@@ -463,7 +460,7 @@ int main(void)
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
 		{
 			circleAround += offset.x*0.01f;
-			yAxis -= offset.y*0.01f;
+			yAxis += offset.y*0.01f;
 		}
 		yAxis = glm::clamp(yAxis, -100.0f, 100.0f);
 		cameraPosition.x = glm::sin(circleAround) * previewStateUtility.modelPreviewZoomLevel;
@@ -472,7 +469,7 @@ int main(void)
 
 		if (glm::distance(cameraPosition, glm::vec3(0)) > previewStateUtility.modelPreviewZoomLevel)
 		{
-			cameraPosition = glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
+			cameraPosition = -glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
 		}
 		prevMcord = windowSys.GetCursorPos();
 
@@ -767,54 +764,54 @@ void SetStatesForSavingNormalMap()
 void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
-	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength -= 0.05f;
-	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength += 0.05f;
-	if (isKeyPressed(GLFW_KEY_W))
+	if (windowSys.IsKeyPressed(GLFW_KEY_W))
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
-	if (isKeyPressed(GLFW_KEY_S))
+	if (windowSys.IsKeyPressed(GLFW_KEY_S))
 		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
 	normalViewStateUtility.zoomLevel = glm::clamp(normalViewStateUtility.zoomLevel, 0.1f, 5.0f);
 
 	//Normal map channel toggles
-	if (isKeyPressedDown(GLFW_KEY_R) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_R) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive;
-	if (isKeyPressedDown(GLFW_KEY_G) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_G) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive;
-	if (isKeyPressedDown(GLFW_KEY_B) && isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_B) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive;
 
 	//Set normal map view mode in editor
-	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_H) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 3;
-	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_J) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 1;
-	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_K) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 2;
 
 	//Set normal map view mode in model preview
-	if (isKeyPressed(GLFW_KEY_H) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.IsKeyPressed(GLFW_KEY_H) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 3;
-	if (isKeyPressed(GLFW_KEY_J) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.IsKeyPressed(GLFW_KEY_J) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 1;
-	if (isKeyPressed(GLFW_KEY_K) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.IsKeyPressed(GLFW_KEY_K) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 2;
-	if (isKeyPressed(GLFW_KEY_L) && isKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.IsKeyPressed(GLFW_KEY_L) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 4;
 
 	//Normal map movement
-	if (isKeyPressed(GLFW_KEY_LEFT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
-	if (isKeyPressed(GLFW_KEY_RIGHT) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
-	if (isKeyPressed(GLFW_KEY_UP) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT && !isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
+	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
-	if (isKeyPressed(GLFW_KEY_DOWN) && !isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_ALT && !isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
+	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
 
 	//Undo
-	if (isKeyPressedDown(GLFW_KEY_Z) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_Z) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 		heightMapTexData.updateTexture();
@@ -822,7 +819,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 	//Redo
-	if (isKeyPressedDown(GLFW_KEY_Y) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_Y) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve(false));
 		heightMapTexData.updateTexture();
@@ -830,7 +827,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 	//Open new image
-	if (isKeyPressedDown(GLFW_KEY_O) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_O) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		currentLoadingOption = LoadingOption::TEXTURE;
 		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
@@ -849,28 +846,28 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Brush data
-	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale += 0.1f;
-	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale -= 0.1f;
-	if (isKeyPressed(GLFW_KEY_RIGHT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset += 0.01f;
-	if (isKeyPressed(GLFW_KEY_LEFT) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset -= 0.01f;
-	if (isKeyPressed(GLFW_KEY_UP) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength += 0.01f;
-	if (isKeyPressed(GLFW_KEY_DOWN) && isKeyPressed(GLFW_KEY_LEFT_SHIFT) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength -= 0.01f;
 	brushData.brushOffset = glm::clamp(brushData.brushOffset, 0.01f, 1.0f);
 	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getRes().y * 0.5f);
 	brushData.brushStrength = glm::clamp(brushData.brushStrength, 0.0f, 1.0f);
 
 	//Flip normal map x-y axis
-	if (isKeyPressedDown(GLFW_KEY_A) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_A) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir;
 
 	//Window fullscreen toggle
-	if (isKeyPressedDown(GLFW_KEY_T) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_T) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		if (!windowSys.IsFullscreen())
 			windowSys.SetFullscreen(true);
@@ -879,10 +876,10 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Normal map panel reset/clear
-	if (isKeyPressedDown(GLFW_KEY_V) && isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.IsKeyPressedDown(GLFW_KEY_V) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		//clear
-		if (isKeyPressed(GLFW_KEY_LEFT_ALT))
+		if (windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
 		{
 			std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 			undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -897,7 +894,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Minimize window
-	if (isKeyPressed(GLFW_KEY_F9))
+	if (windowSys.IsKeyPressed(GLFW_KEY_F9))
 	{
 		windowSys.SetWindowRes(1600, 800);
 		isMaximized = false;
@@ -1706,43 +1703,6 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 		}
 	}
 	delete[] tempPixelData;
-}
-
-bool isKeyPressed(int key)
-{
-	int state = glfwGetKey((GLFWwindow*)windowSys.GetWindow(), key);
-	if (state == GLFW_PRESS)
-		return true;
-	return false;
-}
-
-bool isKeyReleased(int key)
-{
-	int state = glfwGetKey((GLFWwindow*)windowSys.GetWindow(), key);
-	if (state == GLFW_RELEASE)
-		return true;
-	return false;
-}
-bool isKeyPressedDown(int key)
-{
-	static int prevKey = GLFW_KEY_0;
-	int state = glfwGetKey((GLFWwindow*)windowSys.GetWindow(), key);
-
-	if (state == GLFW_PRESS)
-	{
-		if (prevKey != key)
-		{
-			prevKey = key;
-			return true;
-		}
-		prevKey = key;
-	}
-	else if (state == GLFW_RELEASE)
-	{
-		if (prevKey == key)
-			prevKey = GLFW_KEY_0;
-	}
-	return false;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
