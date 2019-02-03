@@ -8,6 +8,7 @@ public:
 	float modelReflectivity = 0.0f;
 	int modelViewMode = 2;
 	float lightLocation = 3.141f;
+	float lightIntensity = 5.0f;
 	glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
 	glm::vec3 lightColour = glm::vec3(1, 1, 1);
 };

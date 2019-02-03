@@ -49,7 +49,6 @@
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
-//TODO : Fix camera controls, Limit distance based y axis
 
 enum class LoadingOption
 {
@@ -486,7 +485,7 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
 		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
 		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getRes().y);
-		modelViewShader.applyShaderFloat(modelLightIntensityUniform, normalViewStateUtility.lightIntensity);
+		modelViewShader.applyShaderFloat(modelLightIntensityUniform, previewStateUtility.lightIntensity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, normalViewStateUtility.specularity);
 		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
 		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.modelRoughness);
@@ -1195,6 +1194,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
 	{
 		ImGui::SliderAngle("Position", &previewStateUtility.lightLocation, 0.0f, 360.0f);
+		ImGui::SliderFloat("Intensity", &previewStateUtility.lightIntensity, 0.0f, 10.0f, "%.2f");
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 		ImGui::Text("Diffuse Colour");
 		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0]);

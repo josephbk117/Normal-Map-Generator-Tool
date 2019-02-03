@@ -242,7 +242,7 @@ void main()
 			vec3 diffuse = diffuseColour * ((_normalMapModeOn == 4)?texture(inTexture2, TexCoords).rgb:vec3(1));
 			vec3 ambient = diffuse * 0.1;
 
-			diffuse *=  dotVal;
+			diffuse *=  lightColour * dotVal;
 
 			// specular
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
@@ -251,7 +251,9 @@ void main()
 			vec3 specular = lightColour * spec;  
 
 			float distance    = length(lightPos - FragPos);
-			float attenuation = 1.0 / (1.0 + (distance * distance));
+			float attenuation = _LightIntensity / (0.01 + (distance * distance));
+
+			attenuation = clamp(attenuation, 0.0, 1.0);
 
 			ambient  *= attenuation;
 			diffuse  *= attenuation;
