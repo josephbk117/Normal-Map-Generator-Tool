@@ -469,12 +469,9 @@ int main(void)
 		cameraPosition.z = glm::cos(circleAround) * previewStateUtility.modelPreviewZoomLevel;
 		cameraPosition.y = yAxis;
 		prevMcord = windowSys.GetCursorPos();
-		static float rot = 0;
-
-		rot += 0.002f;
 
 		modelViewShader.use();
-		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::rotate(glm::mat4(), rot, glm::vec3(glm::sin(rot), 1, 1)));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderVector3(modelCameraPos, cameraPosition);
@@ -1005,7 +1002,7 @@ inline void DisplayNormalSettingsUserInterface()
 	ImGui::SameLine();
 	ImGui::Text("Method");
 
-	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -100.0f, 100.0f, "%.2f")) {}
+	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -10.0f, 10.0f, "%.2f")) {}
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir; }
 	if (ImGui::IsItemHovered())
