@@ -31,12 +31,10 @@ void FileExplorer::display()
 		{
 			pathInput[i] = path[i];
 		}
-		//fileFilter = FileType::IMAGE;
 		std::vector<std::string> filterEnd;
 		switch (fileFilter)
 		{
 		case FileType::IMAGE:
-			std::cout << "\nImage filter";
 			filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
 			break;
 		case FileType::TEXT:
@@ -46,8 +44,6 @@ void FileExplorer::display()
 			filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
 			break;
 		case FileType::NONE:
-			std::cout << "\None filter";
-			break;
 		default:
 			break;
 		}
@@ -178,7 +174,6 @@ void FileExplorer::display()
 		{
 			if (functionToCall != nullptr)
 			{
-				std::cout << "\nCalled func to call";
 				functionToCall(path);
 			}
 			shouldDisplay = false;
@@ -200,6 +195,7 @@ void FileExplorer::displayDialog(FileType filter) noexcept
 void FileExplorer::displayDialog(FileType filter, std::function<void(std::string)> func) noexcept
 {
 	shouldDisplay = true;
+	isDirty = true;
 	this->fileFilter = filter;
 	functionToCall = func;
 }
