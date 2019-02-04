@@ -49,6 +49,7 @@
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
+//TODO : Custom shader support for preview
 
 //#define NORA_CUSTOM_WINDOW_CHROME
 
@@ -162,7 +163,6 @@ void ApplyChangesToPanel()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
-
 int main(void)
 {
 	windowSys.Init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
@@ -403,7 +403,6 @@ int main(void)
 			//Image validation stage start
 			std::string path(saveLocation);
 			std::string fileExt = fileExplorer.getFileExtension(saveLocation);
-			std::cout << "\nFile ext : " << fileExt;
 			if (fileExt == ".tga")
 				imageFormat = ImageFormat::TGA;
 			else if (fileExt == ".bmp")
@@ -1239,7 +1238,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			if (ImGui::MenuItem("Open Image", "CTRL+O"))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
-				
+
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
@@ -1676,7 +1675,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				if (index < 0 || index >= totalPixelCount)
 					continue;
 
-				float avg = tempPixelData[index].getColour_32_Bit().r * 0.5f;
+				float pixelCol = tempPixelData[index].getColour_32_Bit().r;
+				float avg = pixelCol * 0.5f;
 
 				int leftIndex = ((i - 1) - startX) * xMag + (j - startY);
 				int rightIndex = ((i + 1) - startX) * xMag + (j - startY);
@@ -1690,11 +1690,18 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 
 				int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
 				//not clamping values based in width and heifhgt of current pixel center
+				float validEntries = 0;
+				float neighbourAvg = 0;
 				for (unsigned int i = 0; i < 8; i++)
-					avg += (kernel[i] >= 0 && kernel[i] < totalPixelCount) ? tempPixelData[kernel[i]].getColour_32_Bit().r * 0.0625f : 0.0f;
-				float pixelCol = tempPixelData[index].getColour_32_Bit().r;
-				float finalColor = 0;
-				finalColor = avg;
+				{
+					if (kernel[i] >= 0 && kernel[i] < totalPixelCount)
+					{
+						validEntries++;
+						neighbourAvg += tempPixelData[kernel[i]].getColour_32_Bit().r;
+					}
+				}
+				avg += (neighbourAvg / validEntries) * 0.5f;
+				float finalColor = avg;
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
 				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
 				ColourData colData;
