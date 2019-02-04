@@ -35,21 +35,21 @@
 
 //TODO : Add custom theme capability (with json support)
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
-//TODO : Filters added with file explorer
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
-//TODO : Some issue with blurring
 //TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ]
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
+//TODO : Add PBR shader workflow support
 //TODO : Custom shader support for preview
+//TODO : Better lighting options
 
 //#define NORA_CUSTOM_WINDOW_CHROME
 
@@ -114,6 +114,8 @@ ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 WindowSide windowSideVal;
+
+unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId;
 
 struct BoundsAndPos
 {
@@ -199,6 +201,10 @@ int main(void)
 	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
 	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
 	unsigned int logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png");
+
+	toggleFullscreenTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toggleFullscreen.png");
+	clearViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
+	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -624,10 +630,9 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", &open, window_flags);
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
-
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Toggle Fullscreen", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+	float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
+	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f)))
 	{
 		if (!windowSys.IsFullscreen())
 			windowSys.SetFullscreen(true);
@@ -635,24 +640,26 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 			windowSys.SetFullscreen(false);
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Ctrl + T)");
-	ImGui::Spacing();
-	if (ImGui::Button("Clear View", ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f, 40)))
+		ImGui::SetTooltip("Toggle Fullscreen (Ctrl + T)");
+	ImGui::SameLine();
+	//ImGui::Spacing();
+	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f)))
 	{
 		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 		undoRedoSystem.record(heightMapTexData.getTextureData());
 		heightMapTexData.setTextureDirty();
 	}
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("Clear the panel(Ctrl + Alt + V)");
+		ImGui::SetTooltip("Clear the panel (Ctrl + Alt + V)");
 	ImGui::SameLine();
-	if (ImGui::Button("Reset View", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+	if (ImGui::ImageButton((ImTextureID)resetViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 0.0f), ImVec2(1.4f, 1.0f)))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		normalViewStateUtility.zoomLevel = 1.0f;
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Reset position and scale of panel (Ctrl + V)");
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.5f);
 
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
