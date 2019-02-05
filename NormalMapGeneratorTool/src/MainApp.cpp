@@ -51,6 +51,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Brush offset controls brush constrast for textured
+//TODO : UI button texture tinting
 
 //#define NORA_CUSTOM_WINDOW_CHROME
 
@@ -634,7 +635,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::Begin("Settings", &open, window_flags);
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
-	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f)))
+	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
 		if (!windowSys.IsFullscreen())
 			windowSys.SetFullscreen(true);
@@ -645,7 +646,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 		ImGui::SetTooltip("Toggle Fullscreen (Ctrl + T)");
 	ImGui::SameLine();
 	//ImGui::Spacing();
-	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f)))
+	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
 		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 		undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -654,7 +655,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Clear the panel (Ctrl + Alt + V)");
 	ImGui::SameLine();
-	if (ImGui::ImageButton((ImTextureID)resetViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 0.0f), ImVec2(1.4f, 1.0f)))
+	if (ImGui::ImageButton((ImTextureID)resetViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 0.0f), ImVec2(1.4f, 1.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		normalViewStateUtility.zoomLevel = 1.0f;
@@ -1072,7 +1073,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 	static bool isPreviewOpen = true;
-	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.4f, 1), ImVec2(1.4f, 0)))
+	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.45f, 1), ImVec2(1.45f, 0), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
 		isPreviewOpen = true;
 		ImGui::OpenPopup("Preview");
@@ -1240,7 +1241,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
 	{
-		ImGui::Indent(20);
+		ImGui::Indent(10);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
 		ImGui::PushFont(menuBarLargerText);
 		if (ImGui::BeginMenu("File"))
@@ -1248,7 +1249,6 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			if (ImGui::MenuItem("Open Image", "CTRL+O"))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
-
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
@@ -1292,7 +1292,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme","    Green Theme" };
+		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme","    Green Theme","    Ultra Violet Theme" };
 		static int item_current = 0;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
@@ -1314,6 +1314,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			break;
 		case 4:
 			themeManager.EnableInBuiltTheme(ThemeManager::Theme::GREEN);
+			break;
+		case 5:
+			themeManager.EnableInBuiltTheme(ThemeManager::Theme::ULTRA_VIOLET);
+			break;
 		default:
 			break;
 		}
@@ -1338,10 +1342,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1571,7 +1575,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
