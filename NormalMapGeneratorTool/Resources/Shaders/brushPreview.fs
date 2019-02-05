@@ -23,6 +23,7 @@ void main()
 		}
 		else
 		{
+			val = pow(val, _BrushOffset * 0.1);
 			color = vec4(val * _BrushColour, (rim > 0 ? rim : val) * _BrushStrength);
 		}
 	}

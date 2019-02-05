@@ -1354,10 +1354,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1587,7 +1587,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
@@ -1649,17 +1649,17 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureDat
 		for (int j = startY; j < endY; j++)
 		{
 			ColourData colData = inputTexData.getTexelColor(i, j);
-			float rVal = colData.getColour_32_Bit().r;
+			float defVal = colData.getColour_32_Bit().r;
+			float finalOutput = defVal;
 
 			float x = (i - startX) / xMag;
 			float y = (j - startY) / yMag;
 
-			rVal += (brushTexture.getTexelColor
-			((int)(x * brushTexture.getRes().x), (int)(y * brushTexture.getRes().y)).getColour_32_Bit().r *
-				((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal)) *
-				brushData.brushStrength;
-			rVal = glm::clamp(rVal, 0.0f, 1.0f);
-			ColourData col(rVal, rVal, rVal, 1.0f);
+			float brushTexVal = glm::pow(brushTexture.getTexelColor((int)(x * brushTexture.getRes().x), (int)(y * brushTexture.getRes().y)).getColour_32_Bit().r, brushData.brushOffset);
+			finalOutput += (brushTexVal * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - finalOutput));
+			finalOutput = glm::clamp(finalOutput, 0.0f, 1.0f);
+			finalOutput = glm::mix(defVal, finalOutput, brushData.brushStrength);
+			ColourData col(finalOutput, finalOutput, finalOutput, 1.0f);
 			inputTexData.setTexelColor(col, i, j);
 		}
 	}
