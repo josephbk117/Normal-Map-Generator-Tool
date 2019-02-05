@@ -50,6 +50,7 @@
 //TODO : Add PBR shader workflow support
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
+//TODO : Brush offset controls brush constrast for textured
 
 //#define NORA_CUSTOM_WINDOW_CHROME
 
@@ -115,7 +116,7 @@ DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 WindowSide windowSideVal;
 
-unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId;
+unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
 
 struct BoundsAndPos
 {
@@ -205,6 +206,7 @@ int main(void)
 	toggleFullscreenTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toggleFullscreen.png");
 	clearViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
 	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
+	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -1070,12 +1072,11 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 	static bool isPreviewOpen = true;
-	if (ImGui::Button("Maximize", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 40)))
+	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.4f, 1), ImVec2(1.4f, 0)))
 	{
 		isPreviewOpen = true;
 		ImGui::OpenPopup("Preview");
 	}
-	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	ImGui::SetNextWindowPosCenter();
 	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.GetWindowRes().x * 0.95f, windowSys.GetWindowRes().y * 0.95f));
 	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen, ImGuiWindowFlags_NoMove))
@@ -1102,11 +1103,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		}
 		ImGui::EndPopup();
 	}
-
-	const char* items[] = { "CUBE", "CYLINDER", "SPHERE", "TORUS", "CUSTOM MODEL" };
+	ImGui::SameLine();
+	const char* items[] = { "    CUBE", "    CYLINDER", "    SPHERE", "    TORUS", "    CUSTOM MODEL" };
 	static const char* current_item = items[0];
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 15));
 	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
 	{
 		for (int n = 0; n < IM_ARRAYSIZE(items); n++)
@@ -1149,7 +1149,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Load 3d model for preview");
-
+	ImGui::PopStyleVar();
+	ImGui::Spacing();
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::SliderFloat("##Roughness", &previewStateUtility.modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
 	ImGui::SliderFloat("##Reflectivity", &previewStateUtility.modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");

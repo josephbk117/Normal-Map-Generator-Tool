@@ -94,7 +94,9 @@ void FileExplorer::display()
 
 		ImGui::SameLine();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() - 40);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 7));
 		ImGui::InputText("##Path Field", pathInput, 500);
+		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 		if (ImGui::Button("GO", ImVec2(30, 30)))
@@ -102,6 +104,7 @@ void FileExplorer::display()
 			path = std::string(pathInput);
 			isDirty = true;
 		}
+		ImGui::Spacing();
 		static ImGuiTextFilter filter;
 		filter.Draw("Filter(inc, -exc)", ImGui::GetContentRegionAvailWidth() - 200);
 		static int columnCount = 1;
