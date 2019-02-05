@@ -253,6 +253,18 @@
     <Image Include="Resources\Textures\test3.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\UI\clearView.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\maximizePreview.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\resetLocation.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\UI\toggleFullscreen.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

@@ -230,10 +230,14 @@
     <Image Include="Resources\Textures\Penguins.jpg" />
     <Image Include="Resources\Textures\test2.png" />
     <Image Include="Resources\Textures\test3.png" />
+    <Image Include="Resources\UI\clearView.png" />
     <Image Include="Resources\UI\closeIcon.png" />
     <Image Include="Resources\UI\icon.png" />
+    <Image Include="Resources\UI\maximizePreview.png" />
     <Image Include="Resources\UI\maxWinIcon.png" />
     <Image Include="Resources\UI\minWinIcon.png" />
+    <Image Include="Resources\UI\resetLocation.png" />
+    <Image Include="Resources\UI\toggleFullscreen.png" />
     <Image Include="Resources\UI\toTrayIcon.png" />
   </ItemGroup>
   <ItemGroup>

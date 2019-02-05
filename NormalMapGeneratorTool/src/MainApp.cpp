@@ -51,9 +51,9 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Brush offset controls brush constrast for textured
-//TODO : UI button texture tinting
+//TODO : Moving the panel anywhere in the window and not zoom level effcted
 
-//#define NORA_CUSTOM_WINDOW_CHROME
+//#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
 enum class LoadingOption
 {
@@ -369,8 +369,20 @@ int main(void)
 				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
-		frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, -0.5f, 0.5f));
-		frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, -1.0f, 1.0f));
+
+		float leftBorder = 300.0f / windowSys.GetWindowRes().x;
+		float rightBorder = 1.0f - leftBorder;
+
+		float topBorder = 1.0f / windowSys.GetWindowRes().y;
+		float bottomBorder = 1.0f - topBorder;
+
+		leftBorder = (leftBorder * 2.0f - 1.0f);
+		rightBorder = (rightBorder * 2.0f - 1.0f);
+		topBorder = (topBorder * 2.0f - 1.0f)*1.25f;
+		bottomBorder = (bottomBorder * 2.0f - 1.0f)*1.25f;
+
+		//frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, leftBorder, rightBorder));
+		//frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, topBorder, bottomBorder));
 		frameDrawingPanel.getTransform()->update();
 
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
@@ -1292,7 +1304,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		const char* items[] = { "    Default Theme", "    Dark Theme", "    Light Theme", "    Blue Theme","    Green Theme","    Ultra Violet Theme" };
+		const char* items[] = { "    Default", "    Dark", "    Light", "    Blue","    Green","    Ultra Violet" };
 		static int item_current = 0;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
