@@ -217,8 +217,6 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
-	themeManager.SetThemeFromFile(THEMES_PATH + "OrangeJuice.nort");
-
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
 	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg"));
 
@@ -1308,7 +1306,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		const char* items[] = { "    Default", "    Dark", "    Light", "    Blue","    Green","    Ultra Violet" };
+		const char* items[] = { "    Default", "    Dark", "    Light", "    Blue","    Green","    Ultra Violet", "    Custom" };
 		static int item_current = 0;
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
@@ -1337,6 +1335,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			case 5:
 				themeManager.EnableInBuiltTheme(ThemeManager::Theme::ULTRA_VIOLET);
 				break;
+			case 6:
+				themeManager.SetThemeFromFile(THEMES_PATH + "OrangeJuice.nort");
 			default:
 				break;
 			}
