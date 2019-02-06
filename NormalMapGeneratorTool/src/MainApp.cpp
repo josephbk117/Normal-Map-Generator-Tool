@@ -731,12 +731,12 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	static int prevSection = currentSection;
 	static int prevUndoSectionPosition;
 
-	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 200, 0));
+	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 275, 0));
 	ImGui::SameLine();
-	ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 5.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-	ImGui::PushItemWidth(100);
-	if (ImGui::SliderInt("Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1))
+	ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 25.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 15.0f);
+	ImGui::PushItemWidth(250);
+	if (ImGui::SliderInt("##Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1, "%d Steps"))
 	{
 		bool isForward = (currentSection - prevSection) >= 0 ? false : true;
 		int count = glm::abs(currentSection - prevSection);
