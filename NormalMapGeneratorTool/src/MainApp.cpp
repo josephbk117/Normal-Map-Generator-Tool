@@ -50,7 +50,6 @@
 //TODO : Add PBR shader workflow support
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
-//TODO : Brush offset controls brush constrast for textured
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
@@ -1220,28 +1219,30 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("Light Colour");
 		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0]);
 		ImGui::PopItemWidth();
-		static char diffuseTextureImageLocation[500] = "Resources\\Textures\\crate.jpg";
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.7f);
-		ImGui::InputText("## Preview Image Location", diffuseTextureImageLocation, sizeof(diffuseTextureImageLocation));
-		ImGui::PopItemWidth();
-		ImGui::SameLine(0, 5);
-		if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 27)))
+
+		if (previewStateUtility.modelViewMode == 4)
 		{
-			currentLoadingOption = LoadingOption::TEXTURE;
-			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			static char diffuseTextureImageLocation[500] = "Resources\\Textures\\crate.jpg";
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.7f);
+			ImGui::InputText("## Preview Image Location", diffuseTextureImageLocation, sizeof(diffuseTextureImageLocation));
+			ImGui::PopItemWidth();
+			ImGui::SameLine(0, 5);
+			if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 27)))
 			{
-				for (unsigned int i = 0; i < str.length(); i++)
-					diffuseTextureImageLocation[i] = str[i];
-				if (currentLoadingOption == LoadingOption::TEXTURE)
+				currentLoadingOption = LoadingOption::TEXTURE;
+				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
-					diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
-				}
-			});
+					for (unsigned int i = 0; i < str.length(); i++)
+						diffuseTextureImageLocation[i] = str[i];
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+				});
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Load texture for preview model");
+			ImGui::PopStyleVar();
 		}
-		ImGui::PopStyleVar();
-		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("Load texture for preview model");
 	}
 	ImGui::End();
 
@@ -1357,7 +1358,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
