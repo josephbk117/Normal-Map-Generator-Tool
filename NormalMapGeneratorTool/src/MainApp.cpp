@@ -41,7 +41,7 @@
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
-//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ]
+//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ], default theme
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
@@ -61,6 +61,7 @@ enum class LoadingOption
 
 const std::string VERSION_NAME = "v1.0 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
+const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
 const std::string BRUSH_TEXTURES_PATH = "Resources\\Brushes\\";
@@ -215,6 +216,8 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_up.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
+
+	themeManager.SetThemeFromFile(THEMES_PATH + "OrangeJuice.nort");
 
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
 	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg"));
@@ -1307,33 +1310,38 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 
 		const char* items[] = { "    Default", "    Dark", "    Light", "    Blue","    Green","    Ultra Violet" };
 		static int item_current = 0;
+		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
 		ImGui::PopItemWidth();
 		ImGui::PopFont();
-		switch (item_current)
+		if (prev_item != item_current)
 		{
-		case 0:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
-			break;
-		case 1:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
-			break;
-		case 2:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
-			break;
-		case 3:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::BLUE);
-			break;
-		case 4:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::GREEN);
-			break;
-		case 5:
-			themeManager.EnableInBuiltTheme(ThemeManager::Theme::ULTRA_VIOLET);
-			break;
-		default:
-			break;
+			switch (item_current)
+			{
+			case 0:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
+				break;
+			case 1:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
+				break;
+			case 2:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
+				break;
+			case 3:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::BLUE);
+				break;
+			case 4:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::GREEN);
+				break;
+			case 5:
+				themeManager.EnableInBuiltTheme(ThemeManager::Theme::ULTRA_VIOLET);
+				break;
+			default:
+				break;
+			}
 		}
+		prev_item = item_current;
 		ImGui::PopStyleVar();
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 		ImGui::Indent(windowSys.GetWindowRes().x - 160);
@@ -1358,7 +1366,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)

@@ -1,5 +1,8 @@
 #pragma once
 #include <map>
+#include <string>
+#include <fstream>
+#include <algorithm>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
@@ -187,6 +190,7 @@ public:
 	}
 	void EnableInBuiltTheme(Theme theme)
 	{
+		std::cout << "\nset theme called !!";
 		currentTheme = theme;
 		switch (theme)
 		{
@@ -207,13 +211,13 @@ public:
 			CustomColourImGuiTheme();
 			break;
 		case Theme::DARK:
-			PrimaryColour = ImVec4(0.2f,0.2f,0.2f, 1.1f);
+			PrimaryColour = ImVec4(0.2f, 0.2f, 0.2f, 1.1f);
 			TitleColour = ImVec4(0.13f, 0.13f, 0.13f, 1.1f);
-			SecondaryColour = ImVec4(0.3f ,0.3f, 0.3f, 1.1f);
+			SecondaryColour = ImVec4(0.3f, 0.3f, 0.3f, 1.1f);
 			AccentColour1 = ImVec4(0.15f, 0.15f, 0.15f, 1.1f);
 			AccentColour2 = ImVec4(1, 1, 1, 1.1f);
-			AccentColour3 = ImVec4(0.9f,0.9f,0.9f, 1.1f);
-			ActiveColour1 = ImVec4(0.93f,0.93f,0.93f, 0.80f);
+			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
+			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
 			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
 			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
 			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
@@ -289,5 +293,94 @@ public:
 		default:
 			break;
 		}
+	}
+	void SetThemeFromFile(const std::string& filePath)
+	{
+		std::string data = "";
+		std::ifstream myfile(filePath);
+		if (myfile.is_open())
+		{
+			std::string line;
+			while (getline(myfile, line))
+			{
+				if (line[0] == '#' || line.size() < 10)
+					continue;
+				std::string colourType, colourValue;
+				int indexOfColon = line.find(':');
+				int indexOfSemiColon = line.find(';');
+				colourType = line.substr(0, indexOfColon - 1);
+				colourValue = line.substr(indexOfColon + 1, indexOfSemiColon - (indexOfColon + 1));
+
+				int indexOfStartBrac = colourValue.find('(') + 1;
+				int indexOfEndBrac = colourValue.find(')');
+				colourValue = colourValue.substr(indexOfStartBrac, indexOfEndBrac - indexOfStartBrac);
+
+				int indexOfFirstComma = colourValue.find(',');
+				int intdexOfSecondComma = colourValue.find(',', indexOfFirstComma + 1);
+				int indexOfThirdComma = colourValue.find(',', intdexOfSecondComma + 1);
+				std::string num1 = colourValue.substr(0, indexOfFirstComma);
+				std::string num2 = colourValue.substr(indexOfFirstComma + 1, intdexOfSecondComma - (indexOfFirstComma + 1));
+				std::string num3 = colourValue.substr(intdexOfSecondComma + 1, indexOfThirdComma - (intdexOfSecondComma + 1));
+				std::string num4 = colourValue.substr(indexOfThirdComma + 1);
+
+				ImVec4 col(std::atof(num1.c_str()), std::atof(num2.c_str()), std::atof(num3.c_str()), std::atof(num4.c_str()));
+				std::cout << "\nColour type : " << colourType << "." << col.x << "," << col.y << "," << col.z << "," << col.w;
+				if (colourType == "PrimaryColour")
+				{
+					PrimaryColour = col;
+				}
+				else if (colourType == "TitleColour")
+				{
+					TitleColour = col;
+				}
+				else if (colourType == "SecondaryColour")
+				{
+					SecondaryColour = col;
+				}
+				else if (colourType == "AccentColour1")
+				{
+					AccentColour1 = col;
+				}
+				else if (colourType == "AccentColour2")
+				{
+					AccentColour2 = col;
+				}
+				else if (colourType == "AccentColour3")
+				{
+					AccentColour3 = col;
+				}
+				else if (colourType == "ActiveColour1")
+				{
+					ActiveColour1 = col;
+				}
+				else if (colourType == "ActiveColour2")
+				{
+					ActiveColour2 = col;
+				}
+				else if (colourType == "DisabledColour1")
+				{
+					DisabledColour1 = col;
+				}
+				else if (colourType == "DisabledColour2")
+				{
+					DisabledColour2 = col;
+				}
+				else if (colourType == "Sate1Colour")
+				{
+					Sate1Colour = col;
+				}
+				else if (colourType == "Sate2Colour")
+				{
+					Sate2Colour = col;
+				}
+				else if (colourType == "Sate3Colour")
+				{
+					Sate3Colour = col;
+				}
+			}
+			myfile.close();
+		}
+		StyleColorsDark();
+		//std::cout << "\nDATA : \n" << data;
 	}
 };

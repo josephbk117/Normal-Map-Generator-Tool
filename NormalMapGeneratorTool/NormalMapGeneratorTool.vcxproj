@@ -214,6 +214,7 @@
     <None Include="Resources\Shaders\normalPanel.fs" />
     <None Include="Resources\Shaders\normalPanel.vs" />
     <None Include="Resources\Shaders\windowChrome.fs" />
+    <None Include="Resources\Themes\OrangeJuice.nort" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">
