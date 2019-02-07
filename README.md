@@ -1,11 +1,11 @@
-# Nora, The Normal-Map-Generator-Tool
+# Nora, The Normal Map Generator Tool
 Normal map generator / editor tool
 Takes height map information which is usually gray scale ( Height map data ) and converts that data into normal map data which then can be further edited and exported.
 
-*Still not yet ready for production environment*
+*Can be used in production but look out for bugs*
 
-### Software as of version 0.92 Alpha
-![Image of Nora normal map editor](https://i.imgur.com/WSfxpGW.png)
+### Software as of version 1.0 Beta
+![Image of Nora normal map editor](https://i.imgur.com/1fHhvXA.png)
 Different view modes are available while editing the normal map :
 1. Height map mode ( Gray scale )
 2. Normal map mode
@@ -19,6 +19,6 @@ This preview mode has 3 modes:
 3. Lighting mode
 4. Textured mode, which combines lighting along with a custom diffuse texture.
 
-![Image of Nora normal map editor](https://i.imgur.com/5gobyRM.png)
+![Image of Nora normal map editor](https://i.imgur.com/BoIjEQj.png)
 
 *If you like the work being done please do support in terms of feature suggestions and bug reporting*
