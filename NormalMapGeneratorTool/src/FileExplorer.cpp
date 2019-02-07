@@ -232,8 +232,8 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string 
 					paths.push_back(p.path().generic_string());
 				else
 				{
-					if (getFileExtension(p.path().filename().generic_string()) == fileExt)
-						paths.push_back(p.path().generic_string());
+					if (getFileExtension(p.path().filename().string()) == fileExt)
+						paths.push_back(p.path().string());
 				}
 			}
 		}
@@ -245,11 +245,11 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string 
 			if (std::experimental::filesystem::is_regular_file(p))
 			{
 				if (fileExt == "")
-					paths.push_back(p.path().filename().generic_string());
+					paths.push_back(p.path().filename().string());
 				else
 				{
-					if (getFileExtension(p.path().filename().generic_string()) == fileExt)
-						paths.push_back(p.path().filename().generic_string());
+					if (getFileExtension(p.path().filename().string()) == fileExt)
+						paths.push_back(p.path().filename().string());
 				}
 			}
 		}

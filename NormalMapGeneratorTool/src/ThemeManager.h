@@ -180,10 +180,6 @@ public:
 	{
 		FileExplorer fileExplorer;
 		themesInDir = fileExplorer.getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
-		for (int i = 0; i < themesInDir.size(); i++)
-		{
-			std::cout << "\nThemes : " << themesInDir[i];
-		}
 
 
 		PrimaryColour = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
@@ -205,7 +201,9 @@ public:
 	{
 		std::vector<std::string> cleaned;
 		for (int i = 0; i < themesInDir.size(); i++)
+		{
 			cleaned.push_back(themesInDir[i].substr(0, themesInDir[i].size() - 5));
+		}
 		return cleaned;
 	}
 

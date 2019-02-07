@@ -119,6 +119,7 @@ UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 WindowSide windowSideVal;
 
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
+char **themeItems = nullptr;
 
 struct BoundsAndPos
 {
@@ -627,6 +628,7 @@ int main(void)
 	delete modelPreviewObj;
 	delete cubeForSkybox;
 	delete previewPlane;
+	delete[] themeItems;
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -1307,32 +1309,33 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		static char **items = nullptr;
-		if (items == nullptr)
+		if (themeItems == nullptr)
 		{
-			items = new char *[themeManager.getNumberOfThemes()];
-			items[0] = new char[8]{ 'D','e','f','a', 'u', 'l', 't' };
-			items[1] = new char[5]{ 'D','a','r','k' };
-			items[2] = new char[6]{ 'L','i','g','h', 't' };
+			themeItems = new char *[themeManager.getNumberOfThemes()];
+			themeItems[0] = new char[8]{ 'D','e','f','a', 'u', 'l', 't' };
+			themeItems[1] = new char[5]{ 'D','a','r','k' };
+			themeItems[2] = new char[6]{ 'L','i','g','h', 't' };
+
 			std::vector<std::string> loadedThemes = themeManager.GetAllLoadedThemes();
 			for (int i = 0; i < loadedThemes.size(); i++)
 			{
-				items[i + 3] = new char[loadedThemes[i].size()];
-				for (int j = 0; j < loadedThemes[i].size(); j++)
-					items[i + 3][j] = loadedThemes[i][j];
+				std::string val = loadedThemes[i];
+				themeItems[i + 3] = new char[val.size()];
+				std::memcpy(themeItems[i + 3], &val[0], val.size());
+				std::memset(themeItems[i + 3] + (val.size()), '\0', 1);
 			}
 		}
 
 		static int item_current = 0;
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
-		ImGui::Combo("##combo", &item_current, items, themeManager.getNumberOfThemes());
+		ImGui::Combo("##combo", &item_current, themeItems, themeManager.getNumberOfThemes());
 		ImGui::PopItemWidth();
 		ImGui::PopFont();
 		if (prev_item != item_current)
 		{
 			if (item_current >= 3)
-				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(items[item_current]) + ".nort"));
+				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(themeItems[item_current]) + ".nort"));
 			else
 			{
 				if (item_current == 0)
@@ -1384,8 +1387,8 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete[] dataBuffer;
+		}
 	}
-}
 
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
