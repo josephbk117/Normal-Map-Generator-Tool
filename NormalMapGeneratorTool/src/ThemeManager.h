@@ -300,7 +300,6 @@ public:
 				std::string num4 = colourValue.substr(indexOfThirdComma + 1);
 
 				ImVec4 col(std::atof(num1.c_str()), std::atof(num2.c_str()), std::atof(num3.c_str()), std::atof(num4.c_str()));
-				std::cout << "\nColour type : " << colourType << "." << col.x << "," << col.y << "," << col.z << "," << col.w;
 				if (colourType == "PrimaryColour")
 				{
 					PrimaryColour = col;

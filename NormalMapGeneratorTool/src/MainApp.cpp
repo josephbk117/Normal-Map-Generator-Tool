@@ -33,7 +33,6 @@
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 
-//TODO : Add custom theme capability (with json support)
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
