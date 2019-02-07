@@ -2,14 +2,17 @@
 Normal map generator / editor tool
 Takes height map information which is usually gray scale ( Height map data ) and converts that data into normal map data which then can be further edited and exported.
 
+* Custom brushes can be added easily by adding them in the Resources\Brushes
+* Custom themes can be added by adding custom .nort theme files in Resources\Themes
+
 *Can be used in production but look out for bugs*
 
 ### Software as of version 1.0 Beta
 ![Image of Nora normal map editor](https://i.imgur.com/1fHhvXA.png)
 Different view modes are available while editing the normal map :
-1. Height map mode ( Gray scale )
-2. Normal map mode
-3. 3D Plane mode, Has lighting applied on top.
+1. Height mode ( Gray scale )
+2. Normal mode
+3. Lighting mode
 
 Realtime preview of the texture applied on a model can be shown as well.
 This is a real-time preview of how the texture will look once applied on the model.
