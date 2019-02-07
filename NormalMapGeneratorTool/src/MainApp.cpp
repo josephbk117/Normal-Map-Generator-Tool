@@ -51,6 +51,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Any changes made a certain undo level should make that now the max undo state
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -1306,39 +1307,40 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		const char* items[] = { "    Default", "    Dark", "    Light", "    Blue","    Green","    Ultra Violet", "    Custom" };
+		static char **items = nullptr;
+		if (items == nullptr)
+		{
+			items = new char *[themeManager.getNumberOfThemes()];
+			items[0] = new char[8]{ 'D','e','f','a', 'u', 'l', 't' };
+			items[1] = new char[5]{ 'D','a','r','k' };
+			items[2] = new char[6]{ 'L','i','g','h', 't' };
+			std::vector<std::string> loadedThemes = themeManager.GetAllLoadedThemes();
+			for (int i = 0; i < loadedThemes.size(); i++)
+			{
+				items[i + 3] = new char[loadedThemes[i].size()];
+				for (int j = 0; j < loadedThemes[i].size(); j++)
+					items[i + 3][j] = loadedThemes[i][j];
+			}
+		}
+
 		static int item_current = 0;
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
-		ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
+		ImGui::Combo("##combo", &item_current, items, themeManager.getNumberOfThemes());
 		ImGui::PopItemWidth();
 		ImGui::PopFont();
 		if (prev_item != item_current)
 		{
-			switch (item_current)
+			if (item_current >= 3)
+				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(items[item_current]) + ".nort"));
+			else
 			{
-			case 0:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
-				break;
-			case 1:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
-				break;
-			case 2:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
-				break;
-			case 3:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::BLUE);
-				break;
-			case 4:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::GREEN);
-				break;
-			case 5:
-				themeManager.EnableInBuiltTheme(ThemeManager::Theme::ULTRA_VIOLET);
-				break;
-			case 6:
-				themeManager.SetThemeFromFile(THEMES_PATH + "OrangeJuice.nort");
-			default:
-				break;
+				if (item_current == 0)
+					themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
+				else if (item_current == 1)
+					themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
+				else if (item_current == 2)
+					themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
 			}
 		}
 		prev_item = item_current;

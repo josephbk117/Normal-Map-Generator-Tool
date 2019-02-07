@@ -200,7 +200,10 @@
     <None Include="Resources\Shaders\gridLines.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\Themes\OrangeJuice.nort" />
+    <None Include="Resources\Themes\Ultra Violet.nort" />
+    <None Include="Resources\Themes\Orange Juice.nort" />
+    <None Include="Resources\Themes\Green Mint.nort" />
+    <None Include="Resources\Themes\Blue Ice.nort" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">

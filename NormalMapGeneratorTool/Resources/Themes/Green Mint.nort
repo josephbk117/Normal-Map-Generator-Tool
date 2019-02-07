@@ -1,0 +1,17 @@
+# Nora theme file :- Blue Ice
+# Author :- Joseph Kalathil
+# This is a comment, You have 12 colours to play with
+
+PrimaryColour : (0.15, 0.15, 0.15, 1.1);
+TitleColour : (0.13, 0.13, 0.13, 1.1);
+SecondaryColour : (0.55, 0.75, 0.25, 1.1);
+AccentColour1 : (0.25, 0.25, 0.25, 1.1);
+AccentColour2 : (0.85, 1.0, 0.85, 1.1);
+AccentColour3 : (0.9, 0.9, 0.9, 1.1);
+ActiveColour1 : (0.93, 0.93, 0.93, 0.80);
+DisabledColour1 : (0.6, 0.6, 0.6, 1.00);
+ActiveColour2 : (0.6, 0.6, 0.6, 1.00);
+DisabledColour2 : (0.6, 0.6, 0.6, 0.78);
+Sate1Colour : (0.80, 0.80, 0.80, 0.46);
+Sate2Colour : (0.8, 0.8, 0.8, 0.67);
+Sate3Colour : (0.0, 0.0, 0.0, 0.6);

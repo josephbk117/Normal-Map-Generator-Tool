@@ -1,16 +1,19 @@
 #pragma once
 #include <map>
+#include <vector>
 #include <string>
 #include <fstream>
 #include <algorithm>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl2.h"
+#include "FileExplorer.h"
 class ThemeManager
 {
 private:
 	enum class Theme;
 	Theme currentTheme = Theme::DEFAULT;
+	std::vector<std::string> themesInDir;
 	void StyleColorsLight()
 	{
 		ImGuiStyle* style = &ImGui::GetStyle();
@@ -150,10 +153,11 @@ private:
 		colors[ImGuiCol_ModalWindowDarkening] = Sate3Colour;
 		colors[ImGuiCol_DragDropTarget] = Sate3Colour;
 	}
+
 public:
 	enum class Theme
 	{
-		DEFAULT, DARK, LIGHT, BLUE, GREEN, ULTRA_VIOLET
+		DEFAULT, DARK, LIGHT, CUSTOM
 	};
 	ImVec4 PrimaryColour;
 	//Applied on title and menu bar
@@ -174,6 +178,14 @@ public:
 
 	void Init()
 	{
+		FileExplorer fileExplorer;
+		themesInDir = fileExplorer.getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
+		for (int i = 0; i < themesInDir.size(); i++)
+		{
+			std::cout << "\nThemes : " << themesInDir[i];
+		}
+
+
 		PrimaryColour = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
 		TitleColour = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
 		SecondaryColour = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
@@ -188,9 +200,22 @@ public:
 		Sate2Colour = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
 		Sate3Colour = ImVec4(0.10f, 0.1f, 0.25f, 0.01f);
 	}
+
+	std::vector<std::string> GetAllLoadedThemes()
+	{
+		std::vector<std::string> cleaned;
+		for (int i = 0; i < themesInDir.size(); i++)
+			cleaned.push_back(themesInDir[i].substr(0, themesInDir[i].size() - 5));
+		return cleaned;
+	}
+
+	int getNumberOfThemes()
+	{
+		return themesInDir.size() + 3;
+	}
+
 	void EnableInBuiltTheme(Theme theme)
 	{
-		std::cout << "\nset theme called !!";
 		currentTheme = theme;
 		switch (theme)
 		{
@@ -242,60 +267,13 @@ public:
 			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
 			StyleColorsLight();
 			break;
-		case Theme::BLUE:
-			PrimaryColour = ImVec4(0.2f, 0.5f, 0.6f, 1.1f);
-			TitleColour = ImVec4(0.2f, 0.4f, 0.5f, 1.1f);
-			SecondaryColour = ImVec4(0.2f, 0.3f, 0.4f, 1.1f);
-			AccentColour1 = ImVec4(0.1f, 0.2f, 0.3f, 1.1f);
-			AccentColour2 = ImVec4(1.0f, 1.0f, 1.0f, 1.1f);
-			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
-			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
-			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
-			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.8f, 1.00f);
-			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
-			Sate1Colour = ImVec4(0.10f, 0.10f, 0.80f, 0.46f);
-			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.97f);
-			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.2f);
-			StyleColorsLight();
-			break;
-		case Theme::GREEN:
-			PrimaryColour = ImVec4(0.15f, 0.15f, 0.15f, 1.1f);
-			TitleColour = ImVec4(0.13f, 0.13f, 0.13f, 1.1f);
-			SecondaryColour = ImVec4(0.55f, 0.75f, 0.25f, 1.1f);
-			AccentColour1 = ImVec4(0.25f, 0.25f, 0.25f, 1.1f);
-			AccentColour2 = ImVec4(0.85f, 1.0f, 0.85f, 1.1f);
-			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
-			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
-			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
-			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
-			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
-			Sate1Colour = ImVec4(0.80f, 0.80f, 0.80f, 0.46f);
-			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.67f);
-			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-			StyleColorsDark();
-			break;
-		case Theme::ULTRA_VIOLET:
-			PrimaryColour = ImVec4(0.15f, 0.0f, 0.2f, 1.1f);
-			TitleColour = ImVec4(0.18f, 0.0f, 0.22f, 1.1f);
-			SecondaryColour = ImVec4(0.45f, 0.1f, 0.5f, 1.1f);
-			AccentColour1 = ImVec4(0.1f, 0.0f, 0.1f, 1.1f);
-			AccentColour2 = ImVec4(0.8f, 0.7f, 1.0f, 1.1f);
-			AccentColour3 = ImVec4(0.9f, 0.9f, 0.9f, 1.1f);
-			ActiveColour1 = ImVec4(0.93f, 0.93f, 0.93f, 0.80f);
-			DisabledColour1 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
-			ActiveColour2 = ImVec4(0.6f, 0.6f, 0.6f, 1.00f);
-			DisabledColour2 = ImVec4(0.6f, 0.6f, 0.6f, 0.78f);
-			Sate1Colour = ImVec4(0.80f, 0.80f, 0.80f, 0.46f);
-			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.67f);
-			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-			StyleColorsLight();
-			break;
 		default:
 			break;
 		}
 	}
 	void SetThemeFromFile(const std::string& filePath)
 	{
+		currentTheme = Theme::CUSTOM;
 		std::string data = "";
 		std::ifstream myfile(filePath);
 		if (myfile.is_open())
@@ -381,6 +359,5 @@ public:
 			myfile.close();
 		}
 		StyleColorsDark();
-		//std::cout << "\nDATA : \n" << data;
 	}
 };
