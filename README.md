@@ -45,6 +45,7 @@ This is a real-time preview of how the texture will look once applied on the mod
   - Custom shader display option ( Allows custom viewing of model in preview )
   - Better user interaction with preview UI
   - Adding more base models for preview
+  - Adding infinite plane with shadows in Lighting / Textured view ( Which can be toggled )
   - Additional lighting options:
     - Directional light with option for colour and strength of light as well as visual indication of the directional light
     - Having a point light ( Only 1 ) with linear and exponential attenuation multiplier customization along with colour and strength 
