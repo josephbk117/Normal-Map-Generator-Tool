@@ -56,6 +56,13 @@ This is a real-time preview of how the texture will look once applied on the mod
   - Metalness map [PBR workflow]
   - Roughness map [PBR workflow]
 - Ease of use:
+  - File explorer improvements:
+    - Display icon based on file type
+    - Once file selected detailed information is shown:
+      - File size
+      - File type
+      - Last modified time
+      - If image file then preview shown
   - Adding preferences window:
     - Set max resolution image that can be edited ( Larger max image resolution takes more RAM )
     - Adding max number undo steps
