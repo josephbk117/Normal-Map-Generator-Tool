@@ -50,7 +50,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Any changes made a certain undo level should make that now the max undo state
+//TODO : radio button fr height mode /blur mode
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -107,6 +107,7 @@ FrameBufferSystem previewFbs;
 BrushData brushData;
 TextureData heightMapTexData;
 TextureData diffuseTexDataForPreview;
+TextureData specularTexDataForPreview;
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
@@ -219,9 +220,10 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
-	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "crate.jpg"));
+	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "Wall Tex Diffuse.png"));
+	specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "Wall Tex Specular.png"));
 
-	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "goli.png", heightMapTexData);
+	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "Wall Tex Height.png", heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
@@ -290,6 +292,7 @@ int main(void)
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
+	int modelSpecularMapTextureUniform = modelViewShader.getUniformLocation("inTexture3");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 
@@ -435,7 +438,6 @@ int main(void)
 				imageFormat = ImageFormat::JPEG;
 			else //Un-supported format
 			{
-				//SaveNormalMapToFile(saveLocation, imageFormat);
 				shouldSaveNormalMap = false;
 				if (fileExt == "")
 					modalWindow.setModalDialog("ERROR", "The provided path : " + path + "\nIs incomplete, Check if the path is valid");
@@ -514,7 +516,8 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelLightPositionUniform, lightPos);
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
-		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 2);
+		modelViewShader.applyShaderInt(modelSpecularMapTextureUniform, 2);
+		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 3);
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
@@ -525,6 +528,8 @@ int main(void)
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, diffuseTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, specularTexDataForPreview.GetTexId());
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
@@ -614,6 +619,9 @@ int main(void)
 		DisplayPreview(window_flags);
 		fileExplorer.display();
 		modalWindow.display();
+
+		//static bool ff = true;
+		//ImGui::ShowDemoWindow(&ff);
 
 		ImGui::Render();
 
@@ -1214,36 +1222,57 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 
 	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
 	{
+		ImGui::Text("LIGHTING SETTINGS");
+		ImGui::Separator();
+		ImGui::Spacing();
 		ImGui::SliderAngle("Position", &previewStateUtility.lightLocation, 0.0f, 360.0f);
 		ImGui::SliderFloat("Intensity", &previewStateUtility.lightIntensity, 0.0f, 10.0f, "%.2f");
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-		ImGui::Text("Diffuse Colour");
-		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0]);
-		ImGui::Text("Light Colour");
-		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0]);
+		ImGui::Text("Light Colour"); ImGui::SameLine();
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 40, 10)); ImGui::SameLine();
+		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0], ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions);
+		ImGui::Text("Diffuse Colour"); ImGui::SameLine();
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 40, 10)); ImGui::SameLine();
+		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0], ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions);
 		ImGui::PopItemWidth();
 
 		if (previewStateUtility.modelViewMode == 4)
 		{
-			static char diffuseTextureImageLocation[500] = "Resources\\Textures\\crate.jpg";
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-			ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.7f);
-			ImGui::InputText("## Preview Image Location", diffuseTextureImageLocation, sizeof(diffuseTextureImageLocation));
-			ImGui::PopItemWidth();
+			ImGui::Spacing();
+			ImGui::Text("TEXTURE SETTINGS");
+			ImGui::Separator();
+			ImGui::Spacing();
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
+			ImGui::Text("Diffuse / Albedo");
 			ImGui::SameLine(0, 5);
-			if (ImGui::Button("LOAD", ImVec2(ImGui::GetContentRegionAvailWidth() + 5, 27)))
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 60, 10)); ImGui::SameLine();
+			if (ImGui::ImageButton((ImTextureID)diffuseTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
-					for (unsigned int i = 0; i < str.length(); i++)
-						diffuseTextureImageLocation[i] = str[i];
 					if (currentLoadingOption == LoadingOption::TEXTURE)
 						diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
 				});
 			}
 			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load texture for preview model");
+				ImGui::SetTooltip("Load diffuse texture for preview model");
+
+			ImGui::Text("Specular");
+			ImGui::SameLine(0, 5);
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 60, 10)); ImGui::SameLine();
+			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			{
+				currentLoadingOption = LoadingOption::TEXTURE;
+				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+				});
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Load specular texture for preview model");
+
 			ImGui::PopStyleVar();
 		}
 	}
@@ -1381,10 +1410,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1614,7 +1643,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 

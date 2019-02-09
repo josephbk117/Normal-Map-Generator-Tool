@@ -5,8 +5,11 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 in mat3 TBN;
+
 uniform sampler2D inTexture;
 uniform sampler2D inTexture2;
+uniform sampler2D inTexture3;
+
 uniform samplerCube skybox;
 uniform vec3 diffuseColour;
 uniform vec3 lightColour;
@@ -248,7 +251,7 @@ void main()
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
 			vec3 reflectDir = reflect(-normalize(lightPos), norm);  
 			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity) * _SpecularStrength;
-			vec3 specular = lightColour * spec;  
+			vec3 specular = lightColour * spec *  texture(inTexture3, TexCoords).r;
 
 			float distance    = length(lightPos - FragPos);
 			float attenuation = _LightIntensity / (0.01 + (distance * distance));
@@ -261,13 +264,12 @@ void main()
 
 			vec3 diffuseAndAmbient = diffuse + ambient;
 			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
-
 			vec3 result = pow(mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular, vec3(1.0/2.2));
 			FragColor = vec4(result, 1.0);
 		}
         else
 		{
-            FragColor = vec4(norm * 0.5 + 0.5,1.0);
+            FragColor = vec4(norm * 0.5 + 0.5, 1.0);
 		}
     }
     else if(_normalMapModeOn == 3)

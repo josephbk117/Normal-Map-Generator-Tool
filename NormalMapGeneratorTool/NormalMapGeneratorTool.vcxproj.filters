@@ -200,10 +200,18 @@
     <None Include="Resources\Shaders\gridLines.fs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\Themes\Ultra Violet.nort" />
-    <None Include="Resources\Themes\Orange Juice.nort" />
-    <None Include="Resources\Themes\Green Mint.nort" />
-    <None Include="Resources\Themes\Blue Ice.nort" />
+    <None Include="Resources\Themes\Ultra Violet.nort">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Themes\Orange Juice.nort">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Themes\Green Mint.nort">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Themes\Blue Ice.nort">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">
@@ -242,21 +250,6 @@
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Textures\crate.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\goli.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\Penguins.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\test2.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\test3.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Resources\UI\clearView.png">
       <Filter>Resource Files</Filter>
     </Image>
@@ -267,6 +260,15 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\UI\toggleFullscreen.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Wall Tex Height.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Wall Tex Specular.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Wall Tex Diffuse.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
