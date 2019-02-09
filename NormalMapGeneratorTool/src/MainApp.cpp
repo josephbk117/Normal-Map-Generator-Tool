@@ -1279,9 +1279,23 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 					}
 				});
 			}
-			if (ImGui::MenuItem("Preferences")) {}
+			if (ImGui::MenuItem("Preferences"))
+			{
+				ImGui::OpenPopup("eww");
+			}
 			ImGui::EndMenu();
 		}
+		bool oprn = true;
+		ImGui::SetNextWindowSizeConstraints(ImVec2(540, 540), ImVec2(1920, 1080));
+		if (ImGui::BeginPopupModal("eww", &oprn, ImGuiWindowFlags_NoScrollbar))
+		{
+			if (ImGui::Button("CLOSE", ImVec2(80, 30)))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
+
 		if (ImGui::BeginMenu("Edit"))
 		{
 			bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
@@ -1367,10 +1381,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1386,8 +1400,8 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete[] dataBuffer;
-		}
 	}
+}
 
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
@@ -1600,7 +1614,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
