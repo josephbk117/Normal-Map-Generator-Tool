@@ -50,7 +50,6 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : radio button for height mode /blur mode
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -67,12 +66,13 @@ const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
 const std::string BRUSH_TEXTURES_PATH = "Resources\\Brushes\\";
 const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
 const std::string SHADERS_PATH = "Resources\\Shaders\\";
-const std::string MODELS_PATH = "Resources\\3D Models\\Primitives\\";
-const std::string CUBE_MODEL_PATH = MODELS_PATH + "Cube.obj";
-const std::string CYLINDER_MODEL_PATH = MODELS_PATH + "Cylinder.obj";
-const std::string SPHERE_MODEL_PATH = MODELS_PATH + "Sphere.obj";
-const std::string TORUS_MODEL_PATH = MODELS_PATH + "Torus.obj";
-const std::string PLANE_MODEL_PATH = MODELS_PATH + "Plane.obj";
+const std::string PRIMITIVE_MODELS_PATH = "Resources\\3D Models\\Primitives\\";
+const std::string COMPLEX_MODELS_PATH = "Resources\\3D Models\\Complex\\";
+const std::string CUBE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cube.obj";
+const std::string CYLINDER_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cylinder.obj";
+const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.obj";
+const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.obj";
+const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.obj";
 
 const int WINDOW_SIZE_MIN = 480;
 
@@ -983,9 +983,6 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	static int item_type;
 	ImGui::RadioButton("HEIGHT MODE", &item_type, 0); ImGui::SameLine();
 	ImGui::RadioButton("BLUR MODE", &item_type, 1);
-	/*if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
-		isBlurOn = !isBlurOn;
-	ImGui::SameLine();*/
 	isBlurOn = (item_type == 0) ? false : true;
 	if (isBlurOn)
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
@@ -1132,7 +1129,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::EndPopup();
 	}
 	ImGui::SameLine();
-	const char* items[] = { "    CUBE", "    CYLINDER", "    SPHERE", "    TORUS", "    CUSTOM MODEL" };
+	const char* items[] = { "    CUBE", "    CYLINDER", "    SPHERE", "    TORUS","    SUZANNE","    UTAH TEAPOT", "    CUSTOM MODEL" };
 	static const char* current_item = items[0];
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 15));
 	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
@@ -1160,6 +1157,12 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					modelPreviewObj = modelLoader.CreateModelFromFile(TORUS_MODEL_PATH);
 					break;
 				case 4:
+					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Suzanne.obj");
+					break;
+				case 5:
+					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Utah Teapot.obj");
+					break;
+				case 6:
 					currentLoadingOption = LoadingOption::MODEL;
 					fileExplorer.displayDialog(FileType::MODEL, [&](std::string str)
 					{
@@ -1418,7 +1421,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
