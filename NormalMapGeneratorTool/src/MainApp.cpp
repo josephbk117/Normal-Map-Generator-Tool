@@ -50,7 +50,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : radio button fr height mode /blur mode
+//TODO : radio button for height mode /blur mode
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -980,11 +980,13 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		}
 		ImGui::EndMenu();
 	}
-
-	if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
+	static int item_type;
+	ImGui::RadioButton("HEIGHT MODE", &item_type, 0); ImGui::SameLine();
+	ImGui::RadioButton("BLUR MODE", &item_type, 1);
+	/*if (ImGui::Button((isBlurOn) ? "HEIGHT MODE" : "BLUR MODE", ImVec2((int)(ImGui::GetContentRegionAvailWidth() / 2.0f), 40)))
 		isBlurOn = !isBlurOn;
-	ImGui::SameLine();
-
+	ImGui::SameLine();*/
+	isBlurOn = (item_type == 0) ? false : true;
 	if (isBlurOn)
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 
@@ -1002,8 +1004,11 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	if (ImGui::SliderFloat(" Brush Strength", &brushData.brushStrength, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Shift + Ctrl + |UP / DOWN|)");
-	if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
-	if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	if (!isBlurOn)
+	{
+		if (ImGui::SliderFloat(" Brush Min Height", &brushData.brushMinHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
+	}
 	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getRes().y / 2, "%0.2f", 1.0f)) {}
 	static BrushData bCopy = BrushData();
 	if (bCopy != brushData)

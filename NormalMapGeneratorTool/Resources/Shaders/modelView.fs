@@ -251,7 +251,8 @@ void main()
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
 			vec3 reflectDir = reflect(-normalize(lightPos), norm);  
 			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity) * _SpecularStrength;
-			vec3 specular = lightColour * spec *  texture(inTexture3, TexCoords).r;
+			float specTex = texture(inTexture3, TexCoords).r;
+			vec3 specular = lightColour * spec * specTex;
 
 			float distance    = length(lightPos - FragPos);
 			float attenuation = _LightIntensity / (0.01 + (distance * distance));
