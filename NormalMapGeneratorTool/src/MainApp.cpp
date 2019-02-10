@@ -1451,10 +1451,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{
-							float left = glm::clamp((iterCurPoint.x - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-							float right = glm::clamp((iterCurPoint.x + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-							float bottom = glm::clamp((iterCurPoint.y - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-							float top = glm::clamp((iterCurPoint.y + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
+							float left = (iterCurPoint.x - convertedBrushScale.x) * maxWidth;
+							float right = (iterCurPoint.x + convertedBrushScale.x) * maxWidth;
+							float bottom = (iterCurPoint.y - convertedBrushScale.y) * maxHeight;
+							float top = (iterCurPoint.y + convertedBrushScale.y) * maxHeight;
 							iterCurPoint += incValue;
 							if (brushData.hasBrushTexture())
 								SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
@@ -1464,10 +1464,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					}
 					else
 					{
-						float left = glm::clamp((curX - convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-						float right = glm::clamp((curX + convertedBrushScale.x) * maxWidth, 0.0f, maxWidth);
-						float bottom = glm::clamp((curY - convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
-						float top = glm::clamp((curY + convertedBrushScale.y) * maxHeight, 0.0f, maxHeight);
+
+						float left = (curX - convertedBrushScale.x) * maxWidth;
+						float right = (curX + convertedBrushScale.x) * maxWidth;
+						float bottom = (curY - convertedBrushScale.y) * maxHeight;
+						float top = (curY + convertedBrushScale.y) * maxHeight;
+
 						if (brushData.hasBrushTexture())
 							SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
 						else
@@ -1482,14 +1484,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					float bottom = (curY - convertedBrushScale.y) * maxHeight;
 					float top = (curY + convertedBrushScale.y) * maxHeight;
 
-					if (left >= 0 && right <= maxWidth && top <= maxHeight && bottom >= 0)
-					{
-						left = glm::clamp(left, 0.0f, maxWidth);
-						right = glm::clamp(right, 0.0f, maxWidth);
-						bottom = glm::clamp(bottom, 0.0f, maxHeight);
-						top = glm::clamp(top, 0.0f, maxHeight);
-						SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
-					}
+					//if (left >= 0 && right <= maxWidth && top <= maxHeight && bottom >= 0)
+					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
 				heightMapTexData.setTextureDirty();
@@ -1632,9 +1628,15 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 
 	float xMag = endX - startX;
 	float yMag = endY - startY;
-	for (int i = startX; i < endX; i++)
+
+	int clampedStartX = glm::max(startX, 0);
+	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+
+	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
-		for (int j = startY; j < endY; j++)
+		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
 			ColourData colData = inputTexData.getTexelColor(i, j);
 			float rVal = colData.getColour_32_Bit().r;
@@ -1647,7 +1649,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			{
 				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
 				distance = glm::clamp(distance, 0.0f, 1.0f) * brushData.brushStrength;
-				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);//inputTexData.getTexelColor((int)( x * heightMapTexData.getRes().x),(int)( y * heightMapTexData.getRes().y)).getColour_32_Bit().r;
+				rVal = rVal + distance * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - rVal);
 				ColourData col(rVal, rVal, rVal, 1.0f);
 				inputTexData.setTexelColor(col, i, j);
 			}
@@ -1660,9 +1662,14 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureDat
 	float xMag = endX - startX;
 	float yMag = endY - startY;
 
-	for (int i = startX; i < endX; i++)
+	int clampedStartX = glm::max(startX, 0);
+	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+
+	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
-		for (int j = startY; j < endY; j++)
+		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
 			ColourData colData = inputTexData.getTexelColor(i, j);
 			float defVal = colData.getColour_32_Bit().r;
@@ -1703,9 +1710,14 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	float xMag = endX - startX;
 	float yMag = endY - startY;
 
-	for (int i = startX; i < endX; i++)
+	int clampedStartX = glm::max(startX, 0);
+	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+
+	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
-		for (int j = startY; j < endY; j++)
+		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
 			float x = (i - startX) / xMag;
 			float y = (j - startY) / yMag;

@@ -24,11 +24,11 @@ namespace MeshLoadingSystem
 			const aiScene* scene = importer.ReadFile(Path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 			// check for errors
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-			{
 				std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
-			}
 
 			aiMesh* mesh = scene->mMeshes[0];
+			float dist = maxVertexDistance(mesh);
+			float scaleMultiplier = (dist < 3.0f) ? 1.0f : 3.0f / dist;
 
 			unsigned int numVertices = mesh->mNumVertices;
 			float *vertexData = new float[numVertices * 14];
@@ -37,9 +37,9 @@ namespace MeshLoadingSystem
 			for (int i = 0; i < numVertices; i++)
 			{
 
-				vertexData[count] = mesh->mVertices[i].x;
-				vertexData[count + 1] = mesh->mVertices[i].y;
-				vertexData[count + 2] = mesh->mVertices[i].z;
+				vertexData[count] = mesh->mVertices[i].x * scaleMultiplier;
+				vertexData[count + 1] = mesh->mVertices[i].y * scaleMultiplier;
+				vertexData[count + 2] = mesh->mVertices[i].z * scaleMultiplier;
 
 				vertexData[count + 3] = mesh->mNormals[i].x;
 				vertexData[count + 4] = mesh->mNormals[i].y;
@@ -69,6 +69,23 @@ namespace MeshLoadingSystem
 			modelObj->UpdateMeshData(vertexData, numVertices * 14 * sizeof(float), &indices[0], indices.size());
 			delete[] vertexData;
 			return modelObj;
+		}
+	private:
+		//The maximum distance a vertex is from origin, Useful for Bounding spheres
+		float maxVertexDistance(aiMesh* mesh)
+		{
+			unsigned int numVertices = mesh->mNumVertices;
+
+			float maxDist = 0;
+			aiVector3D* vecArray = mesh->mVertices;
+			for (unsigned int i = 0; i < numVertices; i++)
+			{
+				glm::vec3 vec(vecArray[i].x, vecArray[i].y, vecArray[i].z);
+				float dist = glm::length(vec);
+				if (dist > maxDist)
+					maxDist = dist;
+			}
+			return maxDist;
 		}
 	};
 }
