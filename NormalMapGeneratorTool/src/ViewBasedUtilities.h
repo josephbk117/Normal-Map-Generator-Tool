@@ -17,11 +17,11 @@ struct NormalViewStateUtility
 public:
 	float zoomLevel = 1;
 	int mapDrawViewMode = 1;
-	float normalMapStrength = 1.0f;
-	float specularity = 10.0f;
-	float specularityStrength = 0.5f;
+	float normalMapStrength = 2.0f;
+	float specularity = 5.0f;
+	float specularityStrength = 1.0f;
 	float lightIntensity = 0.5f;
-	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 60.0f);
+	glm::vec3 lightDirection = glm::vec3(90.0f, 90.0f, 220.0f);
 	bool flipX_Ydir = false;
 	bool redChannelActive = true;
 	bool greenChannelActive = true;

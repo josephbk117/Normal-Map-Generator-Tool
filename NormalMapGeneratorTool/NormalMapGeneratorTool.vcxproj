@@ -236,9 +236,9 @@
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_lf.tga" />
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_rt.tga" />
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga" />
-    <Image Include="Resources\Textures\Wall Tex Diffuse.png" />
-    <Image Include="Resources\Textures\Wall Tex Height.png" />
-    <Image Include="Resources\Textures\Wall Tex Specular.png" />
+    <Image Include="Resources\Textures\wall diffuse.png" />
+    <Image Include="Resources\Textures\wall height.png" />
+    <Image Include="Resources\Textures\wall specular.png" />
     <Image Include="Resources\UI\clearView.png" />
     <Image Include="Resources\UI\closeIcon.png" />
     <Image Include="Resources\UI\icon.png" />

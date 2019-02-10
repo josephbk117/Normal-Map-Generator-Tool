@@ -269,13 +269,13 @@
     <Image Include="Resources\UI\toggleFullscreen.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Textures\Wall Tex Height.png">
+    <Image Include="Resources\Textures\wall diffuse.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Textures\Wall Tex Specular.png">
+    <Image Include="Resources\Textures\wall height.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Textures\Wall Tex Diffuse.png">
+    <Image Include="Resources\Textures\wall specular.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
