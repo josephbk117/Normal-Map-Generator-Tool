@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <chrono>
-#include <thread>
 #include <queue>
 #include <GL\glew.h>
 #include <GLFW/glfw3.h>
@@ -96,6 +95,7 @@ inline void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPane
 void SetStatesForSavingNormalMap();
 void SetupImGui();
 
+WindowSystem windowSys;
 MeshLoadingSystem::MeshLoader modelLoader;
 ImFont* menuBarLargerText = NULL;
 PreviewStateUtility previewStateUtility;
@@ -112,7 +112,6 @@ ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
 ModalWindow modalWindow;
-WindowSystem windowSys;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
@@ -121,54 +120,6 @@ WindowSide windowSideVal;
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
 char **themeItems = nullptr;
 
-struct BoundsAndPos
-{
-public:
-	glm::vec2 mouseCoord;
-	float left, right, bottom, up;
-};
-
-std::queue<BoundsAndPos> mouseCoordQueue;
-
-
-void ApplyChangesToPanel()
-{
-	const float maxWidth = heightMapTexData.getRes().x;
-	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
-
-	while (!windowSys.IsWindowClosing())
-	{
-		while (mouseCoordQueue.size() > 0)
-		{
-			BoundsAndPos boundAndPos = mouseCoordQueue.front();
-			mouseCoordQueue.pop();
-			glm::vec2 mousePos = boundAndPos.mouseCoord;
-			glm::vec2 prevMousePos = mouseCoordQueue.front().mouseCoord;
-
-			glm::vec2 curPoint = prevMousePos;
-			glm::vec2 incValue = (prevMousePos - mousePos) * 0.333f;
-			curPoint += incValue;
-
-			for (int i = 0; i < 3; i++)
-			{
-				float left = boundAndPos.left;
-				float right = boundAndPos.right;
-				float bottom = boundAndPos.bottom;
-				float top = boundAndPos.up;
-
-				left = glm::clamp(left, 0.0f, maxWidth);
-				right = glm::clamp(right, 0.0f, maxWidth);
-				bottom = glm::clamp(bottom, 0.0f, maxWidth);
-				top = glm::clamp(top, 0.0f, maxWidth);
-
-				curPoint += incValue;
-				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
-			}
-			//SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-	}
-}
 int main(void)
 {
 	windowSys.Init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
@@ -177,7 +128,6 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
-	glewExperimental = GL_TRUE;
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	glEnable(GL_BLEND);
 
@@ -511,8 +461,9 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.modelRoughness);
 		modelViewShader.applyShaderFloat(modelReflectivityUniform, previewStateUtility.modelReflectivity);
 		glm::vec3 lightPos;
-		lightPos.x = sin(previewStateUtility.lightLocation) * 3;
-		lightPos.z = cos(previewStateUtility.lightLocation) * 3;
+		lightPos.x = sin(previewStateUtility.lightLocation.x) * 3;
+		lightPos.z = cos(previewStateUtility.lightLocation.x) * 3;
+		lightPos.y = previewStateUtility.lightLocation.y;
 		modelViewShader.applyShaderVector3(modelLightPositionUniform, lightPos);
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
@@ -629,6 +580,7 @@ int main(void)
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 		windowSys.UpdateWindow();
+
 	}
 	//applyPanelChangeThread.join();
 
@@ -640,7 +592,6 @@ int main(void)
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-
 	windowSys.Destroy();
 	return 0;
 }
@@ -1233,9 +1184,11 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("LIGHTING SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
-		ImGui::SliderAngle("Position", &previewStateUtility.lightLocation, 0.0f, 360.0f);
-		ImGui::SliderFloat("Intensity", &previewStateUtility.lightIntensity, 0.0f, 10.0f, "%.2f");
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+		ImGui::SliderFloat("##Horizontal Position", &previewStateUtility.lightLocation.x, -3.141f, 3.141f, "Horizontal position: %.2f");
+		ImGui::SliderFloat("##Vertical position", &previewStateUtility.lightLocation.y, -3.141f, 3.141f, "Vertical position: %.2f");
+		ImGui::SliderFloat("##Intensity", &previewStateUtility.lightIntensity, 0.0f, 10.0f, "Intensity: %.2f");
+
 		ImGui::Text("Light Colour"); ImGui::SameLine();
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 40, 10)); ImGui::SameLine();
 		ImGui::ColorEdit3("Light Color", &previewStateUtility.lightColour[0], ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions);
@@ -1285,7 +1238,6 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		}
 	}
 	ImGui::End();
-
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
@@ -1421,7 +1373,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1820,3 +1772,51 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 	else if (windowSideVal == WindowSide::RIGHT)
 		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }
+//struct BoundsAndPos
+//{
+//public:
+//	glm::vec2 mouseCoord;
+//	float left, right, bottom, up;
+//};
+//
+//std::queue<BoundsAndPos> mouseCoordQueue;
+//
+//
+//void ApplyChangesToPanel()
+//{
+//	const float maxWidth = heightMapTexData.getRes().x;
+//	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
+//
+//	while (!windowSys.IsWindowClosing())
+//	{
+//		while (mouseCoordQueue.size() > 0)
+//		{
+//			BoundsAndPos boundAndPos = mouseCoordQueue.front();
+//			mouseCoordQueue.pop();
+//			glm::vec2 mousePos = boundAndPos.mouseCoord;
+//			glm::vec2 prevMousePos = mouseCoordQueue.front().mouseCoord;
+//
+//			glm::vec2 curPoint = prevMousePos;
+//			glm::vec2 incValue = (prevMousePos - mousePos) * 0.333f;
+//			curPoint += incValue;
+//
+//			for (int i = 0; i < 3; i++)
+//			{
+//				float left = boundAndPos.left;
+//				float right = boundAndPos.right;
+//				float bottom = boundAndPos.bottom;
+//				float top = boundAndPos.up;
+//
+//				left = glm::clamp(left, 0.0f, maxWidth);
+//				right = glm::clamp(right, 0.0f, maxWidth);
+//				bottom = glm::clamp(bottom, 0.0f, maxWidth);
+//				top = glm::clamp(top, 0.0f, maxWidth);
+//
+//				curPoint += incValue;
+//				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
+//			}
+//			//SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
+//		}
+//		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//	}
+//}

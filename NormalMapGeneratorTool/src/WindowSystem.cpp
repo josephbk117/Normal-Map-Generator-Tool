@@ -22,10 +22,7 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	glfwSetWindowPos(window, 50, 50);
 
 	if (!window)
-	{
-		glfwTerminate();
 		return;
-	}
 	glfwMakeContextCurrent(window);
 }
 

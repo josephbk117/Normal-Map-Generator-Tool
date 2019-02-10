@@ -255,9 +255,7 @@ void main()
 			vec3 specular = lightColour * spec * specTex;
 
 			float distance    = length(lightPos - FragPos);
-			float attenuation = _LightIntensity / (0.01 + (distance * distance));
-
-			attenuation = clamp(attenuation, 0.0, 1.0);
+			float attenuation = _LightIntensity; // (0.01 + (distance * distance));
 
 			ambient  *= attenuation;
 			diffuse  *= attenuation;
@@ -265,7 +263,9 @@ void main()
 
 			vec3 diffuseAndAmbient = diffuse + ambient;
 			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
-			vec3 result = pow(mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular, vec3(1.0/2.2));
+			vec3 result = mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular;
+			result = result/(result + vec3(1.0));
+			result = pow(result, vec3(1.0/2.2));
 			FragColor = vec4(result, 1.0);
 		}
         else
