@@ -67,11 +67,11 @@ const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
 const std::string SHADERS_PATH = "Resources\\Shaders\\";
 const std::string PRIMITIVE_MODELS_PATH = "Resources\\3D Models\\Primitives\\";
 const std::string COMPLEX_MODELS_PATH = "Resources\\3D Models\\Complex\\";
-const std::string CUBE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cube.obj";
-const std::string CYLINDER_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cylinder.obj";
-const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.obj";
-const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.obj";
-const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.obj";
+const std::string CUBE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cube.fbx";
+const std::string CYLINDER_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cylinder.fbx";
+const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.fbx";
+const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.fbx";
+const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.fbx";
 
 const int WINDOW_SIZE_MIN = 480;
 
@@ -1108,10 +1108,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					modelPreviewObj = modelLoader.CreateModelFromFile(TORUS_MODEL_PATH);
 					break;
 				case 4:
-					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Suzanne.obj");
+					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Suzanne.fbx");
 					break;
 				case 5:
-					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Utah Teapot.obj");
+					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Utah Teapot.fbx");
 					break;
 				case 6:
 					currentLoadingOption = LoadingOption::MODEL;

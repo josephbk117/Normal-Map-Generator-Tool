@@ -212,6 +212,13 @@
     <None Include="Resources\Themes\Blue Ice.nort">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\3D Models\Complex\Suzanne.fbx" />
+    <None Include="Resources\3D Models\Complex\Utah Teapot.fbx" />
+    <None Include="Resources\3D Models\Primitives\Cube.fbx" />
+    <None Include="Resources\3D Models\Primitives\Cylinder.fbx" />
+    <None Include="Resources\3D Models\Primitives\Plane.fbx" />
+    <None Include="Resources\3D Models\Primitives\Sphere.fbx" />
+    <None Include="Resources\3D Models\Primitives\Torus.fbx" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">
