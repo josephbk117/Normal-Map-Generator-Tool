@@ -49,6 +49,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Display image resolution and path at bottom
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -117,6 +118,8 @@ DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
 WindowSide windowSideVal;
 
+std::string heightImageLoadLocation = "";
+
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
 char **themeItems = nullptr;
 
@@ -173,6 +176,7 @@ int main(void)
 	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
 	specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall specular.png"));
 
+	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "wall height.png", heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -201,6 +205,7 @@ int main(void)
 	Camera camera;
 	camera.init(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
 
+	//Normal map uniforms
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
@@ -217,6 +222,7 @@ int main(void)
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
 
+	//Brush uniforms
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
 	int brushPreviewTextureUniform = brushPreviewShader.getUniformLocation("_BrushTexture");
 	int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
@@ -224,6 +230,7 @@ int main(void)
 	int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
 	int brushPreviewUseTextureUniform = brushPreviewShader.getUniformLocation("_UseTexture");
 
+	//Model preview uniforms
 	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
 	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
 	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
@@ -246,20 +253,13 @@ int main(void)
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 
+	//Gridlines uniforms
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
 	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
 	int gridLineProjectionMatrixUniform = gridLineShader.getUniformLocation("projection");
 
 	bool isMaximized = false;
 	bool isBlurOn = false;
-
-	brushData.brushScale = 25.0f;
-	brushData.brushOffset = 0.25f;
-	brushData.brushStrength = 1.0f;
-	brushData.brushMinHeight = 0.0f;
-	brushData.brushMaxHeight = 1.0f;
-	brushData.brushRate = 0.0f;
-	brushData.heightMapPositiveDir = false;
 
 	fbs.init(windowSys.GetWindowRes());
 	previewFbs.init(windowSys.GetWindowRes());
@@ -338,7 +338,6 @@ int main(void)
 		//frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, leftBorder, rightBorder));
 		//frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, topBorder, bottomBorder));
 		frameDrawingPanel.getTransform()->update();
-
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
@@ -425,7 +424,7 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		static float circleAround = 0.5f;
+		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;
 		static glm::vec2 prevMcord;
@@ -600,8 +599,6 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	bool open = true;
 	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
-	ImGui::Begin("Side_Bar", &open, window_flags);
-	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
@@ -685,7 +682,16 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 50), ImGuiSetCond_Always);
 	bool open = true;
 	ImGui::Begin("Bottom_Bar", &open, window_flags);
-	ImGui::Indent(ImGui::GetContentRegionAvailWidth()*0.5f - 30);
+
+	float totalWidth = ImGui::GetContentRegionAvailWidth();
+
+	std::string imageDataText(heightImageLoadLocation + " : ");
+	imageDataText += std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y);
+	ImGui::Text(imageDataText.c_str()); ImGui::SameLine();
+
+	float diffWidth = totalWidth - ImGui::GetContentRegionAvailWidth();
+
+	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f - diffWidth * 0.5f, 0)); ImGui::SameLine();
 	ImGui::Text(VERSION_NAME.c_str());
 	ImGui::SameLine();
 
@@ -1246,6 +1252,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
 	{
+		static bool openPreferences = false;
 		ImGui::Indent(10);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(25, 5));
 		ImGui::PushFont(menuBarLargerText);
@@ -1259,6 +1266,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 					if (currentLoadingOption == LoadingOption::TEXTURE)
 					{
 						TextureManager::getTextureDataFromFile(str, heightMapTexData);
+						heightImageLoadLocation = str;
 						heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 						heightMapTexData.setTextureDirty();
 						normalmapPanel.setTextureID(heightMapTexData.GetTexId());
@@ -1270,18 +1278,32 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			}
 			if (ImGui::MenuItem("Preferences"))
 			{
-				ImGui::OpenPopup("eww");
+				openPreferences = true;
 			}
 			ImGui::EndMenu();
 		}
-		bool oprn = true;
-		ImGui::SetNextWindowSizeConstraints(ImVec2(540, 540), ImVec2(1920, 1080));
-		if (ImGui::BeginPopupModal("eww", &oprn, ImGuiWindowFlags_NoScrollbar))
+
+		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
+		if (openPreferences)
+			ImGui::OpenPopup("Preferences");
+		if (ImGui::BeginPopupModal("Preferences", &openPreferences, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
 		{
-			if (ImGui::Button("CLOSE", ImVec2(80, 30)))
-			{
-				ImGui::CloseCurrentPopup();
-			}
+			ImGui::Text("Max image resolution");
+			static int vv[2] = { 4096, 4096 };
+			ImGui::InputInt2("Dimensions :", vv);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Nora needs to allocate memory at start of application and needs to know the max size of an image that will be opened");
+			ImGui::Text("Max Undo Steps :");
+			static int stepNum = 0.0f;
+			ImGui::InputInt("Undo step count", &stepNum, 1, 1);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("RAM is allocated for Undo/Redo operations, To minimize RAM usage set max step count to low value");
+			stepNum = glm::max(stepNum, 10);
+
+			ImGui::Text("Set default export path :");
+			static char poooo[500];
+			ImGui::InputText("Path :", poooo, 500);
+			ImGui::Text("These changes take effect on next application start up");
 			ImGui::EndPopup();
 		}
 
