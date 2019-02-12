@@ -164,12 +164,14 @@
     <ClInclude Include="src\ViewBasedUtilities.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\PreferencesHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\3dmodel.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="glew32.dll" />
     <None Include="Resources\Shaders\brushPreview.fs">
       <Filter>Resource Files</Filter>
     </None>
@@ -212,13 +214,31 @@
     <None Include="Resources\Themes\Blue Ice.nort">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\3D Models\Complex\Suzanne.fbx" />
-    <None Include="Resources\3D Models\Complex\Utah Teapot.fbx" />
-    <None Include="Resources\3D Models\Primitives\Cube.fbx" />
-    <None Include="Resources\3D Models\Primitives\Cylinder.fbx" />
-    <None Include="Resources\3D Models\Primitives\Plane.fbx" />
-    <None Include="Resources\3D Models\Primitives\Sphere.fbx" />
-    <None Include="Resources\3D Models\Primitives\Torus.fbx" />
+    <None Include="Resources\3D Models\Primitives\Cube.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Primitives\Cylinder.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="glew32.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Primitives\Plane.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Primitives\Sphere.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Complex\Suzanne.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Primitives\Torus.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\3D Models\Complex\Utah Teapot.fbx">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Preference\preference.npref" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\UI\toTrayIcon.png">

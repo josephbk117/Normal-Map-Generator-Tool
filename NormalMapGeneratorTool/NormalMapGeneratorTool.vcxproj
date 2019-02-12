@@ -171,6 +171,7 @@
     <ClCompile Include="src\UndoRedoSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\PreferencesHandler.h" />
     <ClInclude Include="src\ModalWindow.h" />
     <ClInclude Include="src\ModelObject.h" />
     <ClInclude Include="src\Camera.h" />
@@ -211,6 +212,7 @@
     <None Include="Resources\3D Models\Primitives\Sphere.fbx" />
     <None Include="Resources\3D Models\Primitives\Torus.fbx" />
     <None Include="Resources\3dmodel.vs" />
+    <None Include="Resources\Preference\preference.npref" />
     <None Include="Resources\Shaders\brushPreview.fs" />
     <None Include="Resources\Shaders\frameBuffer.fs" />
     <None Include="Resources\Shaders\gridLines.fs" />

@@ -1,6 +1,11 @@
 #include "UndoRedoSystem.h"
 #include <iostream>
 
+UndoRedoSystem::UndoRedoSystem()
+{
+
+}
+
 UndoRedoSystem::UndoRedoSystem(unsigned int maxMemoryToAllocate, unsigned int bytesPerSection)
 {
 	this->maxAllocatedMemoryInBytes = maxMemoryToAllocate;
@@ -26,7 +31,8 @@ UndoRedoSystem::UndoRedoSystem(const UndoRedoSystem & undoRedo)
 
 void UndoRedoSystem::updateAllocation(const glm::vec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
 {
-	delete[] data;
+	if (data != nullptr)
+		delete[] data;
 	this->bytesPerSection = sampleImageRes.x * sampleImageRes.y * componentCount;
 	this->maxAllocatedMemoryInBytes = this->bytesPerSection * numberOfUndoSteps;
 	currentSection = 0;
@@ -55,7 +61,6 @@ void UndoRedoSystem::record(unsigned char * data)
 	{
 		std::memcpy(this->data, this->data + bytesPerSection, maxAllocatedMemoryInBytes - bytesPerSection);
 		std::memcpy(this->data + (maxAllocatedMemoryInBytes - bytesPerSection), data, bytesPerSection);
-		std::cout << "\nOut of UNDO/REDO Memory bounds (Upper bound)";
 	}
 	else
 	{
@@ -74,10 +79,7 @@ unsigned char * UndoRedoSystem::retrieve(bool grabPrevious)
 	{
 		--currentSection;
 		if (currentSection - 1 < 0)
-		{
-			std::cout << "\nOut of UNDO/REDO Memory bounds (Lower bound)";
 			currentSection = 1;
-		}
 	}
 	else
 	{

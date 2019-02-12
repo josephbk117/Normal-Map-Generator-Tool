@@ -31,6 +31,7 @@
 #include "ViewBasedUtilities.h"
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
+#include "PreferencesHandler.h"
 
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Add Uniform Buffers
@@ -115,10 +116,11 @@ FileExplorer fileExplorer;
 ModalWindow modalWindow;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
-UndoRedoSystem undoRedoSystem(512 * 512 * 4 * 20, 512 * 512 * 4);
+UndoRedoSystem undoRedoSystem;
 WindowSide windowSideVal;
 
 std::string heightImageLoadLocation = "";
+PreferenceInfo preferencesInfo;
 
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
 char **themeItems = nullptr;
@@ -152,6 +154,11 @@ int main(void)
 	previewFrameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
+
+	PreferencesHandler::init("Resources\\Preference\\preference.npref");
+	preferencesInfo = PreferencesHandler::readPreferences();
+
+	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
 
 	//Windowing related images
 	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
@@ -370,7 +377,12 @@ int main(void)
 		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
 		normalmapPanel.draw();
 
-		static char saveLocation[500] = "C:\\NoraNormalMap.tga";
+		static char saveLocation[500] = { '\0' };
+		if (saveLocation[0] == '\0')
+		{
+			std::memcpy(saveLocation, &preferencesInfo.defaultExportPath[0], preferencesInfo.defaultExportPath.size());
+		}
+
 		if (shouldSaveNormalMap)
 		{
 			ImageFormat imageFormat;
@@ -827,7 +839,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 				heightMapTexData.setTextureDirty();
 				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
-				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
+				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 				undoRedoSystem.record(heightMapTexData.getTextureData());
 			}
 		});
@@ -1271,7 +1283,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 						heightMapTexData.setTextureDirty();
 						normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
-						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), 20);
+						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 						undoRedoSystem.record(heightMapTexData.getTextureData());
 					}
 				});
@@ -1286,24 +1298,35 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
 		if (openPreferences)
 			ImGui::OpenPopup("Preferences");
+		static PreferenceInfo info = preferencesInfo;
+		static int res[2] = { info.maxWidthRes, info.maxHeightRes };
+		static int stepNum = info.maxUndoCount;
+		static char defaultPath[500] = { '\0' };
+		if (defaultPath[0] == '\0')
+			std::memcpy(defaultPath, &info.defaultExportPath[0], info.defaultExportPath.size());
 		if (ImGui::BeginPopupModal("Preferences", &openPreferences, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
 		{
-			ImGui::Text("Max image resolution");
-			static int vv[2] = { 4096, 4096 };
-			ImGui::InputInt2("Dimensions :", vv);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+			ImGui::Text("Max image resolution :");
+
+			ImGui::InputInt2("##Dimensions", &res[0]);
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Nora needs to allocate memory at start of application and needs to know the max size of an image that will be opened");
-			ImGui::Text("Max Undo Steps :");
-			static int stepNum = 0.0f;
-			ImGui::InputInt("Undo step count", &stepNum, 1, 1);
+			ImGui::Text("Max undo Steps :");
+
+			ImGui::InputInt("##Undo step count", &stepNum, 1, 1);
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("RAM is allocated for Undo/Redo operations, To minimize RAM usage set max step count to low value");
 			stepNum = glm::max(stepNum, 10);
-
 			ImGui::Text("Set default export path :");
-			static char poooo[500];
-			ImGui::InputText("Path :", poooo, 500);
+			ImGui::InputText("##Path", defaultPath, 500);
 			ImGui::Text("These changes take effect on next application start up");
+			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+			{
+				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath);
+			}
+			ImGui::PopItemWidth();
+
 			ImGui::EndPopup();
 		}
 

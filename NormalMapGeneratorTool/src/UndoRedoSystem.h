@@ -9,6 +9,7 @@ private:
 	int currentSection = 0;
 	int maxSectionsFilled = 0;
 public:
+	UndoRedoSystem();
 	UndoRedoSystem(unsigned int maxMemoryToAllocate, unsigned int bytesPerSection);
 	UndoRedoSystem(const glm::vec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
 	UndoRedoSystem(const UndoRedoSystem& undoRedo);

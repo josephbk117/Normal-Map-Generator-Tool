@@ -299,7 +299,7 @@ public:
 				std::string num3 = colourValue.substr(intdexOfSecondComma + 1, indexOfThirdComma - (intdexOfSecondComma + 1));
 				std::string num4 = colourValue.substr(indexOfThirdComma + 1);
 
-				ImVec4 col(std::atof(num1.c_str()), std::atof(num2.c_str()), std::atof(num3.c_str()), std::atof(num4.c_str()));
+				ImVec4 col(std::stof(num1), std::stof(num2), std::stof(num3), std::stof(num4));
 				if (colourType == "PrimaryColour")
 				{
 					PrimaryColour = col;
