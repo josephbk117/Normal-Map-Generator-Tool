@@ -212,6 +212,20 @@ public:
 		return themesInDir.size() + 3;
 	}
 
+	void SetupThemeFromName(const std::string & themeName)
+	{
+		if (themeName == "Default")
+			EnableInBuiltTheme(Theme::DEFAULT);
+		else if (themeName == "Dark")
+			EnableInBuiltTheme(Theme::DARK);
+		else if (themeName == "Light")
+			EnableInBuiltTheme(Theme::LIGHT);
+		else
+		{
+			SetThemeFromFile("Resources\\Themes\\" + themeName + ".nort");
+		}
+	}
+
 	void EnableInBuiltTheme(Theme theme)
 	{
 		currentTheme = theme;

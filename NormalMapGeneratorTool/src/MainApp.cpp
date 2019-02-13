@@ -43,7 +43,6 @@
 //TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ], default theme
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
-//TODO : Add texture slots for [ Diffuse & Specular ] in preview in Textured mode
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
 //TODO : Add PBR shader workflow support
@@ -136,18 +135,18 @@ int main(void)
 	glEnable(GL_BLEND);
 
 	SetupImGui();
-	themeManager.Init();
-	themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
-
-	windowSys.SetFrameBufferResizeCallback(framebuffer_size_callback);
-	windowSys.SetScrollCallback(scroll_callback);
-	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
-
 	//Load user preferences
 	PreferencesHandler::init("Resources\\Preference\\preference.npref");
 	preferencesInfo = PreferencesHandler::readPreferences();
 	//Allocate undo/redo memory based on user preferences
 	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
+
+	themeManager.Init();
+	themeManager.SetupThemeFromName("Dark");
+
+	windowSys.SetFrameBufferResizeCallback(framebuffer_size_callback);
+	windowSys.SetScrollCallback(scroll_callback);
+	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 	ModelObject* previewPlane = modelLoader.CreateModelFromFile(PLANE_MODEL_PATH);
@@ -594,6 +593,7 @@ int main(void)
 
 	}
 	//applyPanelChangeThread.join();
+	brushData.textureData.clearRawData();
 
 	delete modelPreviewObj;
 	delete cubeForSkybox;
@@ -1295,46 +1295,6 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
-		if (openPreferences)
-			ImGui::OpenPopup("Preferences");
-		static PreferenceInfo info = preferencesInfo;
-		static int res[2] = { info.maxWidthRes, info.maxHeightRes };
-		static int stepNum = info.maxUndoCount;
-		static char defaultPath[500] = { '\0' };
-		if (defaultPath[0] == '\0')
-			std::memcpy(defaultPath, &info.defaultExportPath[0], info.defaultExportPath.size());
-		if (ImGui::BeginPopupModal("Preferences", &openPreferences, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
-		{
-			ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
-			ImGui::Text("Max image resolution :");
-
-			ImGui::InputInt2("##Dimensions", &res[0]);
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Nora needs to allocate memory at start of application and needs to know the max size of an image that will be opened");
-			ImGui::Text("Max undo Steps :");
-
-			ImGui::InputInt("##Undo step count", &stepNum, 1, 1);
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("RAM is allocated for Undo/Redo operations, To minimize RAM usage set max step count to low value");
-			stepNum = glm::max(stepNum, 10);
-			ImGui::Text("Set default export path :");
-			ImGui::InputText("##Path", defaultPath, 500);
-			ImGui::Text("These changes take effect on next application start up");
-			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
-			{
-				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath);
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Reset to defaults", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
-			{
-				res[0] = 4096;
-				res[1] = 4096;
-				stepNum = 20;
-			}
-			ImGui::PopItemWidth();
-			ImGui::EndPopup();
-		}
 
 		if (ImGui::BeginMenu("Edit"))
 		{
@@ -1362,6 +1322,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
+		static int item_current = 0;
 		if (themeItems == nullptr)
 		{
 			themeItems = new char *[themeManager.getNumberOfThemes()];
@@ -1377,9 +1338,18 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 				std::memcpy(themeItems[i + 3], &val[0], val.size());
 				std::memset(themeItems[i + 3] + (val.size()), '\0', 1);
 			}
+
+			for (int i = 0; i < themeManager.getNumberOfThemes(); i++)
+			{
+				if (themeItems[i] == preferencesInfo.defaultTheme)
+				{
+					item_current = i;
+					break;
+				}
+			}
 		}
 
-		static int item_current = 0;
+
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, themeItems, themeManager.getNumberOfThemes());
@@ -1401,6 +1371,52 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		}
 		prev_item = item_current;
 		ImGui::PopStyleVar();
+
+
+		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
+		if (openPreferences)
+			ImGui::OpenPopup("Preferences");
+		static PreferenceInfo info = preferencesInfo;
+		static int res[2] = { info.maxWidthRes, info.maxHeightRes };
+		static int stepNum = info.maxUndoCount;
+		static char defaultPath[500] = { '\0' };
+		if (defaultPath[0] == '\0')
+			std::memcpy(defaultPath, &info.defaultExportPath[0], info.defaultExportPath.size());
+		if (ImGui::BeginPopupModal("Preferences", &openPreferences, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
+		{
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
+			ImGui::Text("Max image resolution :");
+
+			ImGui::InputInt2("##Dimensions", &res[0]);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Nora needs to allocate memory at start of application and needs to know the max size of an image that will be opened");
+			ImGui::Text("Max undo Steps :");
+			ImGui::InputInt("##Undo step count", &stepNum, 1, 1);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("RAM is allocated for Undo/Redo operations, To minimize RAM usage set max step count to low value");
+			stepNum = glm::max(stepNum, 10);
+			ImGui::Text("Set default export path :");
+			ImGui::InputText("##Path", defaultPath, 500);
+			ImGui::Text("Set default theme :");
+			static int preference_item_current = item_current;
+			ImGui::Combo("##combo", &preference_item_current, themeItems, themeManager.getNumberOfThemes());
+			ImGui::Text("These changes take effect on next application start up");
+			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
+			{
+				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeItems[preference_item_current]));
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset to defaults", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+			{
+				res[0] = 4096;
+				res[1] = 4096;
+				stepNum = 20;
+				preference_item_current = 0;
+			}
+			ImGui::PopItemWidth();
+			ImGui::EndPopup();
+		}
+
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 		ImGui::Indent(windowSys.GetWindowRes().x - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
@@ -1421,10 +1437,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1660,7 +1676,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
@@ -1812,7 +1828,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 						}
 					}
 				}
-				float avg = (neighbourAvg / validEntries);// *0.5f;
+				float avg = (neighbourAvg / validEntries);
 				float finalColor = avg;
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
 				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
