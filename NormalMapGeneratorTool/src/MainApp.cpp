@@ -50,7 +50,6 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Display image resolution and path at bottom
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -144,6 +143,12 @@ int main(void)
 	windowSys.SetScrollCallback(scroll_callback);
 	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
+	//Load user preferences
+	PreferencesHandler::init("Resources\\Preference\\preference.npref");
+	preferencesInfo = PreferencesHandler::readPreferences();
+	//Allocate undo/redo memory based on user preferences
+	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
+
 	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
 	ModelObject* previewPlane = modelLoader.CreateModelFromFile(PLANE_MODEL_PATH);
 
@@ -154,11 +159,6 @@ int main(void)
 	previewFrameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
-
-	PreferencesHandler::init("Resources\\Preference\\preference.npref");
-	preferencesInfo = PreferencesHandler::readPreferences();
-
-	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
 
 	//Windowing related images
 	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
@@ -1321,12 +1321,18 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::Text("Set default export path :");
 			ImGui::InputText("##Path", defaultPath, 500);
 			ImGui::Text("These changes take effect on next application start up");
-			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
 			{
 				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath);
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset to defaults", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+			{
+				res[0] = 4096;
+				res[1] = 4096;
+				stepNum = 20;
+			}
 			ImGui::PopItemWidth();
-
 			ImGui::EndPopup();
 		}
 
@@ -1735,30 +1741,36 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureDat
 
 inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	const float distanceRemap = (0.95f / brushData.brushScale) - 0.01f;
+	//Crashes when drawing with blur at bottom of panel
+
+	const int imageWidth = inputTexData.getRes().x;
+	const int imageHeight = inputTexData.getRes().y;
 	//Temp allocation of image section
+
+	const int clampedStartX = glm::max(startX, 0);
+	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
 
 	const int _width = endX - startX;
 	const int _height = endY - startY;
 	const int totalPixelCount = _width * _height;
 	ColourData *tempPixelData = new ColourData[totalPixelCount];
+	std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
 
 	for (int i = startX; i < endX; i++)
 	{
 		for (int j = startY; j < endY; j++)
 		{
 			int index = (i - startX) * _width + (j - startY);
-			if (index >= 0 && index < totalPixelCount)
+			if (i >= 0 && i <= imageWidth && j <= imageHeight && j >= 0 && index >= 0 && index < totalPixelCount)//if (index >= 0 && index < totalPixelCount && i >= clampedStartX && i < clampedEndX && j >= clampedStartY && j < clampedEndY)
 				tempPixelData[index] = inputTexData.getTexelColor(i, j);
+			else
+				tempPixelData[index] = ColourData(0, 0, 0, 1);
 		}
 	}
 	float xMag = endX - startX;
 	float yMag = endY - startY;
-
-	int clampedStartX = glm::max(startX, 0);
-	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
@@ -1768,46 +1780,54 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 			float y = (j - startY) / yMag;
 			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f));
 			distance = glm::clamp(distance, 0.0f, 1.0f);
-			if (distance < 0.9f)
+			//if (distance < 1.0f)
+			//{
+			int index = (i - startX) * xMag + (j - startY);
+			if (index < 0 || index >= totalPixelCount)
+				continue;
+			if (i - 1 < 0 || i + 1 > imageWidth || j - 1 < 0 || j + 1 > imageHeight)
+				continue;
+
+			float pixelCol = tempPixelData[index].getColour_32_Bit().r;
+			float avg = pixelCol * 0.5f;
+
+			int leftIndex = ((i - 1) - startX) * xMag + (j - startY);
+			int rightIndex = ((i + 1) - startX) * xMag + (j - startY);
+			int topIndex = (i - startX) * xMag + ((j + 1) - startY);
+			int bottomIndex = (i - startX) * xMag + ((j - 1) - startY);
+
+			int topLeftIndex = ((i - 1) - startX) * xMag + ((j + 1) - startY);
+			int bottomLeftIndex = ((i - 1) - startX) * xMag + ((j - 1) - startY);
+			int topRightIndex = ((i + 1) - startX) * xMag + ((j + 1) - startY);
+			int bottomRightIndex = ((i + 1) - startX) * xMag + ((j - 1) - startY);
+
+			if (leftIndex < 0 || rightIndex < 0 || topIndex < 0 || bottomIndex < 0 || topLeftIndex < 0 || bottomLeftIndex < 0 || topRightIndex < 0 || bottomRightIndex < 0)
+				continue;
+			if (leftIndex >= totalPixelCount || rightIndex >= totalPixelCount || topIndex >= totalPixelCount || bottomIndex >= totalPixelCount || topLeftIndex >= totalPixelCount
+				|| bottomLeftIndex >= totalPixelCount || topRightIndex >= totalPixelCount || bottomRightIndex >= totalPixelCount)
+				continue;
+
+			int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
+			//not clamping values based in width and heifhgt of current pixel center
+			float validEntries = 0;
+			float neighbourAvg = 0;
+			for (unsigned int vIndex = 0; vIndex < 8; vIndex++)
 			{
-				int index = (i - startX) * xMag + (j - startY);
-				if (index < 0 || index >= totalPixelCount)
-					continue;
-
-				float pixelCol = tempPixelData[index].getColour_32_Bit().r;
-				float avg = pixelCol * 0.5f;
-
-				int leftIndex = ((i - 1) - startX) * xMag + (j - startY);
-				int rightIndex = ((i + 1) - startX) * xMag + (j - startY);
-				int topIndex = (i - startX) * xMag + ((j + 1) - startY);
-				int bottomIndex = (i - startX) * xMag + ((j - 1) - startY);
-
-				int topLeftIndex = ((i - 1) - startX) * xMag + ((j + 1) - startY);
-				int bottomLeftIndex = ((i - 1) - startX) * xMag + ((j - 1) - startY);
-				int topRightIndex = ((i + 1) - startX) * xMag + ((j + 1) - startY);
-				int bottomRightIndex = ((i + 1) - startX) * xMag + ((j - 1) - startY);
-
-				int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
-				//not clamping values based in width and heifhgt of current pixel center
-				float validEntries = 0;
-				float neighbourAvg = 0;
-				for (unsigned int i = 0; i < 8; i++)
+				if (kernel[vIndex] >= 0 && kernel[vIndex] < totalPixelCount)
 				{
-					if (kernel[i] >= 0 && kernel[i] < totalPixelCount)
-					{
-						validEntries++;
-						neighbourAvg += tempPixelData[kernel[i]].getColour_32_Bit().r;
-					}
+					validEntries++;
+					neighbourAvg += tempPixelData[kernel[vIndex]].getColour_32_Bit().r;
 				}
-				avg += (neighbourAvg / validEntries) * 0.5f;
-				float finalColor = avg;
-				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
-				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
-				ColourData colData;
-				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
-				inputTexData.setTexelColor(colData, i, j);
 			}
+			avg += (neighbourAvg / validEntries) * 0.5f;
+			float finalColor = avg;
+			finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
+			finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
+			ColourData colData;
+			colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
+			inputTexData.setTexelColor(colData, i, j);
 		}
+		//}
 	}
 	delete[] tempPixelData;
 }

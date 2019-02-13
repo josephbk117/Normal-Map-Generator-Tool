@@ -37,6 +37,11 @@ public:
 		savePreferences(info.maxWidthRes, info.maxHeightRes, info.maxUndoCount, info.defaultExportPath);
 	}
 
+	static void setDefaults()
+	{
+		savePreferences(4096, 4096, 20, "C:\\NoraOutput.tga");
+	}
+
 	static PreferenceInfo readPreferences()
 	{
 		std::ifstream file;
