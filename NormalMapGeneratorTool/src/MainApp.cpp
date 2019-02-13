@@ -1535,7 +1535,17 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					float bottom = (curY - convertedBrushScale.y) * maxHeight;
 					float top = (curY + convertedBrushScale.y) * maxHeight;
 
-					//if (left >= 0 && right <= maxWidth && top <= maxHeight && bottom >= 0)
+					//left = glm::clamp(left, 0.0f, maxWidth);
+					//right = glm::clamp(right, 0.0f, maxWidth);
+					//bottom = glm::clamp(bottom, 0.0f, maxHeight);
+					//top = glm::clamp(top, 0.0f, maxHeight);
+
+					//std::cout << "\nLeft :" << left;
+					//std::cout << "\Right :" << right;
+					//std::cout << "\nBottom :" << bottom;
+					//std::cout << "\nTop :" << top;
+
+					//if (left >= 0 && right < maxWidth && top < maxHeight && bottom >= 0)
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
@@ -1755,20 +1765,20 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	const int _width = endX - startX;
 	const int _height = endY - startY;
 	const int totalPixelCount = _width * _height;
-	ColourData *tempPixelData = new ColourData[totalPixelCount];
-	std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
+	ColourData **tempPixelData = new ColourData*[_width];
+	//std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
 
+	int count = 0;
 	for (int i = startX; i < endX; i++)
 	{
+		tempPixelData[i - startX] = new ColourData[_height];
 		for (int j = startY; j < endY; j++)
 		{
-			int index = (i - startX) * _width + (j - startY);
-			if (i >= 0 && i <= imageWidth && j <= imageHeight && j >= 0 && index >= 0 && index < totalPixelCount)//if (index >= 0 && index < totalPixelCount && i >= clampedStartX && i < clampedEndX && j >= clampedStartY && j < clampedEndY)
-				tempPixelData[index] = inputTexData.getTexelColor(i, j);
-			else
-				tempPixelData[index] = ColourData(0, 0, 0, 1);
+			if (i >= clampedStartX && i < clampedEndX && j >= clampedStartY && j < clampedEndY)
+				tempPixelData[i - startX][j - startY] = inputTexData.getTexelColor(i, j);
 		}
 	}
+
 	float xMag = endX - startX;
 	float yMag = endY - startY;
 
@@ -1780,56 +1790,42 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 			float y = (j - startY) / yMag;
 			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f));
 			distance = glm::clamp(distance, 0.0f, 1.0f);
-			//if (distance < 1.0f)
-			//{
-			int index = (i - startX) * xMag + (j - startY);
-			if (index < 0 || index >= totalPixelCount)
-				continue;
-			if (i - 1 < 0 || i + 1 > imageWidth || j - 1 < 0 || j + 1 > imageHeight)
-				continue;
-
-			float pixelCol = tempPixelData[index].getColour_32_Bit().r;
-			float avg = pixelCol * 0.5f;
-
-			int leftIndex = ((i - 1) - startX) * xMag + (j - startY);
-			int rightIndex = ((i + 1) - startX) * xMag + (j - startY);
-			int topIndex = (i - startX) * xMag + ((j + 1) - startY);
-			int bottomIndex = (i - startX) * xMag + ((j - 1) - startY);
-
-			int topLeftIndex = ((i - 1) - startX) * xMag + ((j + 1) - startY);
-			int bottomLeftIndex = ((i - 1) - startX) * xMag + ((j - 1) - startY);
-			int topRightIndex = ((i + 1) - startX) * xMag + ((j + 1) - startY);
-			int bottomRightIndex = ((i + 1) - startX) * xMag + ((j - 1) - startY);
-
-			if (leftIndex < 0 || rightIndex < 0 || topIndex < 0 || bottomIndex < 0 || topLeftIndex < 0 || bottomLeftIndex < 0 || topRightIndex < 0 || bottomRightIndex < 0)
-				continue;
-			if (leftIndex >= totalPixelCount || rightIndex >= totalPixelCount || topIndex >= totalPixelCount || bottomIndex >= totalPixelCount || topLeftIndex >= totalPixelCount
-				|| bottomLeftIndex >= totalPixelCount || topRightIndex >= totalPixelCount || bottomRightIndex >= totalPixelCount)
-				continue;
-
-			int kernel[] = { leftIndex, rightIndex, topIndex, bottomIndex, topLeftIndex, bottomLeftIndex, topRightIndex, bottomRightIndex };
-			//not clamping values based in width and heifhgt of current pixel center
-			float validEntries = 0;
-			float neighbourAvg = 0;
-			for (unsigned int vIndex = 0; vIndex < 8; vIndex++)
+			if (distance < 1.0f)
 			{
-				if (kernel[vIndex] >= 0 && kernel[vIndex] < totalPixelCount)
+				if (i - 1 < startX || i + 1 > endX || j - 1 < startY || j + 1 > endY)
+					continue;
+
+				float pixelCol = tempPixelData[i - startX][j - startY].getColour_32_Bit().r;
+				float validEntries = 0;
+				float neighbourAvg = 0;
+
+				for (int xoffset = -1; xoffset <= 1; xoffset++)
 				{
-					validEntries++;
-					neighbourAvg += tempPixelData[kernel[vIndex]].getColour_32_Bit().r;
+					for (int yoffset = -1; yoffset <= 1; yoffset++)
+					{
+						int xIndex = (i + xoffset) - startX;
+						int yIndex = (j + yoffset) - startY;
+						if (xIndex >= 0 && xIndex < _width && yIndex >= 0 && yIndex < _height)
+						{
+							validEntries++;
+							neighbourAvg += tempPixelData[xIndex][yIndex].getColour_32_Bit().r;
+						}
+					}
 				}
+				float avg = (neighbourAvg / validEntries);// *0.5f;
+				float finalColor = avg;
+				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
+				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
+				ColourData colData;
+				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
+				inputTexData.setTexelColor(colData, i, j);
 			}
-			avg += (neighbourAvg / validEntries) * 0.5f;
-			float finalColor = avg;
-			finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
-			finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
-			ColourData colData;
-			colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
-			inputTexData.setTexelColor(colData, i, j);
 		}
-		//}
 	}
+	for (int i = 0; i < _width; i++)
+		delete[] tempPixelData[i];
 	delete[] tempPixelData;
+	tempPixelData = nullptr;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
