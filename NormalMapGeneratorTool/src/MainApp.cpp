@@ -49,6 +49,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Add matcap view
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 

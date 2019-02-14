@@ -216,6 +216,23 @@ vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffs
 	return norm;
 }
 
+vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten)
+{
+	//float NdotL = dot(normal, lightDir) * 0.5 + 0.5;
+	//float NdotE = dot(normal, viewDir);
+	//vec2 uv = vec2(NdotE, NdotL);
+	//return texture(tex, uv);//vec4(NdotE, NdotL, 0,1.0);
+	
+	vec3 r = reflect( viewDir, normal );
+	float m = 2.0 * sqrt(pow(r.x, 2.0 ) + pow(r.y, 2.0 ) + pow(r.z + 1.0, 2.0));
+	vec2 vN = (r.xy / m + .5);
+
+	vec4 base = texture(tex, vN);//vec4( vN.x, vN.y, 0, 1);
+	//base.rgb /= (base.rgb + 0.9);
+	base.rgb = pow(base.rgb, vec3(1.0/2.2));
+	return base;
+}
+
 void main()
 {
 	if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
@@ -239,23 +256,42 @@ void main()
 
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
+			/*
+			vec3 color = texture(floorTexture, fs_in.TexCoords).rgb;
+			// ambient
+			vec3 ambient = 0.05 * color;
+			// diffuse
+			vec3 lightDir = normalize(lightPos - fs_in.FragPos);
+			vec3 normal = normalize(fs_in.Normal);
+			float diff = max(dot(lightDir, normal), 0.0);
+			vec3 diffuse = diff * color;
+			// specular
+			vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+			vec3 reflectDir = reflect(-lightDir, normal);
+			float spec = 0.0;
+			*/
+
+
 			norm = normalize(TBN * norm);
-			float dotVal = max(dot(normalize(lightPos), norm), 0.0);
+			vec3 lightDir = normalize(lightPos - FragPos);
+			vec3 viewDir = normalize(_CameraPosition - FragPos);
+
+			float dotVal = max(dot(lightDir, norm), 0.0);
 
 			vec3 diffuse = diffuseColour * ((_normalMapModeOn == 4)?texture(inTexture2, TexCoords).rgb:vec3(1));
 			vec3 ambient = diffuse * 0.1;
-
 			diffuse *=  lightColour * dotVal;
 
 			// specular
-			vec3 viewDir = normalize(_CameraPosition - FragPos);
-			vec3 reflectDir = reflect(-normalize(lightPos), norm);  
-			float spec = pow(max(dot(viewDir, reflectDir), 0.0), _Specularity) * _SpecularStrength;
+			vec3 reflectDir = reflect(-lightDir, norm);
+			vec3 halfwayDir = normalize(lightDir + viewDir);
+
+			float spec = pow(max(dot(norm, halfwayDir), 0.0), _Specularity) * _SpecularStrength;
 			float specTex = texture(inTexture3, TexCoords).r;
 			vec3 specular = lightColour * spec * specTex;
 
-			float distance    = length(lightPos - FragPos);
-			float attenuation = 2.0 / (2.0 + (1.0/_LightIntensity) * (distance * distance));
+			float distance   = length(lightPos - FragPos);
+			float attenuation = 1.0 / (0.001 + (1.0/_LightIntensity) * (distance * distance));
 
 			diffuse  *= attenuation;
 			specular *= attenuation;
@@ -264,12 +300,17 @@ void main()
 			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
 			vec3 result = mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular;
 			//result = result/(result + vec3(1.0));
-			result = pow(result, vec3(1.0/2.2));
-			FragColor = vec4(result, 1.0);//PBR_Colour(norm, _CameraPosition, FragPos, vec3(1,1,1), 1.0, 0.2, lightPos);//vec4(result, 1.0);
+			result = pow(result, vec3(1.0/2.2) );
+			FragColor = vec4(result, 1.0); //PBR_Colour(norm, _CameraPosition, FragPos, vec3(1,1,1), 1.0, 0.2, lightPos);//vec4(result, 1.0);
 		}
         else
 		{
             FragColor = vec4(norm * 0.5 + 0.5, 1.0);
+			//norm = normalize(TBN * norm);
+			//vec3 viewDir = normalize(_CameraPosition - FragPos);
+			//vec3 lightDir = normalize(lightPos - FragPos);
+
+			//FragColor = LightingRamp( lightDir , viewDir, norm, inTexture2, 1.0);
 		}
     }
     else if(_normalMapModeOn == 3)
