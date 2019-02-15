@@ -1215,7 +1215,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Checkbox("Use Matcap", &ff);
 
 
-		const char* matcapItems[] = { "chrome", "copper", "muscle", "organic1", "organic2", "organic3", "organic4" };
+		const char* matcapItems[] = { "chrome", "copper", "muscle", "organic1", "organic2", "organic3", "organic4", 
+			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2"};
 		static const char* current_matcap_item = matcapItems[0];
 		if (ImGui::BeginCombo("##matcapcombo", current_matcap_item)) // The second parameter is the label previewed before opening the combo.
 		{

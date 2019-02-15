@@ -226,12 +226,15 @@ vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float
 	
 	vec3 r = reflect( viewDir, normal );
 	float m = 2.0 * sqrt(pow(r.x, 2.0 ) + pow(r.y, 2.0 ) + pow(r.z + 1.0, 2.0));
-	vec2 vN = (r.xy / m + .5);
+	vec2 vN = (r.xy / m + 0.5);
 
-	vec4 base = texture(tex, vN);//vec4( vN.x, vN.y, 0, 1);
-	//base.rgb /= (base.rgb + 0.9);
-	base.rgb = pow(base.rgb, vec3(1.0/2.2));
-	return base;
+	//viewDir = viewDir*normal;
+	vN = normal.xy * 0.5 + 0.5;
+	vN.y =1.0 - vN.y;
+
+	vec3 base = texture(tex, vN).rgb;
+	base = pow(base, vec3(1.0/2.2));
+	return vec4(base, 1.0);
 }
 
 void main()
@@ -257,22 +260,6 @@ void main()
 
         if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
 		{
-			/*
-			vec3 color = texture(floorTexture, fs_in.TexCoords).rgb;
-			// ambient
-			vec3 ambient = 0.05 * color;
-			// diffuse
-			vec3 lightDir = normalize(lightPos - fs_in.FragPos);
-			vec3 normal = normalize(fs_in.Normal);
-			float diff = max(dot(lightDir, normal), 0.0);
-			vec3 diffuse = diff * color;
-			// specular
-			vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-			vec3 reflectDir = reflect(-lightDir, normal);
-			float spec = 0.0;
-			*/
-
-
 			norm = normalize(TBN * norm);
 			vec3 lightDir = normalize(lightPos - FragPos);
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
@@ -288,7 +275,7 @@ void main()
 			vec3 halfwayDir = normalize(lightDir + viewDir);
 
 			float spec = pow(max(dot(norm, halfwayDir), 0.0), _Specularity) * _SpecularStrength;
-			float specTex = texture(inTexture3, TexCoords).r;
+			float specTex = (_normalMapModeOn == 4)?texture(inTexture3, TexCoords).r : 1;
 			vec3 specular = lightColour * spec * specTex;
 
 			float distance   = length(lightPos - FragPos);
@@ -307,7 +294,12 @@ void main()
         else
 		{
             //FragColor = vec4(norm * 0.5 + 0.5, 1.0);
-			norm = normalize(TBN * norm);
+			mat3 conTBN;
+			conTBN[0] = TBN[0];
+			conTBN[1] = TBN[1];
+			conTBN[2] = Normal;
+
+			norm = normalize(conTBN * norm);
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
 			vec3 lightDir = normalize(lightPos - FragPos);
 
