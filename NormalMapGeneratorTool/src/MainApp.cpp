@@ -1206,23 +1206,20 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 
 	ImGui::PopStyleVar();
 
-	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
+	if (previewStateUtility.modelViewMode == 1)
 	{
-		ImGui::Text("LIGHTING SETTINGS");
+		ImGui::Text("MATCAP SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
-		static bool ff = false;
-		ImGui::Checkbox("Use Matcap", &ff);
-
-
-		const char* matcapItems[] = { "chrome", "copper", "muscle", "organic1", "organic2", "organic3", "organic4", 
-			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2"};
+		const char* matcapItems[] = { "chrome", "copper", "organic1", "organic3", "organic4",
+			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2" };
 		static const char* current_matcap_item = matcapItems[0];
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
 		if (ImGui::BeginCombo("##matcapcombo", current_matcap_item)) // The second parameter is the label previewed before opening the combo.
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(matcapItems); n++)
 			{
-				bool is_selected = (current_matcap_item == matcapItems[n]); // You can store your selection however you want, outside or inside your objects
+				bool is_selected = (current_matcap_item == matcapItems[n]);
 				if (ImGui::Selectable(matcapItems[n], is_selected))
 				{
 					current_matcap_item = matcapItems[n];
@@ -1234,8 +1231,13 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			}
 			ImGui::EndCombo();
 		}
+		ImGui::PopItemWidth();
+	}
 
-
+	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
+	{
+		ImGui::Text("LIGHTING SETTINGS");
+		ImGui::Separator();
 		ImGui::Spacing();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 		ImGui::SliderFloat("##Horizontal Position", &previewStateUtility.lightLocation.x, -3.141f, 3.141f, "Horizontal position: %.2f");

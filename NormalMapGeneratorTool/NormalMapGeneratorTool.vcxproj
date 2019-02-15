@@ -240,9 +240,7 @@
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga" />
     <Image Include="Resources\Textures\Matcaps\chrome.png" />
     <Image Include="Resources\Textures\Matcaps\copper.png" />
-    <Image Include="Resources\Textures\Matcaps\muscle.png" />
     <Image Include="Resources\Textures\Matcaps\organic1.png" />
-    <Image Include="Resources\Textures\Matcaps\organic2.png" />
     <Image Include="Resources\Textures\Matcaps\organic3.png" />
     <Image Include="Resources\Textures\Matcaps\organic4.png" />
     <Image Include="Resources\Textures\Matcaps\outline1.png" />

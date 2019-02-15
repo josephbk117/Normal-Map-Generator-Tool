@@ -304,13 +304,7 @@
     <Image Include="Resources\Textures\Matcaps\copper.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="Resources\Textures\Matcaps\muscle.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Resources\Textures\Matcaps\organic1.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Textures\Matcaps\organic2.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\Textures\Matcaps\organic3.png">
