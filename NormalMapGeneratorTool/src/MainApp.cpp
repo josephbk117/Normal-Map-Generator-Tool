@@ -62,6 +62,7 @@ const std::string VERSION_NAME = "v1.1 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
+const std::string MATCAP_TEXTURES_PATH = "Resources\\Textures\\Matcaps\\";
 const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
 const std::string BRUSH_TEXTURES_PATH = "Resources\\Brushes\\";
 const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
@@ -109,6 +110,8 @@ BrushData brushData;
 TextureData heightMapTexData;
 TextureData diffuseTexDataForPreview;
 TextureData specularTexDataForPreview;
+TextureData matcapTexDataForPreview;
+
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer fileExplorer;
@@ -182,6 +185,7 @@ int main(void)
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
 	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
 	specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall specular.png"));
+	matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
 	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
 	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "wall height.png", heightMapTexData);
@@ -257,6 +261,7 @@ int main(void)
 	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
 	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
 	int modelSpecularMapTextureUniform = modelViewShader.getUniformLocation("inTexture3");
+	int modelMatcapTextureUniform = modelViewShader.getUniformLocation("inTexture4");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 
@@ -479,7 +484,8 @@ int main(void)
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
 		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
 		modelViewShader.applyShaderInt(modelSpecularMapTextureUniform, 2);
-		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 3);
+		modelViewShader.applyShaderInt(modelMatcapTextureUniform, 3);
+		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 4);
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
@@ -492,6 +498,8 @@ int main(void)
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, specularTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, matcapTexDataForPreview.GetTexId());
+		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
@@ -1203,6 +1211,31 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("LIGHTING SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
+		static bool ff = false;
+		ImGui::Checkbox("Use Matcap", &ff);
+
+
+		const char* matcapItems[] = { "chrome", "copper", "muscle", "organic1", "organic2", "organic3", "organic4" };
+		static const char* current_matcap_item = matcapItems[0];
+		if (ImGui::BeginCombo("##matcapcombo", current_matcap_item)) // The second parameter is the label previewed before opening the combo.
+		{
+			for (int n = 0; n < IM_ARRAYSIZE(matcapItems); n++)
+			{
+				bool is_selected = (current_matcap_item == matcapItems[n]); // You can store your selection however you want, outside or inside your objects
+				if (ImGui::Selectable(matcapItems[n], is_selected))
+				{
+					current_matcap_item = matcapItems[n];
+					std::string matcapPath = MATCAP_TEXTURES_PATH + current_matcap_item + ".png";
+					matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(matcapPath));
+				}
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+
+		ImGui::Spacing();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 		ImGui::SliderFloat("##Horizontal Position", &previewStateUtility.lightLocation.x, -3.141f, 3.141f, "Horizontal position: %.2f");
 		ImGui::SliderFloat("##Vertical position", &previewStateUtility.lightLocation.y, -3.141f, 3.141f, "Vertical position: %.2f");
@@ -1438,10 +1471,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1677,7 +1710,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 

@@ -9,6 +9,7 @@ in mat3 TBN;
 uniform sampler2D inTexture;
 uniform sampler2D inTexture2;
 uniform sampler2D inTexture3;
+uniform sampler2D inTexture4;
 
 uniform samplerCube skybox;
 uniform vec3 diffuseColour;
@@ -305,12 +306,12 @@ void main()
 		}
         else
 		{
-            FragColor = vec4(norm * 0.5 + 0.5, 1.0);
-			//norm = normalize(TBN * norm);
-			//vec3 viewDir = normalize(_CameraPosition - FragPos);
-			//vec3 lightDir = normalize(lightPos - FragPos);
+            //FragColor = vec4(norm * 0.5 + 0.5, 1.0);
+			norm = normalize(TBN * norm);
+			vec3 viewDir = normalize(_CameraPosition - FragPos);
+			vec3 lightDir = normalize(lightPos - FragPos);
 
-			//FragColor = LightingRamp( lightDir , viewDir, norm, inTexture2, 1.0);
+			FragColor = LightingRamp( lightDir , viewDir, norm, inTexture4, 1.0);
 		}
     }
     else if(_normalMapModeOn == 3)
