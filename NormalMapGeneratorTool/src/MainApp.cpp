@@ -40,7 +40,6 @@
 //TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
-//TODO : Add preferences tab : max undo slots, max image size(requires app restart), export image size [ any resolution / percentage of current resolution ], default theme
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Fix memory error while using custom brush texture and exit the application
@@ -49,7 +48,6 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Add matcap view
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -124,7 +122,7 @@ WindowSide windowSideVal;
 std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
 
-unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId;
+unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // Window ui textureIds
 char **themeItems = nullptr;
 
 int main(void)
@@ -384,9 +382,7 @@ int main(void)
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
-		{
 			std::memcpy(saveLocation, &preferencesInfo.defaultExportPath[0], preferencesInfo.defaultExportPath.size());
-		}
 
 		if (shouldSaveNormalMap)
 		{
@@ -636,7 +632,6 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Toggle Fullscreen (Ctrl + T)");
 	ImGui::SameLine();
-	//ImGui::Spacing();
 	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
 		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
@@ -757,8 +752,8 @@ void SetupImGui()
 	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.GetWindow(), true);
 	ImGui_ImplOpenGL2_Init();
 
-	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 16.0f);
-	menuBarLargerText = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\arial.ttf", 18.0f);
+	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
+	menuBarLargerText = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 18.0f);
 
 	modalWindow.setTitleFont(menuBarLargerText);
 

@@ -346,4 +346,7 @@
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="Resources\Fonts\Roboto-Medium.ttf" />
+  </ItemGroup>
 </Project>
