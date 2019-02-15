@@ -340,6 +340,42 @@
     <Image Include="Resources\Textures\Matcaps\skin2.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\Brushes\Grunge\Crumble 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Crumble 2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Crumble 3.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 3.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 4.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Patterns\Chain 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Patterns\Chain 2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Patterns\Chain 3.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Patterns\Chain 4.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Brushes\Patterns\Floral 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

@@ -232,6 +232,18 @@
     <Image Include="Nora.ico">
       <FileType>Image</FileType>
     </Image>
+    <Image Include="Resources\Brushes\Grunge\Crumble 1.png" />
+    <Image Include="Resources\Brushes\Grunge\Crumble 2.png" />
+    <Image Include="Resources\Brushes\Grunge\Crumble 3.png" />
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 1.png" />
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 2.png" />
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 3.png" />
+    <Image Include="Resources\Brushes\Grunge\Dirt Sploch 4.png" />
+    <Image Include="Resources\Brushes\Patterns\Chain 1.png" />
+    <Image Include="Resources\Brushes\Patterns\Chain 2.png" />
+    <Image Include="Resources\Brushes\Patterns\Chain 3.png" />
+    <Image Include="Resources\Brushes\Patterns\Chain 4.png" />
+    <Image Include="Resources\Brushes\Patterns\Floral 1.png" />
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_bk.tga" />
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_dn.tga" />
     <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_ft.tga" />
