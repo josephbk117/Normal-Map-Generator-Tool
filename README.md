@@ -1,6 +1,6 @@
 # Nora, The Normal Map Generator Tool
 It's a normal map generator / editor tool.
-### Get the latest version here : [Nora-Normal Map Editor](https://github.com/josephbk117/Normal-Map-Generator-Tool/releases) 
+### Get the latest version here : [Nora Normal Map Editor](https://github.com/josephbk117/Normal-Map-Generator-Tool/releases) 
 
 Takes height map information which is usually gray scale ( Height map data ) and converts that data into normal map data which then can be further edited and exported.
 
@@ -9,7 +9,10 @@ Takes height map information which is usually gray scale ( Height map data ) and
 * Model formats supported : OBJ & FBX
 * Custom brushes can be added easily by adding them in the Resources\Brushes
 * Custom themes can be added by adding custom .nort theme files in Resources\Themes
-* Extensive preview capabilities
+* Extensive preview capabilities:
+  * Matcaps
+  * Lit
+  * Textured and lit
 
 *Disclaimer : Can be used in production but look out for the rare bug here and there*
 
@@ -30,7 +33,7 @@ This is a real-time preview of how the texture will look once applied on the mod
 
 ![Image of Nora normal map editor](https://i.imgur.com/BoIjEQj.png)
 
-## Roadmap of upcoming features:
+## Planned / Completed features :
 - Editor Functionality:
   - Better brush drawing performance and functionality
   - Blur improvements
@@ -44,10 +47,10 @@ This is a real-time preview of how the texture will look once applied on the mod
   - Adding PBR support along with Metalness map, Roughness map & Occlusion map
   - Custom shader display option ( Allows custom viewing of model in preview )
   - Better user interaction with preview UI
-  - Adding more base models for preview
+  - [X] Adding more base models for preview (completed as of v1.1)
   - Adding infinite plane with shadows in Lighting / Textured view ( Which can be toggled )
   - Additional lighting options:
-    - Directional light with option for colour and strength of light as well as visual indication of the directional light
+    - [X] Directional light with option for colour and strength of light as well as visual indication of the directional light (completed as of v1.1)
     - Having a point light ( Only 1 ) with linear and exponential attenuation multiplier customization along with colour and strength 
     - Adding IBL ( Image based lighting )
 - Covering more map types ( Technically, Nora will always be a normal map editor at heart :grin: ):
@@ -64,7 +67,7 @@ This is a real-time preview of how the texture will look once applied on the mod
       - File type
       - Last modified time
       - If image file then preview shown
-  - Adding preferences window:
+  - [X] Adding preferences window (completed as of v1.1):
     - Set max resolution image that can be edited ( Larger max image resolution takes more RAM )
     - Adding max number undo steps
     - Set the default theme
