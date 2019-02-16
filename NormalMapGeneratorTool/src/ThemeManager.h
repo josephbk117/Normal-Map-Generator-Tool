@@ -14,6 +14,7 @@ private:
 	enum class Theme;
 	Theme currentTheme = Theme::DEFAULT;
 	std::vector<std::string> themesInDir;
+	char** themeItems = nullptr;
 	void StyleColorsLight()
 	{
 		ImGuiStyle* style = &ImGui::GetStyle();
@@ -226,6 +227,26 @@ public:
 		}
 	}
 
+	char** getRawData()
+	{
+		if (themeItems == nullptr)
+		{
+			themeItems = new char *[getNumberOfThemes()];
+			themeItems[0] = new char[8]{ 'D','e','f','a', 'u', 'l', 't' };
+			themeItems[1] = new char[5]{ 'D','a','r','k' };
+			themeItems[2] = new char[6]{ 'L','i','g','h', 't' };
+
+			std::vector<std::string> loadedThemes = GetAllLoadedThemes();
+			for (int i = 0; i < loadedThemes.size(); i++)
+			{
+				std::string val = loadedThemes[i];
+				themeItems[i + 3] = new char[val.size()];
+				std::memcpy(themeItems[i + 3], &val[0], val.size());
+			}
+		}
+		return themeItems;
+	}
+
 	void EnableInBuiltTheme(Theme theme)
 	{
 		currentTheme = theme;
@@ -370,5 +391,12 @@ public:
 			myfile.close();
 		}
 		StyleColorsDark();
+	}
+
+	~ThemeManager()
+	{
+		for (int i = 0; i < getNumberOfThemes(); i++)
+			delete[] themeItems[i];
+		delete[] themeItems;
 	}
 };

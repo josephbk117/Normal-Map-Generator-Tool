@@ -123,7 +123,6 @@ std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
 
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // Window ui textureIds
-char **themeItems = nullptr;
 
 int main(void)
 {
@@ -611,7 +610,6 @@ int main(void)
 	delete modelPreviewObj;
 	delete cubeForSkybox;
 	delete previewPlane;
-	delete[] themeItems;
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -1369,42 +1367,15 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		}
 
 		static int item_current = 0;
-		if (themeItems == nullptr)
-		{
-			themeItems = new char *[themeManager.getNumberOfThemes()];
-			themeItems[0] = new char[8]{ 'D','e','f','a', 'u', 'l', 't' };
-			themeItems[1] = new char[5]{ 'D','a','r','k' };
-			themeItems[2] = new char[6]{ 'L','i','g','h', 't' };
-
-			std::vector<std::string> loadedThemes = themeManager.GetAllLoadedThemes();
-			for (int i = 0; i < loadedThemes.size(); i++)
-			{
-				std::string val = loadedThemes[i];
-				themeItems[i + 3] = new char[val.size()];
-				std::memcpy(themeItems[i + 3], &val[0], val.size());
-				std::memset(themeItems[i + 3] + (val.size()), '\0', 1);
-			}
-
-			for (int i = 0; i < themeManager.getNumberOfThemes(); i++)
-			{
-				if (themeItems[i] == preferencesInfo.defaultTheme)
-				{
-					item_current = i;
-					break;
-				}
-			}
-		}
-
-
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
-		ImGui::Combo("##combo", &item_current, themeItems, themeManager.getNumberOfThemes());
+		ImGui::Combo("##combo", &item_current, themeManager.getRawData(), themeManager.getNumberOfThemes());
 		ImGui::PopItemWidth();
 		ImGui::PopFont();
 		if (prev_item != item_current)
 		{
 			if (item_current >= 3)
-				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(themeItems[item_current]) + ".nort"));
+				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(themeManager.getRawData()[item_current]) + ".nort"));
 			else
 			{
 				if (item_current == 0)
@@ -1445,11 +1416,11 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::InputText("##Path", defaultPath, 500);
 			ImGui::Text("Set default theme :");
 			static int preference_item_current = item_current;
-			ImGui::Combo("##combo", &preference_item_current, themeItems, themeManager.getNumberOfThemes());
+			ImGui::Combo("##combo", &preference_item_current, themeManager.getRawData(), themeManager.getNumberOfThemes());
 			ImGui::Text("These changes take effect on next application start up");
 			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
 			{
-				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeItems[preference_item_current]));
+				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeManager.getRawData()[preference_item_current]));
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Reset to defaults", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
@@ -1596,18 +1567,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					float right = (curX + convertedBrushScale.x) * maxWidth;
 					float bottom = (curY - convertedBrushScale.y) * maxHeight;
 					float top = (curY + convertedBrushScale.y) * maxHeight;
-
-					//left = glm::clamp(left, 0.0f, maxWidth);
-					//right = glm::clamp(right, 0.0f, maxWidth);
-					//bottom = glm::clamp(bottom, 0.0f, maxHeight);
-					//top = glm::clamp(top, 0.0f, maxHeight);
-
-					//std::cout << "\nLeft :" << left;
-					//std::cout << "\Right :" << right;
-					//std::cout << "\nBottom :" << bottom;
-					//std::cout << "\nTop :" << top;
-
-					//if (left >= 0 && right < maxWidth && top < maxHeight && bottom >= 0)
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
