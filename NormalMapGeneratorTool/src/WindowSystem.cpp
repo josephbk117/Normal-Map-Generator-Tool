@@ -14,6 +14,9 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 	glfwWindowHint(GLFW_DECORATED, false);
 #endif
+	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 	window = glfwCreateWindow(windowRes.x, windowRes.y, windowTitle.c_str(), NULL, NULL);
 	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowRes.x = videoMode->width;
@@ -34,6 +37,11 @@ void WindowSystem::SetFrameBufferResizeCallback(void(*func)(GLFWwindow *, int, i
 void WindowSystem::SetScrollCallback(void(*func)(GLFWwindow *, double, double))
 {
 	glfwSetScrollCallback(window, func);
+}
+
+const int WindowSystem::GetMinWindowSize()
+{
+	return WINDOW_SIZE_MIN;
 }
 
 bool WindowSystem::IsKeyPressed(int key)

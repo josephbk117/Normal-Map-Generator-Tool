@@ -119,6 +119,7 @@ void ShaderProgram::compileShader(const std::string & filePath, unsigned int ID)
 	{
 		perror(filePath.c_str());
 		std::cout << "ERROR : file : " << filePath << " couldnt be loaded";
+		return;
 	}
 	std::string fileContents = "";
 	std::string line;

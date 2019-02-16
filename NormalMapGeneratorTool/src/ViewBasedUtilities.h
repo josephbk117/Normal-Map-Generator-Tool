@@ -7,6 +7,7 @@ public:
 	float modelRoughness = 5.0f;
 	float modelReflectivity = 0.0f;
 	int modelViewMode = 2;
+	bool useMatcap = false;
 	glm::vec2 lightLocation = glm::vec2(0.0f, 0.0f);
 	float lightIntensity = 2.5f;
 	glm::vec3 diffuseColour = glm::vec3(1, 1, 1);

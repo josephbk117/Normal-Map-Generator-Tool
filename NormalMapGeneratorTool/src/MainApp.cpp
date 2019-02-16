@@ -48,6 +48,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Unassigned texture will be set to white as default
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -61,9 +62,9 @@ const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
 const std::string MATCAP_TEXTURES_PATH = "Resources\\Textures\\Matcaps\\";
-const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Cubemap Textures\\";
+const std::string CUBEMAP_TEXTURES_PATH = "Resources\\Textures\\Cubemaps\\";
 const std::string BRUSH_TEXTURES_PATH = "Resources\\Brushes\\";
-const std::string UI_TEXTURES_PATH = "Resources\\UI\\";
+const std::string UI_TEXTURES_PATH = "Resources\\Textures\\UI\\";
 const std::string SHADERS_PATH = "Resources\\Shaders\\";
 const std::string PRIMITIVE_MODELS_PATH = "Resources\\3D Models\\Primitives\\";
 const std::string COMPLEX_MODELS_PATH = "Resources\\3D Models\\Complex\\";
@@ -73,7 +74,6 @@ const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.fbx";
 const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.fbx";
 const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.fbx";
 
-const int WINDOW_SIZE_MIN = 480;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
@@ -186,7 +186,7 @@ int main(void)
 	matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
 	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
-	TextureManager::getTextureDataFromFile(TEXTURES_PATH + "wall height.png", heightMapTexData);
+	TextureManager::getTextureDataFromFile(heightImageLoadLocation, heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
@@ -262,6 +262,7 @@ int main(void)
 	int modelMatcapTextureUniform = modelViewShader.getUniformLocation("inTexture4");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
+	int modelUseMatcapUniform = modelViewShader.getUniformLocation("_Use_Matcap");
 
 	//Gridlines uniforms
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
@@ -486,6 +487,8 @@ int main(void)
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
 		modelViewShader.applyShaderBool(modelMethodIndexUniform, normalViewStateUtility.methodIndex);
+
+		modelViewShader.applyShaderBool(modelUseMatcapUniform, previewStateUtility.useMatcap);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
@@ -1066,7 +1069,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
-	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 305, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 300, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 	static bool isPreviewOpen = true;
@@ -1206,7 +1209,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("MATCAP SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
-		const char* matcapItems[] = { "chrome", "copper", "organic1", "organic3", "organic4",
+		const char* matcapItems[] = { "none", "view space normal", "orange flame", "chrome", "copper", "organic1", "organic3", "organic4",
 			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2" };
 		static const char* current_matcap_item = matcapItems[0];
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
@@ -1218,8 +1221,14 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				if (ImGui::Selectable(matcapItems[n], is_selected))
 				{
 					current_matcap_item = matcapItems[n];
-					std::string matcapPath = MATCAP_TEXTURES_PATH + current_matcap_item + ".png";
-					matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(matcapPath));
+					if (current_matcap_item == "none")
+						previewStateUtility.useMatcap = false;
+					else
+					{
+						previewStateUtility.useMatcap = true;
+						std::string matcapPath = MATCAP_TEXTURES_PATH + current_matcap_item + ".png";
+						matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(matcapPath));
+					}
 				}
 				if (is_selected)
 					ImGui::SetItemDefaultFocus();
@@ -1878,8 +1887,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	width = glm::clamp(width, WINDOW_SIZE_MIN, (int)windowSys.GetMaxWindowRes().x);
-	height = glm::clamp(height, WINDOW_SIZE_MIN, (int)windowSys.GetMaxWindowRes().y);
+	width = glm::clamp(width, windowSys.GetMinWindowSize(), (int)windowSys.GetMaxWindowRes().x);
+	height = glm::clamp(height, windowSys.GetMinWindowSize(), (int)windowSys.GetMaxWindowRes().y);
 
 	windowSys.SetWindowRes(width, height);
 	fbs.updateTextureDimensions(windowSys.GetWindowRes());

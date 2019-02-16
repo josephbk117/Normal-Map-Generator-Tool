@@ -29,6 +29,7 @@ public:
 	void Minimize();
 	const GLFWvidmode* GetVideoMode();
 	const GLFWwindow* GetWindow();
+	const int GetMinWindowSize();
 	void SetWindowRes(const glm::vec2 &res);
 	void SetWindowRes(int windowWidth, int windowHeight);
 	void SetFullscreen(bool isFullscreen);

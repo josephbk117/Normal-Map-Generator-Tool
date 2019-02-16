@@ -241,52 +241,7 @@
     <None Include="Resources\Preference\preference.npref" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\UI\toTrayIcon.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\minWinIcon.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\maxWinIcon.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\closeIcon.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\icon.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="Nora.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_bk.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_dn.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_ft.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_lf.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_rt.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\Cubemap Textures\Sahara Desert Cubemap\sahara_up.tga">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\clearView.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\maximizePreview.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\resetLocation.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="Resources\UI\toggleFullscreen.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\Textures\wall diffuse.png">
@@ -374,6 +329,57 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\Brushes\Patterns\Floral 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_bk.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_dn.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_ft.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_lf.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_rt.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Cubemaps\Sahara Desert Cubemap\sahara_up.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\clearView.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\closeIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\maximizePreview.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\maxWinIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\minWinIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\resetLocation.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\toggleFullscreen.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\UI\toTrayIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Matcaps\view space normal.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\Textures\Matcaps\orange flame.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

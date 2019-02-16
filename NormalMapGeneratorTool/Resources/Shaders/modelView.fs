@@ -26,6 +26,7 @@ uniform float _Reflectivity;
 uniform float _LightIntensity;
 uniform int _normalMapModeOn;
 uniform bool _flipX_Ydir;
+uniform bool _Use_Matcap;
 uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 
 const float PI = 3.14159265359;
@@ -219,16 +220,11 @@ vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffs
 
 vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten)
 {
-	//float NdotL = dot(normal, lightDir) * 0.5 + 0.5;
-	//float NdotE = dot(normal, viewDir);
-	//vec2 uv = vec2(NdotE, NdotL);
-	//return texture(tex, uv);//vec4(NdotE, NdotL, 0,1.0);
 	
 	vec3 r = reflect( viewDir, normal );
 	float m = 2.0 * sqrt(pow(r.x, 2.0 ) + pow(r.y, 2.0 ) + pow(r.z + 1.0, 2.0));
 	vec2 vN = (r.xy / m + 0.5);
 
-	//viewDir = viewDir*normal;
 	vN = normal.xy * 0.5 + 0.5;
 	vN.y =1.0 - vN.y;
 
@@ -288,22 +284,28 @@ void main()
 			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
 			vec3 result = mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular;
 			//result = result/(result + vec3(1.0));
-			result = pow(result, vec3(1.0/2.2) );
-			FragColor = vec4(result, 1.0); //PBR_Colour(norm, _CameraPosition, FragPos, vec3(1,1,1), 1.0, 0.2, lightPos);//vec4(result, 1.0);
+			result = pow(result, vec3(1.0/2.2));
+			FragColor = vec4(result, 1.0);//PBR_Colour(norm, _CameraPosition, FragPos, vec3(1,1,1), 1.0, 0.4, lightPos);
 		}
         else
 		{
-            //FragColor = vec4(norm * 0.5 + 0.5, 1.0);
-			mat3 conTBN;
-			conTBN[0] = TBN[0];
-			conTBN[1] = TBN[1];
-			conTBN[2] = Normal;
+			if(_Use_Matcap)
+			{
+				mat3 conTBN;
+				conTBN[0] = TBN[0];
+				conTBN[1] = TBN[1];
+				conTBN[2] = Normal;
 
-			norm = normalize(conTBN * norm);
-			vec3 viewDir = normalize(_CameraPosition - FragPos);
-			vec3 lightDir = normalize(lightPos - FragPos);
+				norm = normalize(conTBN * norm);
+				vec3 viewDir = normalize(_CameraPosition - FragPos);
+				vec3 lightDir = normalize(lightPos - FragPos);
 
-			FragColor = LightingRamp( lightDir , viewDir, norm, inTexture4, 1.0);
+				FragColor = LightingRamp( lightDir , viewDir, norm, inTexture4, 1.0);
+			}
+			else
+			{
+				FragColor = vec4(norm * 0.5 + 0.5, 1.0);
+			}
 		}
     }
     else if(_normalMapModeOn == 3)
