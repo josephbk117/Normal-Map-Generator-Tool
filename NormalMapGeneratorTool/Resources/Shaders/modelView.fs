@@ -283,7 +283,6 @@ void main()
 			vec3 diffuseAndAmbient = diffuse + ambient;
 			vec3 reflectionCol = textureLod(skybox, reflect(-viewDir, norm), _Roughness).rgb;
 			vec3 result = mix(diffuseAndAmbient, reflectionCol, _Reflectivity) + specular;
-			//result = result/(result + vec3(1.0));
 			result = pow(result, vec3(1.0/2.2));
 			FragColor = vec4(result, 1.0);//PBR_Colour(norm, _CameraPosition, FragPos, vec3(1,1,1), 1.0, 0.4, lightPos);
 		}

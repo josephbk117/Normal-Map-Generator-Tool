@@ -428,11 +428,13 @@ int main(void)
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Draw the frame by using the frame buffer texture
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
 		frameDrawingPanel.setTextureID(fbs.getColourTexture());
 		frameDrawingPanel.draw();
 
+		// Set up the preview frame buffer and then render the 3d model
 		previewFbs.BindFrameBuffer();
 
 		glEnable(GL_DEPTH_TEST);
@@ -459,6 +461,7 @@ int main(void)
 		}
 		prevMcord = windowSys.GetCursorPos();
 
+		// Set up preview model uniforms
 		modelViewShader.use();
 		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
@@ -504,12 +507,14 @@ int main(void)
 			modelPreviewObj->draw();
 		glActiveTexture(GL_TEXTURE0);
 
+		// Set up preview shader uniforms
 		gridLineShader.use();
 		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
 		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewPlane->draw();
 
+		// Set up the default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)

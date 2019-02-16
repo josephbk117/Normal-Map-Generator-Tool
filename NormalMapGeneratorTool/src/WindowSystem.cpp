@@ -17,6 +17,7 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
+
 	window = glfwCreateWindow(windowRes.x, windowRes.y, windowTitle.c_str(), NULL, NULL);
 	videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	maxWindowRes.x = videoMode->width;
