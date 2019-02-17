@@ -15,7 +15,7 @@ private:
 	Theme currentTheme = Theme::DEFAULT;
 	std::vector<std::string> themesInDir;
 	char** themeItems = nullptr;
-	void StyleColorsLight()
+	void styleColorsLight()
 	{
 		ImGuiStyle* style = &ImGui::GetStyle();
 		ImVec4* colors = style->Colors;
@@ -61,7 +61,7 @@ private:
 		colors[ImGuiCol_ModalWindowDarkening] = Sate3Colour;
 		colors[ImGuiCol_DragDropTarget] = Sate3Colour;
 	}
-	void StyleColorsDark()
+	void styleColorsDark()
 	{
 		ImGuiStyle* style = &ImGui::GetStyle();
 		ImVec4* colors = style->Colors;
@@ -108,7 +108,7 @@ private:
 		colors[ImGuiCol_DragDropTarget] = Sate3Colour;
 
 	}
-	void CustomColourImGuiTheme()
+	void customColourImGuiTheme()
 	{
 		ImGuiStyle* style = &ImGui::GetStyle();
 		ImVec4* colors = style->Colors;
@@ -177,7 +177,7 @@ public:
 	ImVec4 Sate2Colour;
 	ImVec4 Sate3Colour;
 
-	void Init()
+	void init()
 	{
 		FileExplorer fileExplorer;
 		themesInDir = fileExplorer.getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
@@ -198,7 +198,7 @@ public:
 		Sate3Colour = ImVec4(0.10f, 0.1f, 0.25f, 0.01f);
 	}
 
-	std::vector<std::string> GetAllLoadedThemes()
+	std::vector<std::string> getAllLoadedThemes()
 	{
 		std::vector<std::string> cleaned;
 		for (int i = 0; i < themesInDir.size(); i++)
@@ -213,17 +213,17 @@ public:
 		return themesInDir.size() + 3;
 	}
 
-	void SetupThemeFromName(const std::string & themeName)
+	void setupThemeFromName(const std::string & themeName)
 	{
 		if (themeName == "Default")
-			EnableInBuiltTheme(Theme::DEFAULT);
+			enableInBuiltTheme(Theme::DEFAULT);
 		else if (themeName == "Dark")
-			EnableInBuiltTheme(Theme::DARK);
+			enableInBuiltTheme(Theme::DARK);
 		else if (themeName == "Light")
-			EnableInBuiltTheme(Theme::LIGHT);
+			enableInBuiltTheme(Theme::LIGHT);
 		else
 		{
-			SetThemeFromFile("Resources\\Themes\\" + themeName + ".nort");
+			setThemeFromFile("Resources\\Themes\\" + themeName + ".nort");
 		}
 	}
 
@@ -236,7 +236,7 @@ public:
 			themeItems[1] = new char[5]{ 'D','a','r','k' };
 			themeItems[2] = new char[6]{ 'L','i','g','h', 't' };
 
-			std::vector<std::string> loadedThemes = GetAllLoadedThemes();
+			std::vector<std::string> loadedThemes = getAllLoadedThemes();
 			for (int i = 0; i < loadedThemes.size(); i++)
 			{
 				std::string val = loadedThemes[i];
@@ -247,7 +247,7 @@ public:
 		return themeItems;
 	}
 
-	void EnableInBuiltTheme(Theme theme)
+	void enableInBuiltTheme(Theme theme)
 	{
 		currentTheme = theme;
 		switch (theme)
@@ -266,7 +266,7 @@ public:
 			Sate1Colour = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
 			Sate2Colour = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
 			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-			CustomColourImGuiTheme();
+			customColourImGuiTheme();
 			break;
 		case Theme::DARK:
 			PrimaryColour = ImVec4(0.2f, 0.2f, 0.2f, 1.1f);
@@ -282,7 +282,7 @@ public:
 			Sate1Colour = ImVec4(0.80f, 0.80f, 0.80f, 0.46f);
 			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.67f);
 			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-			StyleColorsDark();
+			styleColorsDark();
 			break;
 		case Theme::LIGHT:
 			PrimaryColour = ImVec4(0.9f, 0.9f, 0.95f, 1.1f);
@@ -298,13 +298,13 @@ public:
 			Sate1Colour = ImVec4(0.50f, 0.50f, 0.50f, 0.46f);
 			Sate2Colour = ImVec4(0.8f, 0.8f, 0.8f, 0.67f);
 			Sate3Colour = ImVec4(0.0f, 0.0f, 0.0f, 0.6f);
-			StyleColorsLight();
+			styleColorsLight();
 			break;
 		default:
 			break;
 		}
 	}
-	void SetThemeFromFile(const std::string& filePath)
+	void setThemeFromFile(const std::string& filePath)
 	{
 		currentTheme = Theme::CUSTOM;
 		std::string data = "";
@@ -390,7 +390,7 @@ public:
 			}
 			myfile.close();
 		}
-		StyleColorsDark();
+		styleColorsDark();
 	}
 
 	~ThemeManager()

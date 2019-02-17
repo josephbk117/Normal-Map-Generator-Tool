@@ -4,7 +4,7 @@
 WindowSystem::WindowSystem()
 {}
 
-void WindowSystem::Init(const std::string windowTitle, int windowWidth, int windowHeight)
+void WindowSystem::init(const std::string windowTitle, int windowWidth, int windowHeight)
 {
 	this->windowTitle = windowTitle;
 	windowRes.x = windowWidth;
@@ -30,22 +30,22 @@ void WindowSystem::Init(const std::string windowTitle, int windowWidth, int wind
 	glfwMakeContextCurrent(window);
 }
 
-void WindowSystem::SetFrameBufferResizeCallback(void(*func)(GLFWwindow *, int, int))
+void WindowSystem::setFrameBufferResizeCallback(void(*func)(GLFWwindow *, int, int))
 {
 	glfwSetFramebufferSizeCallback(window, func);
 }
 
-void WindowSystem::SetScrollCallback(void(*func)(GLFWwindow *, double, double))
+void WindowSystem::setScrollCallback(void(*func)(GLFWwindow *, double, double))
 {
 	glfwSetScrollCallback(window, func);
 }
 
-const int WindowSystem::GetMinWindowSize()
+const int WindowSystem::getMinWindowSize()
 {
 	return WINDOW_SIZE_MIN;
 }
 
-bool WindowSystem::IsKeyPressed(int key)
+bool WindowSystem::isKeyPressed(int key)
 {
 	int state = glfwGetKey(window, key);
 	if (state == GLFW_PRESS)
@@ -53,7 +53,7 @@ bool WindowSystem::IsKeyPressed(int key)
 	return false;
 }
 
-bool WindowSystem::IsKeyReleased(int key)
+bool WindowSystem::isKeyReleased(int key)
 {
 	int state = glfwGetKey(window, key);
 	if (state == GLFW_RELEASE)
@@ -61,7 +61,7 @@ bool WindowSystem::IsKeyReleased(int key)
 	return false;
 }
 
-bool WindowSystem::IsKeyPressedDown(int key)
+bool WindowSystem::isKeyPressedDown(int key)
 {
 	static int prevKey = GLFW_KEY_0;
 	int state = glfwGetKey(window, key);
@@ -83,50 +83,50 @@ bool WindowSystem::IsKeyPressedDown(int key)
 	return false;
 }
 
-void WindowSystem::Destroy()
+void WindowSystem::destroy()
 {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 
-void WindowSystem::Close()
+void WindowSystem::close()
 {
 	glfwSetWindowShouldClose(window, true);
 }
 
-void WindowSystem::UpdateWindow()
+void WindowSystem::updateWindow()
 {
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
 
-void WindowSystem::Minimize()
+void WindowSystem::minimize()
 {
 	glfwIconifyWindow(window);
 }
 
-const GLFWvidmode * WindowSystem::GetVideoMode()
+const GLFWvidmode * WindowSystem::getVideoMode()
 {
 	return videoMode;
 }
 
-const GLFWwindow * WindowSystem::GetWindow()
+const GLFWwindow * WindowSystem::getWindow()
 {
 	return window;
 }
 
-void WindowSystem::SetWindowRes(const glm::vec2 & res)
+void WindowSystem::setWindowRes(const glm::vec2 & res)
 {
-	SetWindowRes(res.x, res.y);
+	setWindowRes(res.x, res.y);
 }
 
-void WindowSystem::SetWindowRes(int windowWidth, int windowHeight)
+void WindowSystem::setWindowRes(int windowWidth, int windowHeight)
 {
 	glfwSetWindowSize(window, windowWidth, windowHeight);
 	windowRes = glm::vec2(windowWidth, windowHeight);
 }
 
-void WindowSystem::SetFullscreen(bool isFullscreen)
+void WindowSystem::setFullscreen(bool isFullscreen)
 {
 	if (isFullscreen)
 		glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, windowRes.x, windowRes.y, 60);
@@ -135,46 +135,46 @@ void WindowSystem::SetFullscreen(bool isFullscreen)
 	this->isFullscreen = isFullscreen;
 }
 
-bool WindowSystem::IsFullscreen()
+bool WindowSystem::getIfFullscreen()
 {
 	return isFullscreen;
 }
 
-const glm::vec2 WindowSystem::GetMaxWindowRes()
+const glm::vec2 WindowSystem::getMaxWindowRes()
 {
 	return maxWindowRes;
 }
 
-const glm::vec2 WindowSystem::GetWindowRes()
+const glm::vec2 WindowSystem::getWindowRes()
 {
 	return windowRes;
 }
 
-glm::vec2 WindowSystem::GetWindowPos()
+glm::vec2 WindowSystem::getWindowPos()
 {
 	int winPosX, winPosY;
 	glfwGetWindowPos(window, &winPosX, &winPosY);
 	return glm::vec2(winPosX, winPosY);
 }
 
-glm::vec2 WindowSystem::GetCursorPos()
+glm::vec2 WindowSystem::getCursorPos()
 {
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
 	return glm::vec2(x, y);
 }
 
-void WindowSystem::SetWindowPos(int x, int y)
+void WindowSystem::setWindowPos(int x, int y)
 {
 	glfwSetWindowPos(window, x, y);
 }
 
-float WindowSystem::GetAspectRatio()
+float WindowSystem::getAspectRatio()
 {
 	return (float)windowRes.x / (float)windowRes.y;
 }
 
-bool WindowSystem::IsWindowClosing()
+bool WindowSystem::isWindowClosing()
 {
 	return glfwWindowShouldClose(window);
 }

@@ -126,7 +126,7 @@ unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePrev
 
 int main(void)
 {
-	windowSys.Init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
+	windowSys.init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Open GL init error" << std::endl;
@@ -142,15 +142,17 @@ int main(void)
 	//Allocate undo/redo memory based on user preferences
 	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
 
-	themeManager.Init();
-	themeManager.SetupThemeFromName("Dark");
+	themeManager.init();
+	themeManager.setupThemeFromName("Dark");
 
-	windowSys.SetFrameBufferResizeCallback(framebuffer_size_callback);
-	windowSys.SetScrollCallback(scroll_callback);
-	modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
+	windowSys.setFrameBufferResizeCallback(framebuffer_size_callback);
+	windowSys.setScrollCallback(scroll_callback);
+	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
-	ModelObject* cubeForSkybox = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
-	ModelObject* previewPlane = modelLoader.CreateModelFromFile(PLANE_MODEL_PATH);
+
+	ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
+	ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
+	ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
 
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -211,7 +213,7 @@ int main(void)
 	gridLineShader.linkShaders();
 
 	Camera camera;
-	camera.init(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+	camera.init(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 
 	//Normal map uniforms
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -271,8 +273,8 @@ int main(void)
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
-	fbs.init(windowSys.GetWindowRes());
-	previewFbs.init(windowSys.GetWindowRes());
+	fbs.init(windowSys.getWindowRes(), glm::vec2(4096, 4096));
+	previewFbs.init(windowSys.getWindowRes(), glm::vec2(4096, 4096));
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -284,21 +286,21 @@ int main(void)
 
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
-	while (!windowSys.IsWindowClosing())
+	while (!windowSys.isWindowClosing())
 	{
 		const double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
-		glViewport(0, 0, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
 		static WindowSide windowSideAtInitPos = WindowSide::NONE;
 
-		const glm::vec2 curMouseCoord = windowSys.GetCursorPos();
+		const glm::vec2 curMouseCoord = windowSys.getCursorPos();
 		HandleKeyboardInput(deltaTime, frameDrawingPanel, isMaximized);
 
-		fbs.BindFrameBuffer();
+		fbs.bindFrameBuffer();
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
@@ -307,7 +309,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		normalmapShader.use();
 
-		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::GetWindowSideBorderAtMouseCoord(curMouseCoord, windowSys.GetWindowRes());
+		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::getWindowSideBorderAtMouseCoord(curMouseCoord, windowSys.getWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
@@ -316,9 +318,9 @@ int main(void)
 			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
-		const float aspectRatio = windowSys.GetAspectRatio();
+		const float aspectRatio = windowSys.getAspectRatio();
 		glm::vec2 aspectRatioHolder;
-		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
+		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
 			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
 				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1);
@@ -334,10 +336,10 @@ int main(void)
 		}
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 
-		float leftBorder = 300.0f / windowSys.GetWindowRes().x;
+		float leftBorder = 300.0f / windowSys.getWindowRes().x;
 		float rightBorder = 1.0f - leftBorder;
 
-		float topBorder = 1.0f / windowSys.GetWindowRes().y;
+		float topBorder = 1.0f / windowSys.getWindowRes().y;
 		float bottomBorder = 1.0f - topBorder;
 
 		leftBorder = (leftBorder * 2.0f - 1.0f);
@@ -348,12 +350,12 @@ int main(void)
 		//frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, leftBorder, rightBorder));
 		//frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, topBorder, bottomBorder));
 		frameDrawingPanel.getTransform()->update();
-		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_LEFT);
-		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.GetWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
+		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_LEFT);
+		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
 		//Have to set various bounds on mouse location to determine context driven mouse actions
 
-		windowSideVal = WindowTransformUtility::GetWindowAreaAtMouseCoord(curMouseCoord.x, curMouseCoord.y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+		windowSideVal = WindowTransformUtility::getWindowAreaAtMouseCoord(curMouseCoord.x, curMouseCoord.y, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		if (windowSideVal == WindowSide::CENTER)
 		{
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
@@ -405,7 +407,7 @@ int main(void)
 					modalWindow.setModalDialog("ERROR", "The provided path : " + path + "\nIs incomplete, Check if the path is valid");
 				else
 					modalWindow.setModalDialog("ERROR", "The extension '" + fileExt + "' is not supported\n Choose from .png, .jpg, .tga or .bmp");
-				fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+				fbs.updateTextureDimensions(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 				continue;
 			}
 			//Image validation stage over
@@ -416,7 +418,7 @@ int main(void)
 			continue;
 		}
 
-		if (windowSys.IsKeyPressedDown(GLFW_KEY_F10))
+		if (windowSys.isKeyPressedDown(GLFW_KEY_F10))
 		{
 			shouldSaveNormalMap = true;
 			changeSize = true;
@@ -434,7 +436,7 @@ int main(void)
 		frameDrawingPanel.draw();
 
 		// Set up the preview frame buffer and then render the 3d model
-		previewFbs.BindFrameBuffer();
+		previewFbs.bindFrameBuffer();
 
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -443,11 +445,11 @@ int main(void)
 		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;
 		static glm::vec2 prevMcord;
-		glm::vec2 offset = (prevMcord - windowSys.GetCursorPos());
+		glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
 		{
-			circleAround += offset.x*0.01f;
-			yAxis += offset.y*0.01f;
+			circleAround += offset.x * 0.01f;
+			yAxis += offset.y * 0.01f;
 		}
 		yAxis = glm::clamp(yAxis, -100.0f, 100.0f);
 		cameraPosition.x = glm::sin(circleAround) * previewStateUtility.modelPreviewZoomLevel;
@@ -458,7 +460,7 @@ int main(void)
 		{
 			cameraPosition = -glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
 		}
-		prevMcord = windowSys.GetCursorPos();
+		prevMcord = windowSys.getCursorPos();
 
 		// Set up preview model uniforms
 		modelViewShader.use();
@@ -504,6 +506,8 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
+		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(10, 10, 10)), glm::vec3(0, 0.1f, 0)));
+		previewPlane->draw();
 		glActiveTexture(GL_TEXTURE0);
 
 		// Set up preview shader uniforms
@@ -511,12 +515,12 @@ int main(void)
 		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
 		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		previewPlane->draw();
+		previewGrid->draw();
 
 		// Set up the default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		if (windowSys.GetWindowRes().x < windowSys.GetWindowRes().y)
+		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
 			glm::vec2 heightRes = heightMapTexData.getRes();
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x),
@@ -538,10 +542,11 @@ int main(void)
 			else
 				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x));
 		}
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
-		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.GetWindowRes().x)*2.0f) - 1.0f,
-			-(((curMouseCoord.y / windowSys.GetWindowRes().y)*2.0f) - 1.0f));
+		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x)*2.0f) - 1.0f,
+			-(((curMouseCoord.y / windowSys.getWindowRes().y)*2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
 		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, glm::pow(brushData.brushOffset, 2) * 10.0f);
@@ -601,7 +606,7 @@ int main(void)
 		glBindVertexArray(0);
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-		windowSys.UpdateWindow();
+		windowSys.updateWindow();
 
 	}
 	//applyPanelChangeThread.join();
@@ -609,31 +614,31 @@ int main(void)
 
 	delete modelPreviewObj;
 	delete cubeForSkybox;
-	delete previewPlane;
+	delete previewGrid;
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-	windowSys.Destroy();
+	windowSys.destroy();
 	return 0;
 }
 inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize)
 {
 	bool open = true;
-	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 5, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(10, windowSys.GetWindowRes().y - 67), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 5, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(10, windowSys.getWindowRes().y - 67), ImGuiSetCond_Always);
 
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.GetWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.getWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", &open, window_flags);
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 	float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
 	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
-		if (!windowSys.IsFullscreen())
-			windowSys.SetFullscreen(true);
+		if (!windowSys.getIfFullscreen())
+			windowSys.setFullscreen(true);
 		else
-			windowSys.SetFullscreen(false);
+			windowSys.setFullscreen(false);
 	}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Toggle Fullscreen (Ctrl + T)");
@@ -700,8 +705,8 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 }
 void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 {
-	ImGui::SetNextWindowPos(ImVec2(0, windowSys.GetWindowRes().y - 35), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(windowSys.GetWindowRes().x, 50), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(0, windowSys.getWindowRes().y - 35), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(windowSys.getWindowRes().x, 50), ImGuiSetCond_Always);
 	bool open = true;
 	ImGui::Begin("Bottom_Bar", &open, window_flags);
 
@@ -755,7 +760,7 @@ void SetupImGui()
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.GetWindow(), true);
+	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.getWindow(), true);
 	ImGui_ImplOpenGL2_Init();
 
 	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
@@ -774,54 +779,54 @@ void SetStatesForSavingNormalMap()
 void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
-	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_LEFT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength -= 0.05f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_RIGHT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength += 0.05f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_W))
+	if (windowSys.isKeyPressed(GLFW_KEY_W))
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
-	if (windowSys.IsKeyPressed(GLFW_KEY_S))
+	if (windowSys.isKeyPressed(GLFW_KEY_S))
 		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
 	normalViewStateUtility.zoomLevel = glm::clamp(normalViewStateUtility.zoomLevel, 0.1f, 5.0f);
 
 	//Normal map channel toggles
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_R) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_R) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive;
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_G) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_G) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive;
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_B) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_B) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT))
 		normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive;
 
 	//Set normal map view mode in editor
-	if (windowSys.IsKeyPressed(GLFW_KEY_H) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_H) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 3;
-	if (windowSys.IsKeyPressed(GLFW_KEY_J) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_J) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 1;
-	if (windowSys.IsKeyPressed(GLFW_KEY_K) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_K) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.mapDrawViewMode = 2;
 
 	//Set normal map view mode in model preview
-	if (windowSys.IsKeyPressed(GLFW_KEY_H) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.isKeyPressed(GLFW_KEY_H) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 3;
-	if (windowSys.IsKeyPressed(GLFW_KEY_J) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.isKeyPressed(GLFW_KEY_J) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 1;
-	if (windowSys.IsKeyPressed(GLFW_KEY_K) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.isKeyPressed(GLFW_KEY_K) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 2;
-	if (windowSys.IsKeyPressed(GLFW_KEY_L) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
+	if (windowSys.isKeyPressed(GLFW_KEY_L) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 		previewStateUtility.modelViewMode = 4;
 
 	//Normal map movement
-	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_LEFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(-1.0f * deltaTime, 0.0f);
-	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_RIGHT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		frameDrawingPanel.getTransform()->translate(1.0f * deltaTime, 0);
-	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL)))
+	if (windowSys.isKeyPressed(GLFW_KEY_UP) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, 1.0f * deltaTime);
-	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL)))
+	if (windowSys.isKeyPressed(GLFW_KEY_DOWN) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL)))
 		frameDrawingPanel.getTransform()->translate(0.0f, -1.0f * deltaTime);
 
 	//Undo
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_Z) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_Z) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve());
 		heightMapTexData.updateTexture();
@@ -829,7 +834,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 	//Redo
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_Y) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_Y) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		heightMapTexData.updateTextureData(undoRedoSystem.retrieve(false));
 		heightMapTexData.updateTexture();
@@ -837,7 +842,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
 	//Open new image
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_O) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_O) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		currentLoadingOption = LoadingOption::TEXTURE;
 		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
@@ -856,40 +861,40 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Brush data
-	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_UP) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale += 0.1f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_DOWN) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushScale -= 0.1f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_RIGHT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_RIGHT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset += 0.01f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_LEFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_LEFT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushOffset -= 0.01f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_UP) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_UP) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength += 0.01f;
-	if (windowSys.IsKeyPressed(GLFW_KEY_DOWN) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressed(GLFW_KEY_DOWN) && windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		brushData.brushStrength -= 0.01f;
 	brushData.brushOffset = glm::clamp(brushData.brushOffset, 0.01f, 1.0f);
 	brushData.brushScale = glm::clamp(brushData.brushScale, 1.0f, heightMapTexData.getRes().y * 0.5f);
 	brushData.brushStrength = glm::clamp(brushData.brushStrength, 0.0f, 1.0f);
 
 	//Flip normal map x-y axis
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_A) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_A) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir;
 
 	//Window fullscreen toggle
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_T) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_T) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
-		if (!windowSys.IsFullscreen())
-			windowSys.SetFullscreen(true);
+		if (!windowSys.getIfFullscreen())
+			windowSys.setFullscreen(true);
 		else
-			windowSys.SetFullscreen(false);
+			windowSys.setFullscreen(false);
 	}
 
 	//Normal map panel reset/clear
-	if (windowSys.IsKeyPressedDown(GLFW_KEY_V) && windowSys.IsKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	if (windowSys.isKeyPressedDown(GLFW_KEY_V) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		//clear
-		if (windowSys.IsKeyPressed(GLFW_KEY_LEFT_ALT))
+		if (windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 		{
 			std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 			undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -904,9 +909,9 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	}
 
 	//Minimize window
-	if (windowSys.IsKeyPressed(GLFW_KEY_F9))
+	if (windowSys.isKeyPressed(GLFW_KEY_F9))
 	{
-		windowSys.SetWindowRes(1600, 800);
+		windowSys.setWindowRes(1600, 800);
 		isMaximized = false;
 	}
 }
@@ -1072,8 +1077,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
 	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
-	ImGui::SetNextWindowPos(ImVec2(windowSys.GetWindowRes().x - 300, 42), ImGuiSetCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(300, windowSys.GetWindowRes().y - 77), ImGuiSetCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 300, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 	static bool isPreviewOpen = true;
 	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.45f, 1), ImVec2(1.45f, 0), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
@@ -1082,7 +1087,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::OpenPopup("Preview");
 	}
 	ImGui::SetNextWindowPosCenter();
-	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.GetWindowRes().x * 0.95f, windowSys.GetWindowRes().y * 0.95f));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.getWindowRes().x * 0.95f, windowSys.getWindowRes().y * 0.95f));
 	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen, ImGuiWindowFlags_NoMove))
 	{
 		float aspectRatio = 0.0f;
@@ -1124,28 +1129,28 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				switch (n)
 				{
 				case 0:
-					modelPreviewObj = modelLoader.CreateModelFromFile(CUBE_MODEL_PATH);
+					modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
 					break;
 				case 1:
-					modelPreviewObj = modelLoader.CreateModelFromFile(CYLINDER_MODEL_PATH);
+					modelPreviewObj = modelLoader.createModelFromFile(CYLINDER_MODEL_PATH);
 					break;
 				case 2:
-					modelPreviewObj = modelLoader.CreateModelFromFile(SPHERE_MODEL_PATH);
+					modelPreviewObj = modelLoader.createModelFromFile(SPHERE_MODEL_PATH);
 					break;
 				case 3:
-					modelPreviewObj = modelLoader.CreateModelFromFile(TORUS_MODEL_PATH);
+					modelPreviewObj = modelLoader.createModelFromFile(TORUS_MODEL_PATH);
 					break;
 				case 4:
-					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Suzanne.fbx");
+					modelPreviewObj = modelLoader.createModelFromFile(COMPLEX_MODELS_PATH + "Suzanne.fbx");
 					break;
 				case 5:
-					modelPreviewObj = modelLoader.CreateModelFromFile(COMPLEX_MODELS_PATH + "Utah Teapot.fbx");
+					modelPreviewObj = modelLoader.createModelFromFile(COMPLEX_MODELS_PATH + "Utah Teapot.fbx");
 					break;
 				case 6:
 					currentLoadingOption = LoadingOption::MODEL;
 					fileExplorer.displayDialog(FileType::MODEL, [&](std::string str)
 					{
-						modelPreviewObj = modelLoader.CreateModelFromFile(str);
+						modelPreviewObj = modelLoader.createModelFromFile(str);
 					});
 					break;
 				default:
@@ -1375,15 +1380,15 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		if (prev_item != item_current)
 		{
 			if (item_current >= 3)
-				themeManager.SetThemeFromFile(THEMES_PATH + (std::string(themeManager.getRawData()[item_current]) + ".nort"));
+				themeManager.setThemeFromFile(THEMES_PATH + (std::string(themeManager.getRawData()[item_current]) + ".nort"));
 			else
 			{
 				if (item_current == 0)
-					themeManager.EnableInBuiltTheme(ThemeManager::Theme::DEFAULT);
+					themeManager.enableInBuiltTheme(ThemeManager::Theme::DEFAULT);
 				else if (item_current == 1)
-					themeManager.EnableInBuiltTheme(ThemeManager::Theme::DARK);
+					themeManager.enableInBuiltTheme(ThemeManager::Theme::DARK);
 				else if (item_current == 2)
-					themeManager.EnableInBuiltTheme(ThemeManager::Theme::LIGHT);
+					themeManager.enableInBuiltTheme(ThemeManager::Theme::LIGHT);
 			}
 		}
 		prev_item = item_current;
@@ -1462,7 +1467,7 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 {
 	if (locationStr.length() > 4)
 	{
-		fbs.BindColourTexture();
+		fbs.bindColourTexture();
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 		const int nSize = heightMapTexData.getRes().x * heightMapTexData.getRes().y * 3;
@@ -1470,7 +1475,7 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
-		fbs.updateTextureDimensions(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
+		fbs.updateTextureDimensions(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete[] dataBuffer;
 	}
@@ -1482,12 +1487,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 	static glm::vec2 prevMouseCoord = INVALID;
 	static int prevState = GLFW_RELEASE;
 	static bool didActuallyDraw = false;
-	const glm::vec2 currentMouseCoord = windowSys.GetCursorPos();
+	const glm::vec2 currentMouseCoord = windowSys.getCursorPos();
 
 	if (state == GLFW_PRESS && !fileExplorer.shouldDisplay)
 	{
-		const glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.GetWindowRes().y);
-		const glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.GetWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.GetWindowRes().y);
+		const glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.getWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.getWindowRes().y);
+		const glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.getWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.getWindowRes().y);
 		//viewport current mouse coords
 		const glm::vec2 vpCurMouse(wnCurMouse.x * 2.0f - 1.0f, wnCurMouse.y * 2.0f - 1.0f);
 		//viewport previous mouse coords
@@ -1689,14 +1694,14 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 {
 	if (state == GLFW_PRESS)
 	{
-		glm::vec2 currentPos = windowSys.GetCursorPos();
-		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.GetWindowRes().x, 1.0f / windowSys.GetWindowRes().y) * 2.0f;
+		glm::vec2 currentPos = windowSys.getCursorPos();
+		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.getWindowRes().x, 1.0f / windowSys.getWindowRes().y) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
 	}
 	else
 	{
-		prevMiddleMouseButtonCoord = windowSys.GetCursorPos();
+		prevMiddleMouseButtonCoord = windowSys.getCursorPos();
 	}
 }
 
@@ -1851,12 +1856,12 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	width = glm::clamp(width, windowSys.GetMinWindowSize(), (int)windowSys.GetMaxWindowRes().x);
-	height = glm::clamp(height, windowSys.GetMinWindowSize(), (int)windowSys.GetMaxWindowRes().y);
+	width = glm::clamp(width, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().x);
+	height = glm::clamp(height, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().y);
 
-	windowSys.SetWindowRes(width, height);
-	fbs.updateTextureDimensions(windowSys.GetWindowRes());
-	previewFbs.updateTextureDimensions(windowSys.GetWindowRes());
+	windowSys.setWindowRes(width, height);
+	fbs.updateTextureDimensions(windowSys.getWindowRes());
+	previewFbs.updateTextureDimensions(windowSys.getWindowRes());
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept

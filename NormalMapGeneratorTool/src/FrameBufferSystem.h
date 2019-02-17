@@ -10,16 +10,16 @@ private:
 public:
 	FrameBufferSystem();
 	//Initialize frame buffer with certain resolution
-	void init(const glm::vec2 &windowRes);
+	void init(const glm::vec2& windowRes, const glm::vec2& maxBufferResolution);
 	//Initialize frame buffer with certain resolution
-	void init(int windowWidth, int windowHeight);
-	void BindFrameBuffer() noexcept;
+	void init(int windowWidth, int windowHeight, int maxBufferWidth, int maxBufferHeight);
+	void bindFrameBuffer() noexcept;
 	//Bind the colour buffer texture which is linked with the framebuffer
-	void BindColourTexture() noexcept;
+	void bindColourTexture() noexcept;
 	//Get colour buffer texture
 	unsigned int getColourTexture() noexcept;
 	//Bind the depth buffer texture which is linked with the framebuffer
-	void BindDepthTexture() noexcept;
+	void bindDepthTexture() noexcept;
 	//Get depth buffer texture
 	unsigned int getDepthTexture() noexcept;
 	//Change resolution of existing frame buffer

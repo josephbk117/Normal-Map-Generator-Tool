@@ -2,14 +2,14 @@
 #include <iostream>
 #include <GL\glew.h>
 unsigned int FrameBufferSystem::currentlyBoundFBO;
-FrameBufferSystem::FrameBufferSystem(){}
+FrameBufferSystem::FrameBufferSystem() {}
 
-void FrameBufferSystem::init(const glm::vec2 & windowRes)
+void FrameBufferSystem::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution)
 {
-	init(windowRes.x, windowRes.y);
+	init(windowRes.x, windowRes.y, maxBufferResolution.x, maxBufferResolution.y);
 }
 
-void FrameBufferSystem::init(int windowWidth, int windowHeight)
+void FrameBufferSystem::init(int windowWidth, int windowHeight, int maxBufferWidth, int maxBufferHeight)
 {
 	glGenFramebuffers(1, &framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -21,7 +21,7 @@ void FrameBufferSystem::init(int windowWidth, int windowHeight)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenTextures(1, &textureDepthBuffer);
 	glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 4096, 4096, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL); //Max image size limit is set here for now 4K
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, maxBufferWidth, maxBufferHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, textureDepthBuffer, 0);
 
@@ -30,13 +30,13 @@ void FrameBufferSystem::init(int windowWidth, int windowHeight)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBufferSystem::BindFrameBuffer() noexcept
+void FrameBufferSystem::bindFrameBuffer() noexcept
 {
 	currentlyBoundFBO = framebuffer;
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
-void FrameBufferSystem::BindColourTexture() noexcept
+void FrameBufferSystem::bindColourTexture() noexcept
 {
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 }
@@ -46,7 +46,7 @@ unsigned int FrameBufferSystem::getColourTexture() noexcept
 	return textureColorbuffer;
 }
 
-void FrameBufferSystem::BindDepthTexture() noexcept
+void FrameBufferSystem::bindDepthTexture() noexcept
 {
 	glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
 }

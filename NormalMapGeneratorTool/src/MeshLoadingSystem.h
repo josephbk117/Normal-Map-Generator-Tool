@@ -18,7 +18,7 @@ namespace MeshLoadingSystem
 		MeshLoader() {}
 		~MeshLoader() {}
 
-		ModelObject* CreateModelFromFile(const std::string& Path)
+		ModelObject* createModelFromFile(const std::string& Path)
 		{
 			Assimp::Importer importer;
 			const aiScene* scene = importer.ReadFile(Path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -66,7 +66,7 @@ namespace MeshLoadingSystem
 					indices.push_back(face.mIndices[j]);
 			}
 			ModelObject* modelObj = new ModelObject();
-			modelObj->UpdateMeshData(vertexData, numVertices * 14 * sizeof(float), &indices[0], indices.size());
+			modelObj->updateMeshData(vertexData, numVertices * 14 * sizeof(float), &indices[0], indices.size());
 			delete[] vertexData;
 			return modelObj;
 		}

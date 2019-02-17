@@ -14,7 +14,7 @@ public:
 	~ModelObject();
 
 	//Provide new data to existing model
-	void UpdateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount);
+	void updateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount);
 	void draw();
 };
 

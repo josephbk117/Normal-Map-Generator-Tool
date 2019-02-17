@@ -26,10 +26,10 @@ ModelObject::ModelObject(float vertexData[], int vertexDataCount)
 
 ModelObject::ModelObject(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount)
 {
-	UpdateMeshData(vertexData, vertexDataCount, indices, indicesCount);
+	updateMeshData(vertexData, vertexDataCount, indices, indicesCount);
 }
 
-void ModelObject::UpdateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount)
+void ModelObject::updateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount)
 {
 	std::cout<<"\nUpdated Mesh";
 	usesElementBuffer = true;
