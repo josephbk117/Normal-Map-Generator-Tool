@@ -149,7 +149,6 @@ int main(void)
 	windowSys.setScrollCallback(scroll_callback);
 	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 
-
 	ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
 	ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
 	ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
@@ -273,7 +272,7 @@ int main(void)
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
-	fbs.init(windowSys.getWindowRes(), glm::vec2(4096, 4096));
+	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	previewFbs.init(windowSys.getWindowRes(), glm::vec2(4096, 4096));
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
