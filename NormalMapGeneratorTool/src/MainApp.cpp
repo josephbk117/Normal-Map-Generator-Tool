@@ -506,7 +506,7 @@ int main(void)
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
 		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(10, 10, 10)), glm::vec3(0, 0.1f, 0)));
-		previewPlane->draw();
+		//previewPlane->draw();
 		glActiveTexture(GL_TEXTURE0);
 
 		// Set up preview shader uniforms
