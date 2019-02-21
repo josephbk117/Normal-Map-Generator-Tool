@@ -106,8 +106,9 @@ FrameBufferSystem previewFbs;
 
 BrushData brushData;
 TextureData heightMapTexData;
-TextureData diffuseTexDataForPreview;
-TextureData specularTexDataForPreview;
+TextureData albedoTexDataForPreview;
+TextureData metalnessTexDataForPreview;
+TextureData roughnessTexDataForPreview;
 TextureData matcapTexDataForPreview;
 
 ModelObject *modelPreviewObj = nullptr;
@@ -185,8 +186,9 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
 	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
-	diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
-	specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall specular.png"));
+	albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
+	roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall specular.png"));
+	metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId);
 	matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
 	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
@@ -258,10 +260,11 @@ int main(void)
 	int modelLightPositionUniform = modelViewShader.getUniformLocation("lightPos");
 	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
-	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("inTexture");
-	int modelTextureMapTextureUniform = modelViewShader.getUniformLocation("inTexture2");
-	int modelSpecularMapTextureUniform = modelViewShader.getUniformLocation("inTexture3");
-	int modelMatcapTextureUniform = modelViewShader.getUniformLocation("inTexture4");
+	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("heightmapTexture");
+	int modelAlbedoMapTextureUniform = modelViewShader.getUniformLocation("albedomapTexture");
+	int modelMetalnessMapTextureUniform = modelViewShader.getUniformLocation("metalnessmapTexture");
+	int modelRoughnessMapTextureUniform = modelViewShader.getUniformLocation("roughnessmapTexture");
+	int modelMatcapTextureUniform = modelViewShader.getUniformLocation("mapcapTexture");
 	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 	int modelUseMatcapUniform = modelViewShader.getUniformLocation("_Use_Matcap");
@@ -482,10 +485,11 @@ int main(void)
 		lightPos.y = previewStateUtility.lightLocation.y;
 		modelViewShader.applyShaderVector3(modelLightPositionUniform, lightPos);
 		modelViewShader.applyShaderInt(modelHeightMapTextureUniform, 0);
-		modelViewShader.applyShaderInt(modelTextureMapTextureUniform, 1);
-		modelViewShader.applyShaderInt(modelSpecularMapTextureUniform, 2);
-		modelViewShader.applyShaderInt(modelMatcapTextureUniform, 3);
-		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 4);
+		modelViewShader.applyShaderInt(modelAlbedoMapTextureUniform, 1);
+		modelViewShader.applyShaderInt(modelMetalnessMapTextureUniform, 2);
+		modelViewShader.applyShaderInt(modelRoughnessMapTextureUniform, 3);
+		modelViewShader.applyShaderInt(modelMatcapTextureUniform, 4);
+		modelViewShader.applyShaderInt(modelCubeMapTextureUniform, 5);
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
@@ -496,12 +500,14 @@ int main(void)
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, diffuseTexDataForPreview.GetTexId());
+		glBindTexture(GL_TEXTURE_2D, albedoTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, specularTexDataForPreview.GetTexId());
+		glBindTexture(GL_TEXTURE_2D, metalnessTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, matcapTexDataForPreview.GetTexId());
+		glBindTexture(GL_TEXTURE_2D, roughnessTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, matcapTexDataForPreview.GetTexId());
+		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
@@ -1168,8 +1174,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
-	ImGui::SliderFloat("##Metalness", &previewStateUtility.roughness, 0.0f, 1.0f, "Metalness:%.2f");
-	ImGui::SliderFloat("##Roughness", &previewStateUtility.metalness, 0.0f, 1.0f, "Roughness:%.2f");
+	ImGui::SliderFloat("##Metalness", &previewStateUtility.metalness, 0.01f, 1.0f, "Metalness:%.2f");
+	ImGui::SliderFloat("##Roughness", &previewStateUtility.roughness, 0.01f, 10.0f, "Roughness:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
@@ -1273,54 +1279,54 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			ImGui::Text("Albedo");
 			ImGui::SameLine(0, 5);
 			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)diffuseTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
-						diffuseTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+						albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
 				});
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Load albedo map for preview model");
 			ImGui::SameLine();
-			if (ImGui::Button("X", ImVec2(20, 40))) { diffuseTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+			if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 
 			ImGui::Text("Metalness");
 			ImGui::SameLine(0, 5);
 			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
-						specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+						metalnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
 				});
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Load metalness map for preview model");
 			ImGui::SameLine();
-			if (ImGui::Button("X##2", ImVec2(20, 40))) { specularTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+			if (ImGui::Button("X##2", ImVec2(20, 40))) { metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 			ImGui::Text("Roughness");
 			ImGui::SameLine(0, 5);
 			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
 				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
-						specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+						roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
 				});
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Load roughness map for preview model");
 			ImGui::SameLine();
-			if (ImGui::Button("X##3", ImVec2(20, 40))) { specularTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+			if (ImGui::Button("X##3", ImVec2(20, 40))) { roughnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 			ImGui::PopStyleVar();
 		}

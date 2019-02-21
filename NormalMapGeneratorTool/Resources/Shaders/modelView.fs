@@ -6,10 +6,11 @@ in vec3 Normal;
 in vec2 TexCoords;
 in mat3 TBN;
 
-uniform sampler2D inTexture;
-uniform sampler2D inTexture2;
-uniform sampler2D inTexture3;
-uniform sampler2D inTexture4;
+uniform sampler2D heightmapTexture;
+uniform sampler2D albedomapTexture;
+uniform sampler2D metalnessmapTexture;
+uniform sampler2D roughnessmapTexture;
+uniform sampler2D mapcapTexture;
 
 uniform samplerCube skybox;
 uniform vec3 diffuseColour;
@@ -71,7 +72,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 // ----------------------------------------------------------------------------
 vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float metallic, float roughness, vec3 lightPositions)
 {
-    float ao        = 1.0;//texture(aoMap, TexCoords).r;
+    float ao        = 5.0;//texture(aoMap, TexCoords).r;
 
     vec3 N = Normal;
     vec3 V = normalize(camPos - WorldPos);
@@ -120,7 +121,7 @@ vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float meta
     
     // ambient lighting (note that the next IBL tutorial will replace 
     // this ambient lighting with environment lighting).
-    vec3 ambient = vec3(0.05) * albedo * ao;
+    vec3 ambient = vec3(0.03) * albedo * ao;
     
     vec3 color = ambient + Lo;
 
@@ -244,11 +245,11 @@ void main()
 
 		if(_MethodIndex == 0) //For method 1
 		{
-			norm = TriSample(inTexture, TexCoords, xOffset, yOffset);
+			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
 		}
 		else //For method 2
 		{
-			norm = SobelNormal(inTexture, TexCoords, xOffset, yOffset);
+			norm = SobelNormal(heightmapTexture, TexCoords, xOffset, yOffset);
 		}
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
@@ -259,14 +260,10 @@ void main()
 			norm = normalize(TBN * norm);
 			vec3 lightDir = normalize(lightPos - FragPos);
 			vec3 viewDir = normalize(_CameraPosition - FragPos);
-
-			vec3 albedoTex = texture(inTexture2, TexCoords).rgb;
-			vec3 diffuse = diffuseColour * ((_normalMapModeOn == 4)?albedoTex:vec3(1));
-
-			vec3 albedoCol = diffuseColour * ((_normalMapModeOn == 4)?albedoTex:vec3(1));
-			float roughnessTex = texture(inTexture3, TexCoords).r;
-
-			FragColor = PBR_Colour(norm, _CameraPosition, FragPos, albedoCol, roughnessTex * _Roughness, roughnessTex * _Metalness, lightPos);
+			vec3 albedoCol = diffuseColour * texture(albedomapTexture, TexCoords).rgb;
+			float metalnessTex = texture(metalnessmapTexture, TexCoords).r;
+			float roughnessTex = texture(roughnessmapTexture, TexCoords).r;
+			FragColor = PBR_Colour(norm, _CameraPosition, FragPos, albedoCol, metalnessTex * _Metalness, roughnessTex * _Roughness, lightPos);
 		}
         else
 		{
@@ -281,7 +278,7 @@ void main()
 				vec3 viewDir = normalize(_CameraPosition - FragPos);
 				vec3 lightDir = normalize(lightPos - FragPos);
 
-				FragColor = LightingRamp( lightDir , viewDir, norm, inTexture4, 1.0);
+				FragColor = LightingRamp( lightDir , viewDir, norm, mapcapTexture, 1.0);
 			}
 			else
 			{
@@ -291,6 +288,6 @@ void main()
     }
     else if(_normalMapModeOn == 3)
     {
-		FragColor = texture(inTexture, TexCoords);
+		FragColor = texture(heightmapTexture, TexCoords);
     }
 }
