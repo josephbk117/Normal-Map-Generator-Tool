@@ -253,10 +253,8 @@ int main(void)
 	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
 	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
 	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
-	int modelLightSpecularityUniform = modelViewShader.getUniformLocation("_Specularity");
-	int modelLightSpecularityStrengthUniform = modelViewShader.getUniformLocation("_SpecularStrength");
 	int modelRoughnessUniform = modelViewShader.getUniformLocation("_Roughness");
-	int modelReflectivityUniform = modelViewShader.getUniformLocation("_Reflectivity");
+	int modelMetalnessUniform = modelViewShader.getUniformLocation("_Metalness");
 	int modelLightPositionUniform = modelViewShader.getUniformLocation("lightPos");
 	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
 	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
@@ -476,10 +474,8 @@ int main(void)
 		modelViewShader.applyShaderFloat(modelWidthUniform, heightMapTexData.getRes().x);
 		modelViewShader.applyShaderFloat(modelHeightUniform, heightMapTexData.getRes().y);
 		modelViewShader.applyShaderFloat(modelLightIntensityUniform, previewStateUtility.lightIntensity);
-		modelViewShader.applyShaderFloat(modelLightSpecularityUniform, normalViewStateUtility.specularity);
-		modelViewShader.applyShaderFloat(modelLightSpecularityStrengthUniform, normalViewStateUtility.specularityStrength);
-		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.modelRoughness);
-		modelViewShader.applyShaderFloat(modelReflectivityUniform, previewStateUtility.modelReflectivity);
+		modelViewShader.applyShaderFloat(modelRoughnessUniform, previewStateUtility.roughness);
+		modelViewShader.applyShaderFloat(modelMetalnessUniform, previewStateUtility.metalness);
 		glm::vec3 lightPos;
 		lightPos.x = sin(previewStateUtility.lightLocation.x) * 3;
 		lightPos.z = cos(previewStateUtility.lightLocation.x) * 3;
@@ -1172,8 +1168,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
-	ImGui::SliderFloat("##Roughness", &previewStateUtility.modelRoughness, 0.0f, 10.0f, "Roughness:%.2f");
-	ImGui::SliderFloat("##Reflectivity", &previewStateUtility.modelReflectivity, 0.0f, 1.0f, "Reflectivity:%.2f");
+	ImGui::SliderFloat("##Metalness", &previewStateUtility.roughness, 0.0f, 1.0f, "Metalness:%.2f");
+	ImGui::SliderFloat("##Roughness", &previewStateUtility.metalness, 0.0f, 1.0f, "Roughness:%.2f");
 	ImGui::PopItemWidth();
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
@@ -1274,7 +1270,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			ImGui::Separator();
 			ImGui::Spacing();
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
-			ImGui::Text("Diffuse / Albedo");
+			ImGui::Text("Albedo");
 			ImGui::SameLine(0, 5);
 			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
 			if (ImGui::ImageButton((ImTextureID)diffuseTexDataForPreview.GetTexId(), ImVec2(40, 40)))
@@ -1287,11 +1283,12 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				});
 			}
 			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load diffuse texture for preview model");
+				ImGui::SetTooltip("Load albedo map for preview model");
 			ImGui::SameLine();
 			if (ImGui::Button("X", ImVec2(20, 40))) { diffuseTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
-			ImGui::Text("Specular");
+
+			ImGui::Text("Metalness");
 			ImGui::SameLine(0, 5);
 			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
 			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
@@ -1304,9 +1301,26 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				});
 			}
 			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load specular texture for preview model");
+				ImGui::SetTooltip("Load metalness map for preview model");
 			ImGui::SameLine();
 			if (ImGui::Button("X##2", ImVec2(20, 40))) { specularTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+
+			ImGui::Text("Roughness");
+			ImGui::SameLine(0, 5);
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
+			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			{
+				currentLoadingOption = LoadingOption::TEXTURE;
+				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						specularTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+				});
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Load roughness map for preview model");
+			ImGui::SameLine();
+			if (ImGui::Button("X##3", ImVec2(20, 40))) { specularTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 			ImGui::PopStyleVar();
 		}

@@ -4,8 +4,8 @@ struct PreviewStateUtility
 {
 public:
 	float modelPreviewZoomLevel = -5.0f;
-	float modelRoughness = 5.0f;
-	float modelReflectivity = 0.0f;
+	float roughness = 0.04f;
+	float metalness = 0.0f;
 	int modelViewMode = 2;
 	bool useMatcap = false;
 	glm::vec2 lightLocation = glm::vec2(0.0f, 0.0f);
