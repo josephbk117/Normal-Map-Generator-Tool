@@ -20,4 +20,5 @@ public:
 	static GLenum getTextureFormatFromData(TextureData & textureData);
 	static GLenum getTextureFormatFromData(int componentCount);
 	static void SaveImage(std::string path, const glm::vec2& imageRes, ImageFormat imageFormat, char * data);
+	static unsigned int loadTextureFromColour(const ColourData& colour);
 };

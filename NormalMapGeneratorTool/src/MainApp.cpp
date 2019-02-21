@@ -122,7 +122,9 @@ WindowSide windowSideVal;
 std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
 
-unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // Window ui textureIds
+unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // UI textureIds
+unsigned int closeTextureId, restoreTextureId, minimizeTextureId, logoTextureId; // Window textureIds
+unsigned int defaultWhiteTextureId;
 
 int main(void)
 {
@@ -162,15 +164,17 @@ int main(void)
 	brushPanel.init(1.0f, 1.0f);
 
 	//Windowing related images
-	unsigned int closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
-	unsigned int restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
-	unsigned int minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
-	unsigned int logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png");
+	closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
+	restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
+	minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
+	logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png");
 
 	toggleFullscreenTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toggleFullscreen.png");
 	clearViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
 	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
+
+	defaultWhiteTextureId = TextureManager::loadTextureFromColour(ColourData(1, 1, 1, 1));
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -1272,7 +1276,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
 			ImGui::Text("Diffuse / Albedo");
 			ImGui::SameLine(0, 5);
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 60, 10)); ImGui::SameLine();
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
 			if (ImGui::ImageButton((ImTextureID)diffuseTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
@@ -1284,10 +1288,12 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Load diffuse texture for preview model");
+			ImGui::SameLine();
+			if (ImGui::Button("X", ImVec2(20, 40))) { diffuseTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 			ImGui::Text("Specular");
 			ImGui::SameLine(0, 5);
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 60, 10)); ImGui::SameLine();
+			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
 			if (ImGui::ImageButton((ImTextureID)specularTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
@@ -1299,6 +1305,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Load specular texture for preview model");
+			ImGui::SameLine();
+			if (ImGui::Button("X##2", ImVec2(20, 40))) { specularTexDataForPreview.SetTexId(defaultWhiteTextureId); }
 
 			ImGui::PopStyleVar();
 		}
@@ -1461,7 +1469,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)

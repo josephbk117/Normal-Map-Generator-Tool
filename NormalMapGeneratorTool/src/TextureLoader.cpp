@@ -188,3 +188,12 @@ void TextureManager::SaveImage(std::string path, const glm::vec2 & imageRes, Ima
 		return;
 	}
 }
+
+unsigned int TextureManager::loadTextureFromColour(const ColourData & colour)
+{
+	TextureData texData;
+	glm::vec4 col = colour.getColour_8_Bit();
+	unsigned char data[4] = { col[0], col[1], col[2], col[3] };
+	texData.setTextureData(data, 1, 1, 4);
+	return TextureManager::loadTextureFromData(texData);
+}

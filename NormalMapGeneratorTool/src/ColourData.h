@@ -39,11 +39,11 @@ public:
 	{
 		this->colour = glm::vec4(r, g, b, a);
 	}
-	glm::vec4 getColour_32_Bit()
+	const glm::vec4 getColour_32_Bit() const
 	{
 		return colour;
 	}
-	glm::vec4 getColour_8_Bit()
+	const glm::vec4 getColour_8_Bit() const
 	{
 		const unsigned char rV = (unsigned char)(colour.r * 255.0f);
 		const unsigned char gV = (unsigned char)(colour.g * 255.0f);
