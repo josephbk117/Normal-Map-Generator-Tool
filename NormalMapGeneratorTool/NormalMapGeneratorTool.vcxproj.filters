@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\ImGui">
+      <UniqueIdentifier>{01b2cf9a-2036-4459-b328-1954d236141f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ImGui">
+      <UniqueIdentifier>{8739f278-b01d-4bd2-a807-dc89dd445263}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Stb">
+      <UniqueIdentifier>{40e6ae13-43f4-4906-a80b-9c1591b04a9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Stb">
+      <UniqueIdentifier>{d9a5f0c8-25af-488b-8083-814585b511dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\DrawingPanel.cpp">
@@ -22,9 +34,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\ShaderProgram.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\TextureLoader.cpp">
@@ -39,25 +48,7 @@
     <ClCompile Include="src\FrameBufferSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_impl_glfw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\imgui_impl_opengl2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\FileExplorer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\stb_image_write.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Camera.cpp">
@@ -75,15 +66,33 @@
     <ClCompile Include="src\UndoRedoSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImGui\imgui.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGui\imgui_demo.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGui\imgui_draw.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGui\imgui_impl_glfw.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImGui\imgui_impl_opengl2.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Stb\stb_image_write.cpp">
+      <Filter>Source Files\Stb</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Stb\stb_image.cpp">
+      <Filter>Source Files\Stb</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ShaderProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\TextureLoader.h">
@@ -110,34 +119,7 @@
     <ClInclude Include="src\WindowTransformUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\stb_rect_pack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stb_textedit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stb_truetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imconfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui_impl_glfw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imgui_impl_opengl2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\FileExplorer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stb_image_write.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Camera.h">
@@ -166,6 +148,36 @@
     </ClInclude>
     <ClInclude Include="src\PreferencesHandler.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImGui\imconfig.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImGui\imgui.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImGui\imgui_impl_glfw.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImGui\imgui_impl_opengl2.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImGui\imgui_internal.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stb\stb_image.h">
+      <Filter>Header Files\Stb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stb\stb_image_write.h">
+      <Filter>Header Files\Stb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stb\stb_rect_pack.h">
+      <Filter>Header Files\Stb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stb\stb_textedit.h">
+      <Filter>Header Files\Stb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Stb\stb_truetype.h">
+      <Filter>Header Files\Stb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -238,7 +250,9 @@
     <None Include="Resources\3D Models\Complex\Utah Teapot.fbx">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\Preference\preference.npref" />
+    <None Include="Resources\Preference\preference.npref">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">
@@ -389,6 +403,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Font Include="Resources\Fonts\Roboto-Medium.ttf" />
+    <Font Include="Resources\Fonts\Roboto-Medium.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
   </ItemGroup>
 </Project>

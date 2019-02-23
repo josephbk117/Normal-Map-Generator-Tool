@@ -1,6 +1,6 @@
 #include "TextureLoader.h"
-#include "stb_image.h"
-#include "stb_image_write.h"
+#include "Stb/stb_image.h"
+#include "Stb/stb_image_write.h"
 #include "TextureData.h"
 #include <GL\glew.h>
 #include <iostream>

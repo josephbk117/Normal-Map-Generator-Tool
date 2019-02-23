@@ -8,10 +8,9 @@
 #include <GLM\gtc\quaternion.hpp>
 #include <GLM\gtx\quaternion.hpp>
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl2.h"
-#include "stb_image_write.h"
+#include "ImGui\imgui.h"
+#include "ImGui\imgui_impl_glfw.h"
+#include "ImGui\imgui_impl_opengl2.h"
 
 #include "Camera.h"
 #include "DrawingPanel.h"
@@ -44,7 +43,6 @@
 //TODO : Convert text to icon for most buttons
 //TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Parallax map option
-//TODO : Add PBR shader workflow support
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
@@ -145,7 +143,6 @@ int main(void)
 	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
 
 	themeManager.init();
-	themeManager.setupThemeFromName("Dark");
 
 	windowSys.setFrameBufferResizeCallback(framebuffer_size_callback);
 	windowSys.setScrollCallback(scroll_callback);
