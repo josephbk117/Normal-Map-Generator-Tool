@@ -1358,7 +1358,6 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-
 		if (ImGui::BeginMenu("Edit"))
 		{
 			bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
@@ -1385,7 +1384,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		static int item_current = 0;
+		static int item_current = themeManager.getIndexOfTheme(preferencesInfo.defaultTheme);
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
 		ImGui::Combo("##combo", &item_current, themeManager.getRawData(), themeManager.getNumberOfThemes());
@@ -1407,7 +1406,6 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		}
 		prev_item = item_current;
 		ImGui::PopStyleVar();
-
 
 		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
 		if (openPreferences)
@@ -1727,13 +1725,13 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const float distanceRemap = 1.0f / brushData.brushScale;
 	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
 
-	float xMag = endX - startX;
-	float yMag = endY - startY;
+	const float xMag = endX - startX;
+	const float yMag = endY - startY;
 
-	int clampedStartX = glm::max(startX, 0);
-	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+	const int clampedStartX = glm::max(startX, 0);
+	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
@@ -1760,13 +1758,13 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 
 inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	float xMag = endX - startX;
-	float yMag = endY - startY;
+	const float xMag = endX - startX;
+	const float yMag = endY - startY;
 
-	int clampedStartX = glm::max(startX, 0);
-	int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+	const int clampedStartX = glm::max(startX, 0);
+	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
@@ -1819,8 +1817,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 		}
 	}
 
-	float xMag = endX - startX;
-	float yMag = endY - startY;
+	const float xMag = endX - startX;
+	const float yMag = endY - startY;
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{

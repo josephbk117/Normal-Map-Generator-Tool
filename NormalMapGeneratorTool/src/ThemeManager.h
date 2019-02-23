@@ -213,6 +213,24 @@ public:
 		return themesInDir.size() + 3;
 	}
 
+	int getIndexOfTheme(const std::string themeName)
+	{
+		if (themeName == "Default")
+			return 0;
+		else if (themeName == "Dark")
+			return 1;
+		else if (themeName == "Light")
+			return 2;
+
+		std::vector<std::string> themes = getAllLoadedThemes();
+		for (int i = 0; i < themes.size(); i++)
+		{
+			if (themeName == themes[i])
+				return i + 3;
+		}
+		return 0;
+	}
+
 	void setupThemeFromName(const std::string & themeName)
 	{
 		if (themeName == "Default")
@@ -240,8 +258,9 @@ public:
 			for (int i = 0; i < loadedThemes.size(); i++)
 			{
 				std::string val = loadedThemes[i];
-				themeItems[i + 3] = new char[val.size()];
+				themeItems[i + 3] = new char[val.size() + 1];
 				std::memcpy(themeItems[i + 3], &val[0], val.size());
+				std::memset(themeItems[i + 3] + val.size(), '\0', 1);
 			}
 		}
 		return themeItems;
