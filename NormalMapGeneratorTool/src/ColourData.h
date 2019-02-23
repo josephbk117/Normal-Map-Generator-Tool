@@ -17,10 +17,10 @@ public:
 	}
 	void setColour_8_Bit(const glm::vec4& colour)
 	{
-		const int r = glm::clamp((int)colour.r, 0, 255);
-		const int g = glm::clamp((int)colour.g, 0, 255);
-		const int b = glm::clamp((int)colour.b, 0, 255);
-		const int a = glm::clamp((int)colour.a, 0, 255);
+		const int r = glm::clamp(static_cast<int>(colour.r), 0, 255);
+		const int g = glm::clamp(static_cast<int>(colour.g), 0, 255);
+		const int b = glm::clamp(static_cast<int>(colour.b), 0, 255);
+		const int a = glm::clamp(static_cast<int>(colour.a), 0, 255);
 		this->colour = glm::vec4(r, g, b, a);
 	}
 	void setColour_8_Bit(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
@@ -39,16 +39,16 @@ public:
 	{
 		this->colour = glm::vec4(r, g, b, a);
 	}
-	const glm::vec4 getColour_32_Bit() const
+	const glm::vec4 getColour_32_Bit() const noexcept
 	{
 		return colour;
 	}
 	const glm::vec4 getColour_8_Bit() const
 	{
-		const unsigned char rV = (unsigned char)(colour.r * 255.0f);
-		const unsigned char gV = (unsigned char)(colour.g * 255.0f);
-		const unsigned char bV = (unsigned char)(colour.b * 255.0f);
-		const unsigned char aV = (unsigned char)(colour.a * 255.0f);
+		const unsigned char rV = static_cast<unsigned char>(colour.r * 255.0f);
+		const unsigned char gV = static_cast<unsigned char>(colour.g * 255.0f);
+		const unsigned char bV = static_cast<unsigned char>(colour.b * 255.0f);
+		const unsigned char aV = static_cast<unsigned char>(colour.a * 255.0f);
 		return glm::vec4(rV, gV, bV, aV);
 	}
 };

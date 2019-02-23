@@ -89,7 +89,7 @@ inline void DisplayLightSettingsUserInterface();
 inline void DisplayNormalSettingsUserInterface();
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
 inline void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
-void SetStatesForSavingNormalMap();
+void SetStatesForSavingNormalMap()noexcept;
 void SetupImGui();
 
 WindowSystem windowSys;
@@ -388,7 +388,7 @@ int main(void)
 
 		if (shouldSaveNormalMap)
 		{
-			ImageFormat imageFormat;
+			ImageFormat imageFormat = ImageFormat::BMP;
 			//Image validation stage start
 			std::string path(saveLocation);
 			std::string fileExt = fileExplorer.getFileExtension(saveLocation);
@@ -735,7 +735,7 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	if (ImGui::SliderInt("##Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1, "%d Steps"))
 	{
 		bool isForward = (currentSection - prevSection) >= 0 ? false : true;
-		int count = glm::abs(currentSection - prevSection);
+		const int count = glm::abs(currentSection - prevSection);
 		for (int i = 0; i < count; i++)
 			heightMapTexData.updateTextureData(undoRedoSystem.retrieve(isForward));
 		heightMapTexData.updateTexture();
@@ -772,7 +772,7 @@ void SetupImGui()
 	IM_ASSERT(font != NULL);
 	IM_ASSERT(menuBarLargerText != NULL);
 }
-void SetStatesForSavingNormalMap()
+void SetStatesForSavingNormalMap() noexcept
 {
 	glViewport(0, 0, heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 	fbs.updateTextureDimensions(heightMapTexData.getRes().x, heightMapTexData.getRes().y);
@@ -1471,7 +1471,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1479,7 +1479,7 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		fbs.bindColourTexture();
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		const int nSize = heightMapTexData.getRes().x * heightMapTexData.getRes().y * 3;
+		const int nSize = static_cast<int>(heightMapTexData.getRes().x * heightMapTexData.getRes().y * 3);
 		char* dataBuffer = new char[nSize];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
@@ -1545,14 +1545,14 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 						glm::vec2 diff = (prevPoint - toPoint);
 						glm::vec2 incValue = glm::normalize(diff) * density;
-						int numberOfPoints = glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f));
+						int numberOfPoints = static_cast<int>(glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f)));
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{
-							float left = (iterCurPoint.x - convertedBrushScale.x) * maxWidth;
-							float right = (iterCurPoint.x + convertedBrushScale.x) * maxWidth;
-							float bottom = (iterCurPoint.y - convertedBrushScale.y) * maxHeight;
-							float top = (iterCurPoint.y + convertedBrushScale.y) * maxHeight;
+							const float left = (iterCurPoint.x - convertedBrushScale.x) * maxWidth;
+							const float right = (iterCurPoint.x + convertedBrushScale.x) * maxWidth;
+							const float bottom = (iterCurPoint.y - convertedBrushScale.y) * maxHeight;
+							const float top = (iterCurPoint.y + convertedBrushScale.y) * maxHeight;
 							iterCurPoint += incValue;
 							if (brushData.hasBrushTexture())
 								SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
@@ -1563,10 +1563,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					else
 					{
 
-						float left = (curX - convertedBrushScale.x) * maxWidth;
-						float right = (curX + convertedBrushScale.x) * maxWidth;
-						float bottom = (curY - convertedBrushScale.y) * maxHeight;
-						float top = (curY + convertedBrushScale.y) * maxHeight;
+						const float left = (curX - convertedBrushScale.x) * maxWidth;
+						const float right = (curX + convertedBrushScale.x) * maxWidth;
+						const float bottom = (curY - convertedBrushScale.y) * maxHeight;
+						const float top = (curY + convertedBrushScale.y) * maxHeight;
 
 						if (brushData.hasBrushTexture())
 							SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
@@ -1577,10 +1577,10 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 				}
 				else if (isBlurOn)
 				{
-					float left = (curX - convertedBrushScale.x) * maxWidth;
-					float right = (curX + convertedBrushScale.x) * maxWidth;
-					float bottom = (curY - convertedBrushScale.y) * maxHeight;
-					float top = (curY + convertedBrushScale.y) * maxHeight;
+					const float left = (curX - convertedBrushScale.x) * maxWidth;
+					const float right = (curX + convertedBrushScale.x) * maxWidth;
+					const float bottom = (curY - convertedBrushScale.y) * maxHeight;
+					const float top = (curY + convertedBrushScale.y) * maxHeight;
 					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 				}
 				didActuallyDraw = true;
@@ -1722,8 +1722,8 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const float distanceRemap = 1.0f / brushData.brushScale;
 	const float offsetRemap = glm::pow(brushData.brushOffset, 2) * 10.0f;
 
-	const float xMag = endX - startX;
-	const float yMag = endY - startY;
+	const float xMag = static_cast<float>(endX - startX);
+	const float yMag = static_cast<float>(endY - startY);
 
 	const int clampedStartX = glm::max(startX, 0);
 	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
@@ -1755,8 +1755,8 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 
 inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
-	const float xMag = endX - startX;
-	const float yMag = endY - startY;
+	const float xMag = static_cast<float>(endX - startX);
+	const float yMag = static_cast<float>(endY - startY);
 
 	const int clampedStartX = glm::max(startX, 0);
 	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
@@ -1788,8 +1788,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 {
 	//Crashes when drawing with blur at bottom of panel
 
-	const int imageWidth = inputTexData.getRes().x;
-	const int imageHeight = inputTexData.getRes().y;
+	const int imageWidth = static_cast<int>(inputTexData.getRes().x);
+	const int imageHeight = static_cast<int>(inputTexData.getRes().y);
 	//Temp allocation of image section
 
 	const int clampedStartX = glm::max(startX, 0);
@@ -1803,7 +1803,6 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	ColourData **tempPixelData = new ColourData*[_width];
 	//std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
 
-	int count = 0;
 	for (int i = startX; i < endX; i++)
 	{
 		tempPixelData[i - startX] = new ColourData[_height];
@@ -1814,15 +1813,15 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 		}
 	}
 
-	const float xMag = endX - startX;
-	const float yMag = endY - startY;
+	const float xMag = static_cast<float>(endX - startX);
+	const float yMag = static_cast<float>(endY - startY);
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
 		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
-			float x = (i - startX) / xMag;
-			float y = (j - startY) / yMag;
+			const float x = (i - startX) / xMag;
+			const float y = (j - startY) / yMag;
 			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f));
 			distance = glm::clamp(distance, 0.0f, 1.0f);
 			if (distance < 1.0f)
