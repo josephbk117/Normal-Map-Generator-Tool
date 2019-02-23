@@ -1183,32 +1183,32 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
-	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 3; }
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + H)");
 
 	ImGui::SameLine(0, 5);
-	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 1; }
+	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 2; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + J)");
 
 	ImGui::SameLine(0, 5);
-	if (previewStateUtility.modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
+	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 4; }
+	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + L)");
 
 	ImGui::PopStyleVar();
 
-	if (previewStateUtility.modelViewMode == 1)
+	if (previewStateUtility.modelViewMode == 2)
 	{
 		ImGui::Text("MATCAP SETTINGS");
 		ImGui::Separator();
@@ -1242,7 +1242,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::PopItemWidth();
 	}
 
-	if (previewStateUtility.modelViewMode == 2 || previewStateUtility.modelViewMode == 4)
+	if (previewStateUtility.modelViewMode == 3)
 	{
 		ImGui::Text("LIGHTING SETTINGS");
 		ImGui::Separator();
@@ -1260,66 +1260,63 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::ColorEdit3("Diffuse Color", &previewStateUtility.diffuseColour[0], ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions);
 		ImGui::PopItemWidth();
 
-		if (previewStateUtility.modelViewMode == 4)
+		ImGui::Spacing();
+		ImGui::Text("TEXTURE SETTINGS");
+		ImGui::Separator();
+		ImGui::Spacing();
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
+		ImGui::Text("Albedo");
+		ImGui::SameLine(0, 5);
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
+		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 		{
-			ImGui::Spacing();
-			ImGui::Text("TEXTURE SETTINGS");
-			ImGui::Separator();
-			ImGui::Spacing();
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
-			ImGui::Text("Albedo");
-			ImGui::SameLine(0, 5);
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+			currentLoadingOption = LoadingOption::TEXTURE;
+			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
 			{
-				currentLoadingOption = LoadingOption::TEXTURE;
-				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
-				{
-					if (currentLoadingOption == LoadingOption::TEXTURE)
-						albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
-				});
-			}
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load albedo map for preview model");
-			ImGui::SameLine();
-			if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.SetTexId(defaultWhiteTextureId); }
-
-			ImGui::Text("Metalness");
-			ImGui::SameLine(0, 5);
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
-			{
-				currentLoadingOption = LoadingOption::TEXTURE;
-				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
-				{
-					if (currentLoadingOption == LoadingOption::TEXTURE)
-						metalnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
-				});
-			}
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load metalness map for preview model");
-			ImGui::SameLine();
-			if (ImGui::Button("X##2", ImVec2(20, 40))) { metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
-
-			ImGui::Text("Roughness");
-			ImGui::SameLine(0, 5);
-			ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-			if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
-			{
-				currentLoadingOption = LoadingOption::TEXTURE;
-				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
-				{
-					if (currentLoadingOption == LoadingOption::TEXTURE)
-						roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
-				});
-			}
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Load roughness map for preview model");
-			ImGui::SameLine();
-			if (ImGui::Button("X##3", ImVec2(20, 40))) { roughnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
-
-			ImGui::PopStyleVar();
+				if (currentLoadingOption == LoadingOption::TEXTURE)
+					albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+			});
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Load albedo map for preview model");
+		ImGui::SameLine();
+		if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+
+		ImGui::Text("Metalness");
+		ImGui::SameLine(0, 5);
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
+		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+		{
+			currentLoadingOption = LoadingOption::TEXTURE;
+			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			{
+				if (currentLoadingOption == LoadingOption::TEXTURE)
+					metalnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+			});
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Load metalness map for preview model");
+		ImGui::SameLine();
+		if (ImGui::Button("X##2", ImVec2(20, 40))) { metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+
+		ImGui::Text("Roughness");
+		ImGui::SameLine(0, 5);
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
+		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+		{
+			currentLoadingOption = LoadingOption::TEXTURE;
+			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			{
+				if (currentLoadingOption == LoadingOption::TEXTURE)
+					roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+			});
+		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Load roughness map for preview model");
+		ImGui::SameLine();
+		if (ImGui::Button("X##3", ImVec2(20, 40))) { roughnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+
+		ImGui::PopStyleVar();
 	}
 	ImGui::End();
 	ImGui::PopStyleColor();

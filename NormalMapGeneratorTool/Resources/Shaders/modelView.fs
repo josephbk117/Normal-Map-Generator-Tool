@@ -236,30 +236,24 @@ vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float
 
 void main()
 {
-	if(_normalMapModeOn == 1 || _normalMapModeOn == 2 || _normalMapModeOn == 4)
+	if(_normalMapModeOn == 2 || _normalMapModeOn == 3)
     {
 		float xOffset = 1.0/_HeightmapDimX;
 		float yOffset = 1.0/_HeightmapDimY;
-
         vec3 norm;
 
 		if(_MethodIndex == 0) //For method 1
-		{
 			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
-		}
 		else //For method 2
-		{
 			norm = SobelNormal(heightmapTexture, TexCoords, xOffset, yOffset);
-		}
+
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
 
-        if(_normalMapModeOn == 2 || _normalMapModeOn == 4)
+        if(_normalMapModeOn == 3)
 		{
 			norm = normalize(TBN * norm);
-			vec3 lightDir = normalize(lightPos - FragPos);
-			vec3 viewDir = normalize(_CameraPosition - FragPos);
 			vec3 albedoCol = diffuseColour * texture(albedomapTexture, TexCoords).rgb;
 			float metalnessTex = texture(metalnessmapTexture, TexCoords).r;
 			float roughnessTex = texture(roughnessmapTexture, TexCoords).r;
@@ -281,13 +275,9 @@ void main()
 				FragColor = LightingRamp( lightDir , viewDir, norm, mapcapTexture, 1.0);
 			}
 			else
-			{
 				FragColor = vec4(norm * 0.5 + 0.5, 1.0);
-			}
 		}
     }
-    else if(_normalMapModeOn == 3)
-    {
+    else if(_normalMapModeOn == 1)
 		FragColor = texture(heightmapTexture, TexCoords);
-    }
 }
