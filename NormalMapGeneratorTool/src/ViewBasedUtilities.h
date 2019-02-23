@@ -6,10 +6,10 @@ public:
 	float modelPreviewZoomLevel = -5.0f;
 	float metalness = 0.04f;
 	float roughness = 0.5f;
-	int modelViewMode = 2;
+	int modelViewMode = 4;
 	bool useMatcap = false;
-	glm::vec2 lightLocation = glm::vec2(0.0f, 0.0f);
 	float lightIntensity = 2.5f;
+	glm::vec2 lightLocation = glm::vec2(0.0f, 0.0f);
 	glm::vec3 diffuseColour = glm::vec3(1, 1, 1);
 	glm::vec3 lightColour = glm::vec3(1, 1, 1);
 };

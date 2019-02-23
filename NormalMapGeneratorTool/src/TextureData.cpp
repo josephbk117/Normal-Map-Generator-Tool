@@ -40,7 +40,7 @@ int TextureData::getComponentCount() noexcept
 
 void TextureData::SetTexId(unsigned int texId)
 {
-	if (this->texId != 0)
+	if (this->texId != 0 && this->texId != texId)
 		glDeleteTextures(1, &(this->texId));
 	this->texId = texId;
 }

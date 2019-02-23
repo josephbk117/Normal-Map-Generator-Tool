@@ -48,7 +48,6 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Unassigned texture will be set to white as default
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -1181,7 +1180,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Text("VIEW MODE");
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 4.0f);
+	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
 	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
@@ -1200,17 +1199,9 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::SetTooltip("(Alt + J)");
 
 	ImGui::SameLine(0, 5);
-	if (previewStateUtility.modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 2; }
-	ImGui::PopStyleColor();
-	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("(Alt + K)");
-
-	ImGui::SameLine(0, 5);
 	if (previewStateUtility.modelViewMode == 4) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
-	if (ImGui::Button("Textured", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 4; }
+	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 4; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + L)");
@@ -1292,7 +1283,6 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				ImGui::SetTooltip("Load albedo map for preview model");
 			ImGui::SameLine();
 			if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.SetTexId(defaultWhiteTextureId); }
-
 
 			ImGui::Text("Metalness");
 			ImGui::SameLine(0, 5);
