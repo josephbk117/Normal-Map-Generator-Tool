@@ -7,7 +7,6 @@ in vec3 aBitangent;
 
 out vec3 FragPos;
 out vec3 Normal;
-out vec2 TexCoords;
 out mat3 TBN;
 
 uniform mat4 model;
@@ -16,14 +15,14 @@ uniform mat4 projection;
 
 void main()
 {
-    FragPos = (model * vec4(aPos, 1.0)).xyz;
-    Normal =  (model * view * vec4(aNormal,0.0)).xyz; //mat3(transpose(inverse(model))) * aNormal;
-    TexCoords = aTexCoords;
+    vec3 _aPos = aPos + aNormal * 0.01;
+    FragPos = (model * vec4(_aPos, 1.0)).xyz;
+    Normal =  (model * view * vec4(aNormal,0.0)).xyz;
 
     vec3 T = (model * vec4(aTangent,0.0)).xyz;
     vec3 N = (model * vec4(aNormal, 0.0)).xyz;
     T = normalize(T - dot(T, N) * N);
-    vec3 B = (model * vec4(aBitangent, 0.0)).xyz;//cross(N, T);
+    vec3 B = (model * vec4(aBitangent, 0.0)).xyz;
 
     TBN = mat3(T, B, N);
 

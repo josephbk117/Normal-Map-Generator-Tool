@@ -46,6 +46,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Preview additional capabilities: i)Wireframe ii)Normals(per vertex & per-face) iii)Tangents iv)Bi-Tangents
 
 //#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
 
@@ -160,6 +161,8 @@ int main(void)
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
 
+	glLineWidth(2.0f);
+
 	//Windowing related images
 	closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
 	restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
@@ -200,6 +203,10 @@ int main(void)
 	ShaderProgram modelViewShader;
 	modelViewShader.compileShaders(SHADERS_PATH + "modelView.vs", SHADERS_PATH + "modelView.fs");
 	modelViewShader.linkShaders();
+
+	ShaderProgram modelAttribViewShader;
+	modelAttribViewShader.compileShaders(SHADERS_PATH + "modelAttribsDisplay.vs", SHADERS_PATH + "modelAttribsDisplay.fs", SHADERS_PATH + "modelAttribsDisplay.gs");
+	modelAttribViewShader.linkShaders();
 
 	ShaderProgram frameShader;
 	frameShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "frameBuffer.fs");
@@ -265,6 +272,9 @@ int main(void)
 	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
 	int modelUseMatcapUniform = modelViewShader.getUniformLocation("_Use_Matcap");
 
+	//Model attributes uniforms
+	int modelAttributesShowNormalsUniform = modelAttribViewShader.getUniformLocation("_ShowNormals");
+
 	//Gridlines uniforms
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
 	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
@@ -274,7 +284,7 @@ int main(void)
 	bool isBlurOn = false;
 
 	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
-	previewFbs.init(windowSys.getWindowRes(), glm::vec2(4096, 4096));
+	previewFbs.init(windowSys.getWindowRes(), glm::vec2(1920, 1920));
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
@@ -334,6 +344,7 @@ int main(void)
 			else
 				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
+
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 
 		float leftBorder = 300.0f / windowSys.getWindowRes().x;
@@ -507,7 +518,16 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(10, 10, 10)), glm::vec3(0, 0.1f, 0)));
+
+		modelAttribViewShader.use();
+		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
+		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
+		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.5f, 20.0f));
+		modelAttribViewShader.applyShaderBool(modelAttributesShowNormalsUniform, previewStateUtility.showNormals);
+		if (modelPreviewObj != nullptr)
+			modelPreviewObj->draw();
+
+		//modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(10, 10, 10)), glm::vec3(0, 0.1f, 0)));
 		//previewPlane->draw();
 		glActiveTexture(GL_TEXTURE0);
 
@@ -1168,6 +1188,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleVar();
 	ImGui::Spacing();
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::Checkbox("Normals", &previewStateUtility.showNormals);
+
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::SliderFloat("##Metalness", &previewStateUtility.metalness, 0.01f, 1.0f, "Metalness:%.2f");
@@ -1468,10 +1490,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1695,7 +1717,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 

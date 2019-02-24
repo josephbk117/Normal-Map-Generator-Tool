@@ -8,6 +8,7 @@ public:
 	~ShaderProgram();
 	//Compiler vertex shader and fragment shader
 	void compileShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
+	void compileShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geometryShaderPath);
 	//Link shaders and create program
 	void linkShaders();
 	void addAttribute(const std::string& attributeName);
@@ -20,7 +21,7 @@ public:
 	static void applyShaderInt(int uniformId, int value);
 	static void applyShaderBool(int uniformId, bool value);
 private:
-	unsigned int programID, vertexShaderID, fragmentShaderID;
+	unsigned int programID, vertexShaderID, fragmentShaderID, geometryShaderID;
 	void compileShader(const std::string& filePath, unsigned int ID);
 	int attributeCount;
 };

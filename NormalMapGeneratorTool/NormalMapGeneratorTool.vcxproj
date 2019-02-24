@@ -217,6 +217,9 @@
     <None Include="Resources\Shaders\frameBuffer.fs" />
     <None Include="Resources\Shaders\gridLines.fs" />
     <None Include="Resources\Shaders\gridLines.vs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.fs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.gs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.vs" />
     <None Include="Resources\Shaders\modelView.fs" />
     <None Include="Resources\Shaders\modelView.vs" />
     <None Include="Resources\Shaders\modelViewPBR.fs" />

@@ -253,6 +253,9 @@
     <None Include="Resources\Preference\preference.npref">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="Resources\Shaders\modelAttribsDisplay.gs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.fs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.vs" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">

@@ -9,6 +9,7 @@ ShaderProgram::ShaderProgram()
 	programID = 0;
 	vertexShaderID = 0;
 	fragmentShaderID = 0;
+	geometryShaderID = 0;
 	attributeCount = 0;
 }
 
@@ -23,16 +24,36 @@ void ShaderProgram::compileShaders(const std::string & vertexShaderPath, const s
 	if (vertexShaderID == 0)
 		std::cout << "ERROR : Vertex shader creation";
 	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	if (vertexShaderID == 0)
+	if (fragmentShaderID == 0)
 		std::cout << "ERROR : Fragment shader creation";
 	compileShader(vertexShaderPath, vertexShaderID);
 	compileShader(fragmentShaderPath, fragmentShaderID);
+}
+
+void ShaderProgram::compileShaders(const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geometryShaderPath)
+{
+	programID = glCreateProgram();
+	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	if (vertexShaderID == 0)
+		std::cout << "ERROR : Vertex shader creation";
+	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	if (fragmentShaderID == 0)
+		std::cout << "ERROR : Fragment shader creation";
+	geometryShaderID = glCreateShader(GL_GEOMETRY_SHADER);
+	if (geometryShaderID == 0)
+		std::cout << "ERROR : Geometry shader creation";
+
+	compileShader(vertexShaderPath, vertexShaderID);
+	compileShader(fragmentShaderPath, fragmentShaderID);
+	compileShader(geometryShaderPath, geometryShaderID);
 }
 
 void ShaderProgram::linkShaders()
 {
 	glAttachShader(programID, vertexShaderID);
 	glAttachShader(programID, fragmentShaderID);
+	if (geometryShaderID != 0)
+		glAttachShader(programID, geometryShaderID);
 
 	glLinkProgram(programID);
 	GLint isLinked = 0;
@@ -41,12 +62,15 @@ void ShaderProgram::linkShaders()
 	{
 		GLint maxLength = 0;
 		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, (int *)&isLinked);
-		std::vector<char> infoLog(maxLength);
-		std::cout << &(infoLog[0]);
-		glGetProgramInfoLog(programID, maxLength, &maxLength, &infoLog[0]);
+		GLchar infoLog[1024]; //std::vector<char> infoLog(2000);
+		glGetProgramInfoLog(programID, 1024, NULL, &infoLog[0]);
+		std::cout << "\nLink error : --------------\n" << &infoLog[0];
+		std::cout << "\n-------------\n";
 		glDeleteProgram(programID);
 		glDeleteShader(vertexShaderID);
 		glDeleteShader(fragmentShaderID);
+		if (geometryShaderID != 0)
+			glDeleteShader(geometryShaderID);
 	}
 	else
 	{
@@ -57,6 +81,12 @@ void ShaderProgram::linkShaders()
 	glDetachShader(programID, fragmentShaderID);
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
+
+	if (geometryShaderID != 0)
+	{
+		glDetachShader(programID, geometryShaderID);
+		glDeleteShader(geometryShaderID);
+	}
 }
 
 void ShaderProgram::addAttribute(const std::string & attributeName)
