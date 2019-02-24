@@ -9,14 +9,15 @@ in mat3 TBN[];
 out vec3 AttribColour;
 
 uniform bool _ShowNormals;
-const float MAGNITUDE = 0.15;
+const float MAGNITUDE = 0.25;
 
 void main()
 {
-	
+	vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
+    vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
+
 	vec4 midPoint = (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position)/3.0;
-	vec3 avgNormal = Normal[0] + Normal[1] + Normal[2];
-	avgNormal = normalize(avgNormal) * ((_ShowNormals)? 1.0 : 0.0);
+	vec3 avgNormal = normalize(cross(a, b)) * ((_ShowNormals)? 1.0 : 0.0);
 
 	AttribColour = vec3(0,1,0);
 
