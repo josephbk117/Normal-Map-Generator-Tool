@@ -452,6 +452,7 @@ int main(void)
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;

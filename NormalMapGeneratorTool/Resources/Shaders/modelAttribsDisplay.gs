@@ -9,7 +9,7 @@ in mat3 TBN[];
 out vec3 AttribColour;
 
 uniform bool _ShowNormals;
-const float MAGNITUDE = 0.25;
+const float MAGNITUDE = 0.35;
 
 void main()
 {
