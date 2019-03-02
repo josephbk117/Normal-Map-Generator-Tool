@@ -9,7 +9,7 @@ in mat3 TBN[];
 out vec3 AttribColour;
 
 uniform bool _ShowNormals;
-const float MAGNITUDE = 0.35;
+uniform float _NormalsLength;
 
 void main()
 {
@@ -23,14 +23,14 @@ void main()
 
 	gl_Position = midPoint;
 	EmitVertex();
-	gl_Position = midPoint + vec4(avgNormal, 0.0) * MAGNITUDE;
+	gl_Position = midPoint + vec4(avgNormal, 0.0) * _NormalsLength;
 	EmitVertex();
 	EndPrimitive();
 
 	/*AttribColour = vec3(0,1,0);
 	gl_Position = midPoint;
 	EmitVertex();
-	gl_Position = midPoint + vec4(TBN[0][0],0.0) * MAGNITUDE;
+	gl_Position = midPoint + vec4(TBN[0][0],0.0) * _NormalsLength;
 	EmitVertex();
 	EndPrimitive();*/
 

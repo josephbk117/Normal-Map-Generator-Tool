@@ -55,7 +55,7 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v1.1 Beta";
+const std::string VERSION_NAME = "v1.2 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -162,8 +162,6 @@ int main(void)
 	previewFrameDrawingPanel.init(1.0f, 1.0f);
 	DrawingPanel brushPanel;
 	brushPanel.init(1.0f, 1.0f);
-
-	glLineWidth(2.0f);
 
 	//Windowing related images
 	closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
@@ -276,6 +274,7 @@ int main(void)
 
 	//Model attributes uniforms
 	int modelAttributesShowNormalsUniform = modelAttribViewShader.getUniformLocation("_ShowNormals");
+	int modelAttributesNormalLengthUniform = modelAttribViewShader.getUniformLocation("_NormalsLength");
 
 	//Gridlines uniforms
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
@@ -302,6 +301,8 @@ int main(void)
 	{
 		const double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
+
+		glLineWidth(previewStateUtility.normDisplayThickness);
 
 		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		if (shouldSaveNormalMap)
@@ -527,6 +528,7 @@ int main(void)
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 100.0f));
 		modelAttribViewShader.applyShaderBool(modelAttributesShowNormalsUniform, previewStateUtility.showNormals);
+		modelAttribViewShader.applyShaderFloat(modelAttributesNormalLengthUniform, previewStateUtility.normDisplayLineLength);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
 
@@ -1199,7 +1201,13 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleVar();
 	ImGui::Spacing();
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
-	ImGui::Checkbox("Normals", &previewStateUtility.showNormals);
+	ImGui::Checkbox("Normals", &previewStateUtility.showNormals); ImGui::SameLine();
+	float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
+	ImGui::PushItemWidth(availWidth);
+	ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f");
+	ImGui::SameLine();
+	ImGui::SliderFloat("##Normal Length", &previewStateUtility.normDisplayLineLength, 0.1f, 10.0f, "Length:%.2f");
+	ImGui::PopItemWidth();
 
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
 	if (!isPreviewWindowMaximized)
@@ -1508,10 +1516,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+		}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1735,7 +1743,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 
