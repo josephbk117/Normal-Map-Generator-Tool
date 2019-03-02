@@ -11,13 +11,12 @@ Takes height map information which is usually gray scale ( Height map data ) and
 * Custom themes can be added by adding custom .nort theme files in Resources\Themes
 * Extensive preview capabilities:
   * Matcaps
-  * Lit
-  * Textured and lit
+  * PBR material display
 
 *Disclaimer : Can be used in production but look out for the rare bug here and there*
 
-### Software as of version 1.0 Beta
-![Image of Nora normal map editor](https://i.imgur.com/1fHhvXA.png)
+### Software as of version 1.2 Beta
+![Image of Nora normal map editor](https://i.imgur.com/JujvJES.png)
 #### Different view modes are available while editing the normal map :
 1. Height( Gray scale )
 2. Normal
@@ -27,11 +26,14 @@ Realtime preview of the texture applied on a model can be shown as well.
 This is a real-time preview of how the texture will look once applied on the model.
 #### This preview mode has 4 modes:
 1. Height
-2. Normal
-3. Lighting
-4. Textured, which combines lighting along with a custom diffuse texture.
+2. Normal, Visualize the normals in various ways with the help of Matcaps
+   ![Image of Nora Matcap Previewa](https://i.imgur.com/wI0svNZ.png)
+3. Lighting, which shows PBR output with the help of Albedo, Metalness & Roughness textures.
 
-![Image of Nora normal map editor](https://i.imgur.com/BoIjEQj.png)
+#### Custom theme support:
+1. Create a .nort file with a certain format and add it under the Resources\Themes
+2. Look at existing theme files to make your own
+<div><img src="https://i.imgur.com/7ItkGf0.png" alt="alt text" width="300"/> <img src="https://i.imgur.com/mkSqdWF.png" alt="alt text" width="300"/><img src="https://i.imgur.com/h2Hlrym.png" alt="alt text" width="300"/><img src="https://i.imgur.com/OZPJzUA.png" alt="alt text" width="300"/></div>
 
 ## Planned / Completed features :
 - Editor Functionality:
@@ -44,9 +46,9 @@ This is a real-time preview of how the texture will look once applied on the mod
     - Adding blend options to interpolate normals between layers    
 - Preview Display:
   - Adding support for parallax map using the input height map
-  - Adding PBR support along with Metalness map, Roughness map & Occlusion map
+  - [X] Adding PBR support along with Metalness map, Roughness map & Occlusion map ( completed as of v1.2 )
   - Custom shader display option ( Allows custom viewing of model in preview )
-  - Better user interaction with preview UI
+  - [X] Better user interaction with preview UI (completed as of v1.2)
   - [X] Adding more base models for preview (completed as of v1.1)
   - Adding infinite plane with shadows in Lighting / Textured view ( Which can be toggled )
   - Additional lighting options:
@@ -68,10 +70,10 @@ This is a real-time preview of how the texture will look once applied on the mod
       - Last modified time
       - If image file then preview shown
   - [X] Adding preferences window (completed as of v1.1):
-    - Set max resolution image that can be edited ( Larger max image resolution takes more RAM )
-    - Adding max number undo steps
-    - Set the default theme
-    - Set the default export path
+    - [X] Set max resolution image that can be edited ( Larger max image resolution takes more RAM )
+    - [X] Adding max number undo steps
+    - [X] Set the default theme
+    - [X] Set the default export path
   - Add any file for models / brush textures / theme files (.nort) to application's library. These ones will get loaded up along with the base assets
   - Cover more application edge cases and report correct information to user. eg: Running out of memory, space etc
   - Export options:
