@@ -245,19 +245,19 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     // depth of current layer
     float currentLayerDepth = 0.0;
     // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * 0.1; 
+    vec2 P = viewDir.xy / viewDir.z * 0.05; 
     vec2 deltaTexCoords = P / numLayers;
   
     // get initial values
     vec2  currentTexCoords     = texCoords;
-    float currentDepthMapValue = texture(heightmapTexture, currentTexCoords).r;
+    float currentDepthMapValue = 1.0 - texture(heightmapTexture, currentTexCoords).r;
       
     while(currentLayerDepth < currentDepthMapValue)
     {
         // shift texture coordinates along direction of P
         currentTexCoords -= deltaTexCoords;
         // get depthmap value at current texture coordinates
-        currentDepthMapValue = texture(heightmapTexture, currentTexCoords).r;  
+        currentDepthMapValue = 1.0 - texture(heightmapTexture, currentTexCoords).r;  
         // get depth of next layer
         currentLayerDepth += layerDepth;  
     }
@@ -272,8 +272,9 @@ void main()
 		float xOffset = 1.0/_HeightmapDimX;
 		float yOffset = 1.0/_HeightmapDimY;
         vec3 norm;
-		//vec2 TexCoords = ParallaxMapping(TexCoords, normalize(( (TBN * _CameraPosition) - FragPos)));
-		 //if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
+
+		//vec2 TexCoords = ParallaxMapping(TexCoords, normalize(TBN*_CameraPosition - TBN*FragPos));
+		//if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
 			//discard;
 		if(_MethodIndex == 0) //For method 1
 			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
@@ -312,5 +313,7 @@ void main()
 		}
     }
     else if(_normalMapModeOn == 1)
+	{
 		FragColor = texture(heightmapTexture, TexCoords);
+	}
 }

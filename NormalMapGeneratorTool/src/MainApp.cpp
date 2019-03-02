@@ -116,7 +116,6 @@ ModalWindow modalWindow;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem;
-WindowSide windowSideVal;
 
 std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
@@ -124,6 +123,9 @@ PreferenceInfo preferencesInfo;
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // UI textureIds
 unsigned int closeTextureId, restoreTextureId, minimizeTextureId, logoTextureId; // Window textureIds
 unsigned int defaultWhiteTextureId;
+
+bool canPerformPreviewWindowMouseOperations = false;
+bool isPreviewWindowMaximized = false;
 
 int main(void)
 {
@@ -364,14 +366,13 @@ int main(void)
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
 
-		//Have to set various bounds on mouse location to determine context driven mouse actions
-
-		windowSideVal = WindowTransformUtility::getWindowAreaAtMouseCoord(curMouseCoord.x, curMouseCoord.y, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-		if (windowSideVal == WindowSide::CENTER)
+		//Check if the preview modal window is open and only then perform drawing operations
+		if (!isPreviewWindowMaximized)
 		{
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, frameDrawingPanel, isBlurOn);
 		}
+
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 		heightMapTexData.updateTexture();
 
@@ -458,7 +459,8 @@ int main(void)
 		glm::vec3 cameraPosition;
 		static glm::vec2 prevMcord;
 		glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
-		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400)
+
+		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && canPerformPreviewWindowMouseOperations/*&& windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400*/)
 		{
 			circleAround += offset.x * 0.01f;
 			yAxis += offset.y * 0.01f;
@@ -1102,15 +1104,15 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 300, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
-	static bool isPreviewOpen = true;
+
 	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.45f, 1), ImVec2(1.45f, 0), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
 	{
-		isPreviewOpen = true;
+		isPreviewWindowMaximized = true;
 		ImGui::OpenPopup("Preview");
 	}
 	ImGui::SetNextWindowPosCenter();
 	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.getWindowRes().x * 0.95f, windowSys.getWindowRes().y * 0.95f));
-	if (ImGui::BeginPopupModal("Preview", &isPreviewOpen, ImGuiWindowFlags_NoMove))
+	if (ImGui::BeginPopupModal("Preview", &isPreviewWindowMaximized, ImGuiWindowFlags_NoMove))
 	{
 		float aspectRatio = 0.0f;
 		float width = ImGui::GetContentRegionAvail().x;
@@ -1126,11 +1128,19 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			ImGui::Dummy(ImVec2(((ImGui::GetContentRegionAvail().x - width) * 0.5f) - 10, 0));
 			ImGui::SameLine();
 			ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(width, height));
+			if (ImGui::IsItemHovered())
+				canPerformPreviewWindowMouseOperations = true;
+			else
+				canPerformPreviewWindowMouseOperations = false;
 		}
 		else
 		{
 			ImGui::Dummy(ImVec2(((ImGui::GetContentRegionAvail().x - width) * 0.5f) - 10, (ImGui::GetContentRegionAvail().y - height) * 0.5f));
 			ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(width, height));
+			if (ImGui::IsItemHovered())
+				canPerformPreviewWindowMouseOperations = true;
+			else
+				canPerformPreviewWindowMouseOperations = false;
 		}
 		ImGui::EndPopup();
 	}
@@ -1192,6 +1202,13 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Checkbox("Normals", &previewStateUtility.showNormals);
 
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
+	if (!isPreviewWindowMaximized)
+	{
+		if (ImGui::IsItemHovered())
+			canPerformPreviewWindowMouseOperations = true;
+		else
+			canPerformPreviewWindowMouseOperations = false;
+	}
 	ImGui::SliderFloat("##Zoom level", &previewStateUtility.modelPreviewZoomLevel, -1.0f, -100.0f, "Zoom Level:%.2f");
 	ImGui::SliderFloat("##Metalness", &previewStateUtility.metalness, 0.01f, 1.0f, "Metalness:%.2f");
 	ImGui::SliderFloat("##Roughness", &previewStateUtility.roughness, 0.01f, 10.0f, "Roughness:%.2f");
@@ -1491,10 +1508,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1718,7 +1735,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 
@@ -1897,9 +1914,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
-	if (windowSideVal == WindowSide::CENTER)
+	if (!canPerformPreviewWindowMouseOperations)
 		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
-	else if (windowSideVal == WindowSide::RIGHT)
+	else if (canPerformPreviewWindowMouseOperations)
 		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }
 //struct BoundsAndPos
