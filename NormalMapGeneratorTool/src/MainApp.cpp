@@ -31,7 +31,7 @@
 #include "UndoRedoSystem.h"
 #include "MeshLoadingSystem.h"
 #include "PreferencesHandler.h"
-
+#include "LayerManager.h"
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
@@ -86,6 +86,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
 inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
 inline void DisplayPreview(const ImGuiWindowFlags &window_flags);
+inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags);
 inline void DisplayLightSettingsUserInterface();
 inline void DisplayNormalSettingsUserInterface();
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
@@ -119,6 +120,7 @@ UndoRedoSystem undoRedoSystem;
 
 std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
+LayerManager layerManager;
 
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // UI textureIds
 unsigned int closeTextureId, restoreTextureId, minimizeTextureId, logoTextureId; // Window textureIds
@@ -126,6 +128,7 @@ unsigned int defaultWhiteTextureId;
 
 bool canPerformPreviewWindowMouseOperations = false;
 bool isPreviewWindowMaximized = false;
+bool isPreviewPanelActive = true;
 
 int main(void)
 {
@@ -195,6 +198,10 @@ int main(void)
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+
+	layerManager.addLayer(heightMapTexData.GetTexId(), "Layer 1");
+	layerManager.addLayer(albedoTexDataForPreview.GetTexId(), "Layer 1");
+	layerManager.addLayer(roughnessTexDataForPreview.GetTexId(), "Layer 1");
 
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
@@ -619,8 +626,16 @@ int main(void)
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 
-		//________Preview Display_______
-		DisplayPreview(window_flags);
+		if (isPreviewPanelActive)
+		{
+			//________Preview Display_______
+			DisplayPreview(window_flags);
+		}
+		else
+		{
+			//________Layers Display________
+			DisplayLayerPanel(window_flags);
+		}
 		fileExplorer.display();
 		modalWindow.display();
 
@@ -1367,6 +1382,29 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
+
+inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
+{
+	bool open = true;
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
+	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 300, 42), ImGuiSetCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(300, windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
+	ImGui::Begin("Layer_Panel", &open, window_flags);
+
+	ImGui::SetNextWindowPosCenter();
+	ImGui::SetNextWindowSizeConstraints(ImVec2(400, 400), ImVec2(windowSys.getWindowRes().x * 0.95f, windowSys.getWindowRes().y * 0.95f));
+
+	layerManager.draw();
+
+	ImGui::End();
+	ImGui::PopStyleColor();
+	ImGui::PopStyleVar(3);
+}
+
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
@@ -1452,6 +1490,16 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		prev_item = item_current;
 		ImGui::PopStyleVar();
 
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 300, 0));
+		if (ImGui::Button("Preview", ImVec2(142, 40)))
+		{
+			isPreviewPanelActive = true;
+		}
+		if (ImGui::Button("Layers", ImVec2(142, 40)))
+		{
+			isPreviewPanelActive = false;
+		}
+
 		ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowWidth() * 0.5f - 150, ImGui::GetWindowHeight() * 0.5f + 300));
 		if (openPreferences)
 			ImGui::OpenPopup("Preferences");
@@ -1496,6 +1544,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndPopup();
 		}
 
+
+
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 		ImGui::Indent(windowSys.GetWindowRes().x - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
@@ -1516,10 +1566,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-		}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)

@@ -87,6 +87,9 @@
     <ClCompile Include="src\Stb\stb_image.cpp">
       <Filter>Source Files\Stb</Filter>
     </ClCompile>
+    <ClCompile Include="src\LayerManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DrawingPanel.h">
@@ -179,6 +182,9 @@
     <ClInclude Include="src\Stb\stb_truetype.h">
       <Filter>Header Files\Stb</Filter>
     </ClInclude>
+    <ClInclude Include="src\LayerManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\3dmodel.vs">
@@ -253,9 +259,15 @@
     <None Include="Resources\Preference\preference.npref">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Resources\Shaders\modelAttribsDisplay.gs" />
-    <None Include="Resources\Shaders\modelAttribsDisplay.fs" />
-    <None Include="Resources\Shaders\modelAttribsDisplay.vs" />
+    <None Include="Resources\Shaders\modelAttribsDisplay.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\modelAttribsDisplay.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\Shaders\modelAttribsDisplay.gs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">

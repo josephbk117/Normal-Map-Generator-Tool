@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\LayerManager.cpp" />
     <ClCompile Include="src\ModalWindow.cpp" />
     <ClCompile Include="src\ModelObject.cpp" />
     <ClCompile Include="src\Camera.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="src\UndoRedoSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\LayerManager.h" />
     <ClInclude Include="src\PreferencesHandler.h" />
     <ClInclude Include="src\ModalWindow.h" />
     <ClInclude Include="src\ModelObject.h" />
