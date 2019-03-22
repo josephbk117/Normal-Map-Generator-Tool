@@ -29,7 +29,153 @@ uniform bool _Use_Matcap;
 uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 
 const float PI = 3.14159265359;
-// ----------------------------------------------------------------------------
+float DistributionGGX(vec3 N, vec3 H, float roughness);
+float GeometrySchlickGGX(float NdotV, float roughness);
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
+vec3 fresnelSchlick(float cosTheta, vec3 F0);
+vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float metallic, float roughness, vec3 lightPositions);
+vec3 TriSample(sampler2D inTexture ,vec2 TexCoords, float xOffset, float yOffset);
+vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffset);
+vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten);
+vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
+
+void main()
+{
+	if(_normalMapModeOn == 2 || _normalMapModeOn == 3)
+    {
+		float xOffset = 1.0/_HeightmapDimX;
+		float yOffset = 1.0/_HeightmapDimY;
+        vec3 norm;
+
+		//vec2 TexCoords = ParallaxMapping(TexCoords, normalize(TBN*_CameraPosition - TBN*FragPos));
+		//if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
+			//discard;
+		if(_MethodIndex == 0) //For method 1
+			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
+		else //For method 2
+			norm = SobelNormal(heightmapTexture, TexCoords, xOffset, yOffset);
+
+		norm = normalize(norm);
+		if(_flipX_Ydir == true)
+			norm = norm.grb;
+
+        if(_normalMapModeOn == 3)
+		{
+			norm = normalize(TBN * norm);
+			vec3 albedoCol = diffuseColour * texture(albedomapTexture, TexCoords).rgb;
+			float metalnessTex = texture(metalnessmapTexture, TexCoords).r;
+			float roughnessTex = texture(roughnessmapTexture, TexCoords).r;
+			FragColor = PBR_Colour(norm, _CameraPosition, FragPos, albedoCol, metalnessTex * _Metalness, roughnessTex * _Roughness, lightPos);
+		}
+        else
+		{
+			if(_Use_Matcap)
+			{
+				mat3 conTBN;
+				conTBN[0] = TBN[0];
+				conTBN[1] = TBN[1];
+				conTBN[2] = Normal;
+
+				norm = normalize(conTBN * norm);
+				vec3 viewDir = normalize(_CameraPosition - FragPos);
+				vec3 lightDir = normalize(lightPos - FragPos);
+
+				FragColor = LightingRamp( lightDir , viewDir, norm, mapcapTexture, 1.0);
+			}
+			else
+				FragColor = vec4(norm * 0.5 + 0.5, 1.0);
+		}
+    }
+    else if(_normalMapModeOn == 1)
+	{
+		FragColor = texture(heightmapTexture, TexCoords);
+	}
+}
+
+vec3 TriSample(sampler2D inTexture ,vec2 TexCoords, float xOffset, float yOffset)
+{
+	float currentPx = texture(inTexture,TexCoords).x;
+
+    float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
+    float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;
+    float e = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y)).r;
+    float w = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y)).r;
+
+     vec3 norm;
+
+	n *= _HeightmapStrength * 0.01;
+	s *= _HeightmapStrength * 0.01;
+	e *= _HeightmapStrength * 0.01;
+	w *= _HeightmapStrength * 0.01;
+
+	yOffset = xOffset = 0.002;//Uniform distance for triangle points
+	//Point 1 north
+	vec3 point1 = vec3(0, n, 0);
+	point1.xz = vec2(TexCoords.x, TexCoords.y + yOffset);
+	//Point 2 west
+	vec3 point2 = vec3(0, w, 0);
+	point2.xz = vec2(TexCoords.x + xOffset, TexCoords.y);
+	//Point 3 center
+	vec3 point3 = vec3(0, currentPx, 0);
+	point3.xz = TexCoords;
+	//Point 4 south
+	vec3 point4 = vec3(0, s, 0);
+	point4.xz = vec2(TexCoords.x, TexCoords.y - yOffset);
+	//Point 5 east
+	vec3 point5 = vec3(0, e, 0);
+	point5.xz = vec2(TexCoords.x - xOffset, TexCoords.y);
+
+	vec3 v1 = point1 - point3;
+	vec3 v2 = point2 - point3;
+
+	vec3 v3 = point4 - point3;
+	vec3 v4 = point5 - point3;
+
+	vec3 v5 = point5 - point3;
+	vec3 v6 = point1 - point3;
+
+	vec3 v7 = point2 - point3;
+	vec3 v8 = point4 - point3;
+
+	vec3 frNorm = normalize(cross(v1, v2));
+	vec3 secNorm = normalize(cross(v3, v4));
+	vec3 thrNorm = normalize(cross(v5, v6));
+	vec3 fourNorm = normalize(cross(v7, v8));
+
+	norm = frNorm + secNorm + thrNorm + fourNorm;
+	norm.rgb = norm.rbg;
+	norm.rg = -norm.rg;
+
+	return norm;
+}
+vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffset)
+{
+	vec3 norm;
+	float currentPx = texture(inTexture,TexCoords).x;
+	float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
+    float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;
+    float e = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y)).r;
+    float w = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y)).r;
+
+	float ne = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y + yOffset)).r;
+	float nw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y + yOffset)).r;
+	float se = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y - yOffset)).r;
+	float sw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y - yOffset)).r;
+	//           -1 0 1
+	//           -2 0 2
+	//           -1 0 1
+	float dX = nw + 2*w + sw -ne - 2*e - se;
+	//           -1-2-1
+	//            0 0 0
+	//            1 2 1
+	float dY = se + 2*s + sw -ne - 2*n - nw;
+	dX *= _HeightmapStrength * currentPx;
+	dY *= _HeightmapStrength * currentPx;
+	norm = vec3(dX, dY, 1.0);
+	norm.g = -norm.g;
+
+	return norm;
+}
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
     float a = roughness*roughness;
@@ -43,7 +189,6 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 
     return nom / denom;
 }
-// ----------------------------------------------------------------------------
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0);
@@ -54,7 +199,6 @@ float GeometrySchlickGGX(float NdotV, float roughness)
 
     return nom / denom;
 }
-// ----------------------------------------------------------------------------
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
@@ -64,15 +208,13 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 
     return ggx1 * ggx2;
 }
-// ----------------------------------------------------------------------------
 vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
-// ----------------------------------------------------------------------------
 vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float metallic, float roughness, vec3 lightPositions)
 {
-    float ao        = 5.0;//texture(aoMap, TexCoords).r;
+    float ao = 5.0;//texture(aoMap, TexCoords).r;
 
     vec3 N = Normal;
     vec3 V = normalize(camPos - WorldPos);
@@ -132,108 +274,6 @@ vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float meta
 
     return vec4(color, 1.0);
 }
-
-vec3 TriSample(sampler2D inTexture ,vec2 TexCoords, float xOffset, float yOffset)
-{
-	float currentPx = texture(inTexture,TexCoords).x;
-
-    float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
-    float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;
-    float e = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y)).r;
-    float w = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y)).r;
-
-     vec3 norm;
-
-	n *= _HeightmapStrength * 0.01;
-	s *= _HeightmapStrength * 0.01;
-	e *= _HeightmapStrength * 0.01;
-	w *= _HeightmapStrength * 0.01;
-
-	yOffset = xOffset = 0.002;//Uniform distance for triangle points
-	//Point 1 north
-	vec3 point1 = vec3(0, n, 0);
-	point1.xz = vec2(TexCoords.x, TexCoords.y + yOffset);
-	//Point 2 west
-	vec3 point2 = vec3(0, w, 0);
-	point2.xz = vec2(TexCoords.x + xOffset, TexCoords.y);
-	//Point 3 center
-	vec3 point3 = vec3(0, currentPx, 0);
-	point3.xz = TexCoords;
-	//Point 4 south
-	vec3 point4 = vec3(0, s, 0);
-	point4.xz = vec2(TexCoords.x, TexCoords.y - yOffset);
-	//Point 5 east
-	vec3 point5 = vec3(0, e, 0);
-	point5.xz = vec2(TexCoords.x - xOffset, TexCoords.y);
-
-	vec3 v1 = point1 - point3;
-	vec3 v2 = point2 - point3;
-
-	vec3 v3 = point4 - point3;
-	vec3 v4 = point5 - point3;
-
-	vec3 v5 = point5 - point3;
-	vec3 v6 = point1 - point3;
-
-	vec3 v7 = point2 - point3;
-	vec3 v8 = point4 - point3;
-
-	vec3 frNorm = normalize(cross(v1, v2));
-	vec3 secNorm = normalize(cross(v3, v4));
-	vec3 thrNorm = normalize(cross(v5, v6));
-	vec3 fourNorm = normalize(cross(v7, v8));
-
-	norm = frNorm + secNorm + thrNorm + fourNorm;
-	norm.rgb = norm.rbg;
-	norm.rg = -norm.rg;
-
-	return norm;
-}
-
-vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffset)
-{
-	vec3 norm;
-	float currentPx = texture(inTexture,TexCoords).x;
-	float n = texture(inTexture,vec2(TexCoords.x, TexCoords.y + yOffset)).r;
-    float s = texture(inTexture,vec2(TexCoords.x, TexCoords.y - yOffset)).r;
-    float e = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y)).r;
-    float w = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y)).r;
-
-	float ne = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y + yOffset)).r;
-	float nw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y + yOffset)).r;
-	float se = texture(inTexture,vec2(TexCoords.x - xOffset, TexCoords.y - yOffset)).r;
-	float sw = texture(inTexture,vec2(TexCoords.x + xOffset, TexCoords.y - yOffset)).r;
-	//           -1 0 1
-	//           -2 0 2
-	//           -1 0 1
-	float dX = nw + 2*w + sw -ne - 2*e - se;
-	//           -1-2-1
-	//            0 0 0
-	//            1 2 1
-	float dY = se + 2*s + sw -ne - 2*n - nw;
-	dX *= _HeightmapStrength * currentPx;
-	dY *= _HeightmapStrength * currentPx;
-	norm = vec3(dX, dY, 1.0);
-	norm.g = -norm.g;
-
-	return norm;
-}
-
-vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten)
-{
-	
-	vec3 r = reflect( viewDir, normal );
-	float m = 2.0 * sqrt(pow(r.x, 2.0 ) + pow(r.y, 2.0 ) + pow(r.z + 1.0, 2.0));
-	vec2 vN = (r.xy / m + 0.5);
-
-	vN = normal.xy * 0.5 + 0.5;
-	vN.y =1.0 - vN.y;
-
-	vec3 base = texture(tex, vN).rgb;
-	base = pow(base, vec3(1.0/2.2));
-	return vec4(base, 1.0);
-}
-
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
     // number of depth layers
@@ -264,56 +304,17 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     
     return currentTexCoords;
 }
-
-void main()
+vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten)
 {
-	if(_normalMapModeOn == 2 || _normalMapModeOn == 3)
-    {
-		float xOffset = 1.0/_HeightmapDimX;
-		float yOffset = 1.0/_HeightmapDimY;
-        vec3 norm;
+	
+	vec3 r = reflect( viewDir, normal );
+	float m = 2.0 * sqrt(pow(r.x, 2.0 ) + pow(r.y, 2.0 ) + pow(r.z + 1.0, 2.0));
+	vec2 vN = (r.xy / m + 0.5);
 
-		//vec2 TexCoords = ParallaxMapping(TexCoords, normalize(TBN*_CameraPosition - TBN*FragPos));
-		//if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
-			//discard;
-		if(_MethodIndex == 0) //For method 1
-			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
-		else //For method 2
-			norm = SobelNormal(heightmapTexture, TexCoords, xOffset, yOffset);
+	vN = normal.xy * 0.5 + 0.5;
+	vN.y =1.0 - vN.y;
 
-		norm = normalize(norm);
-		if(_flipX_Ydir == true)
-			norm = norm.grb;
-
-        if(_normalMapModeOn == 3)
-		{
-			norm = normalize(TBN * norm);
-			vec3 albedoCol = diffuseColour * texture(albedomapTexture, TexCoords).rgb;
-			float metalnessTex = texture(metalnessmapTexture, TexCoords).r;
-			float roughnessTex = texture(roughnessmapTexture, TexCoords).r;
-			FragColor = PBR_Colour(norm, _CameraPosition, FragPos, albedoCol, metalnessTex * _Metalness, roughnessTex * _Roughness, lightPos);
-		}
-        else
-		{
-			if(_Use_Matcap)
-			{
-				mat3 conTBN;
-				conTBN[0] = TBN[0];
-				conTBN[1] = TBN[1];
-				conTBN[2] = Normal;
-
-				norm = normalize(conTBN * norm);
-				vec3 viewDir = normalize(_CameraPosition - FragPos);
-				vec3 lightDir = normalize(lightPos - FragPos);
-
-				FragColor = LightingRamp( lightDir , viewDir, norm, mapcapTexture, 1.0);
-			}
-			else
-				FragColor = vec4(norm * 0.5 + 0.5, 1.0);
-		}
-    }
-    else if(_normalMapModeOn == 1)
-	{
-		FragColor = texture(heightmapTexture, TexCoords);
-	}
+	vec3 base = texture(tex, vN).rgb;
+	base = pow(base, vec3(1.0/2.2));
+	return vec4(base, 1.0);
 }
