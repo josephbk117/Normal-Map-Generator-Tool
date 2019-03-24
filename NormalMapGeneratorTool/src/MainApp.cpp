@@ -177,6 +177,8 @@ int main(void)
 	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
 
+	unsigned int additionalNormalTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "Normal Maps\\sample normal 1.png");
+
 	defaultWhiteTextureId = TextureManager::loadTextureFromColour(ColourData(1, 1, 1, 1));
 
 	std::vector<std::string> cubeMapImagePaths;
@@ -199,9 +201,9 @@ int main(void)
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
-	layerManager.addLayer(heightMapTexData.GetTexId(), "Layer 1");
-	layerManager.addLayer(albedoTexDataForPreview.GetTexId(), "Layer 1");
-	layerManager.addLayer(roughnessTexDataForPreview.GetTexId(), "Layer 1");
+	layerManager.addLayer(heightMapTexData.GetTexId());
+	layerManager.addLayer(albedoTexDataForPreview.GetTexId());
+	layerManager.addLayer(roughnessTexDataForPreview.GetTexId());
 
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
@@ -246,6 +248,8 @@ int main(void)
 	int BlueChannelUniform = normalmapShader.getUniformLocation("_Channel_B");
 	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
 	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
+	int textureOneIndexUniform = normalmapShader.getUniformLocation("textureOne");
+	int textureTwoIndexUniform = normalmapShader.getUniformLocation("textureTwo");
 
 	//Brush uniforms
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
@@ -400,7 +404,9 @@ int main(void)
 		normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
 		normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
 		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
-		normalmapPanel.draw();
+		normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
+		normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
+		normalmapPanel.draw(additionalNormalTextureId);
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
@@ -1793,7 +1799,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
+	}
 #endif
 }
 

@@ -118,11 +118,20 @@ glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
 	);
 }
 
-void DrawingPanel::draw()noexcept
+void DrawingPanel::draw(int additionalTextureId)noexcept
 {
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	if (additionalTextureId != -1)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, additionalTextureId);
+	}
+	else
+		glBindTexture(GL_TEXTURE_2D, textureID);
 	glBindVertexArray(vaoID);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }

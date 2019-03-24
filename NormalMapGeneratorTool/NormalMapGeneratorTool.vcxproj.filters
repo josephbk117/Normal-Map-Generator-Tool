@@ -411,6 +411,9 @@
     <Image Include="Resources\Textures\Matcaps\orange flame.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Resources\Textures\Normal Maps\sample normal 1.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

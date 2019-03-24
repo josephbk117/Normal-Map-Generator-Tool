@@ -3,6 +3,7 @@ in vec2 textureUV;
 in vec3 worldPos;
 out vec4 color;
 uniform sampler2D textureOne;
+uniform sampler2D textureTwo;
 uniform vec3 lightDir;
 uniform float _HeightmapStrength;
 uniform float _HeightmapDimX;
@@ -16,6 +17,12 @@ uniform int _Channel_R;
 uniform int _Channel_G;
 uniform int _Channel_B;
 uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
+
+
+vec3 blend_rnm(vec3 n1, vec3 n2)
+{
+    return normalize(vec3(n1.xy*n2.z + n2.xy*n1.z, n1.z*n2.z));
+}
 
 void main()
 {
@@ -96,10 +103,13 @@ void main()
 			norm = vec3(dX, dY, 1.0);
 			norm.g = -norm.g;
 		}
+
 		norm = normalize(norm);
+		//vec3 cNorm = pow(texture(textureTwo,textureUV).rgb,vec3(1.0/2.2));
+		//norm = blend_rnm(norm, cNorm * 2.0 - 1.0);
+
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
-
         float diffuse = max(dot(norm, lightDir) * 0.5 + 0.5, 0.0) * _LightIntensity;
 
         if(_normalMapModeOn == 2)

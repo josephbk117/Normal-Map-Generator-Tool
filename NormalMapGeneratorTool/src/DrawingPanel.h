@@ -15,7 +15,7 @@ public:
 	unsigned int getTextureID()const noexcept;
 	bool isPointInPanel(float xpos, float ypos)noexcept;
 	glm::vec4 getPanelWorldDimension()noexcept;
-	void draw()noexcept;
+	void draw(int additionalTextureId = -1)noexcept;
 private:
 	Transform transform;
 	float width, height;
