@@ -7,7 +7,8 @@ enum class LayerType { HEIGHT_MAP, NORMAL_MAP };
 
 struct LayerInfo
 {
-	int textureId;
+	int inputTextureId = 0;
+	unsigned int outputTextureId = 0;
 	std::string layerName = "Layer 1";
 	LayerType layerType;
 };
@@ -19,7 +20,9 @@ private:
 public:
 	LayerManager();
 	~LayerManager();
-	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName="");
+	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
+	void setOutputTexture(int index,unsigned int texId);
+	int getInputTexId(int index);
 	std::string* getLayerNameAddress(int index);
 	void draw();
 };

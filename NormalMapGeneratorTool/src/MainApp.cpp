@@ -201,10 +201,6 @@ int main(void)
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
-	layerManager.addLayer(heightMapTexData.GetTexId());
-	layerManager.addLayer(albedoTexDataForPreview.GetTexId());
-	layerManager.addLayer(roughnessTexDataForPreview.GetTexId());
-
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
 	normalmapShader.linkShaders();
@@ -308,14 +304,16 @@ int main(void)
 
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
+
+	layerManager.addLayer(heightMapTexData.GetTexId());
+	layerManager.addLayer(roughnessTexDataForPreview.GetTexId());
+
 	while (!windowSys.isWindowClosing())
 	{
 		const double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
 
 		glLineWidth(previewStateUtility.normDisplayThickness);
-
-		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
@@ -323,15 +321,6 @@ int main(void)
 
 		const glm::vec2 curMouseCoord = windowSys.getCursorPos();
 		HandleKeyboardInput(deltaTime, frameDrawingPanel, isMaximized);
-
-		fbs.bindFrameBuffer();
-		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-
-		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
-		normalmapShader.use();
 
 		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::getWindowSideBorderAtMouseCoord(curMouseCoord, windowSys.getWindowRes());
 		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
@@ -388,6 +377,19 @@ int main(void)
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 		heightMapTexData.updateTexture();
 
+		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
+		if (shouldSaveNormalMap)
+			SetStatesForSavingNormalMap();
+		fbs.bindFrameBuffer();
+		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+
+		//glBindTexture(GL_TEXTURE_2D, );
+		normalmapPanel.setTextureID(layerManager.getInputTexId(0), false);
+		normalmapShader.use();
+
 		normalmapPanel.getTransform()->update();
 		//---- Applying Normal Map Shader Uniforms---//
 		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
@@ -407,6 +409,13 @@ int main(void)
 		normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
 		normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
 		normalmapPanel.draw(additionalNormalTextureId);
+
+		layerManager.setOutputTexture(0, fbs.getColourTexture());
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
@@ -450,11 +459,6 @@ int main(void)
 			changeSize = true;
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		// Draw the frame by using the frame buffer texture
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
@@ -466,7 +470,6 @@ int main(void)
 
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
