@@ -29,5 +29,21 @@ void LayerManager::draw()
 		ImGui::Image((ImTextureID)layers.at(i).textureId, ImVec2(50, 50)); ImGui::SameLine();
 		char* buffer = &layers.at(i).layerName[0];
 		ImGui::InputText("##Layer Name", buffer, layers.at(i).layerName.size());
+		const char* items[] = { "Height Map", "Normal Map" };
+		int item_current = (int)layers.at(i).layerType;
+		if (ImGui::Combo("##combo" + i, &item_current, items, IM_ARRAYSIZE(items)))
+		{
+			switch (item_current)
+			{
+			case 0:
+				layers.at(i).layerType = LayerType::HEIGHT_MAP;
+				break;
+			case 1:
+				layers.at(i).layerType = LayerType::NORMAL_MAP;
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }

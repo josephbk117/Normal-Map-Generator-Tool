@@ -177,7 +177,7 @@ int main(void)
 	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
 
-	unsigned int additionalNormalTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "Normal Maps\\sample normal 1.png");
+	unsigned int additionalNormalTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "Normal Maps\\sample normal 1.png", true);
 
 	defaultWhiteTextureId = TextureManager::loadTextureFromColour(ColourData(1, 1, 1, 1));
 

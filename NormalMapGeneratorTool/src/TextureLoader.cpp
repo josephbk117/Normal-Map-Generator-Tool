@@ -38,12 +38,13 @@ glm::vec2 TextureManager::getImageDimensions(const std::string & path)
 	return glm::vec2(width, height);
 }
 
-unsigned int TextureManager::loadTextureFromFile(const std::string & path)
+unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool linearColourSpace)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
+
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 4);
 	nrComponents = 4;
 	if (data)
@@ -55,12 +56,12 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path)
 		else if (nrComponents == 3)
 		{
 			format = GL_RGB;
-			internalFormat = GL_SRGB;
+			internalFormat = (linearColourSpace) ? GL_RGB : GL_SRGB;
 		}
 		else if (nrComponents == 4)
 		{
 			format = GL_RGBA;
-			internalFormat = GL_SRGB_ALPHA;
+			internalFormat = (linearColourSpace) ? GL_RGBA : GL_SRGB_ALPHA;
 		}
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);

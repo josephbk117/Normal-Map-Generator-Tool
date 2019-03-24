@@ -18,10 +18,24 @@ uniform int _Channel_G;
 uniform int _Channel_B;
 uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 
-
+// Inputs will be in -1.0 to +1.0 range for blending methods
 vec3 blend_rnm(vec3 n1, vec3 n2)
 {
-    return normalize(vec3(n1.xy*n2.z + n2.xy*n1.z, n1.z*n2.z));
+	 n1 = n1 * 0.5 + 0.5;
+	 n2 = n2 * 0.5 + 0.5;
+     n1 = n1*vec3( 2,  2, 2) + vec3(-1, -1,  0);
+     n2 = n2*vec3(-2, -2, 2) + vec3( 1,  1, -1);
+     return n1*dot(n1, n2)/n1.z - n2;
+}
+
+vec3 blend_udn(vec3 n1, vec3 n2)
+{
+	return normalize(vec3(n1.xy + n2.xy, n1.z));
+}
+
+vec3 blend_pd(vec3 n1, vec3 n2)
+{
+	return normalize(vec3(n1.xy*n2.z + n2.xy*n1.z, n1.z*n2.z));
 }
 
 void main()
@@ -105,8 +119,8 @@ void main()
 		}
 
 		norm = normalize(norm);
-		//vec3 cNorm = pow(texture(textureTwo,textureUV).rgb,vec3(1.0/2.2));
-		//norm = blend_rnm(norm, cNorm * 2.0 - 1.0);
+		vec3 cNorm = texture(textureTwo,textureUV).rgb * 2.0 - 1.0;
+		norm = blend_pd(norm, cNorm);
 
 		if(_flipX_Ydir == true)
 			norm = norm.grb;
@@ -116,7 +130,7 @@ void main()
 		{
 			// specular
 			vec3 viewDir = normalize(- vec3( 0, 0, 5.0));
-			vec3 halfwayDir = normalize(lightDir + viewDir);  
+			vec3 halfwayDir = normalize(lightDir + viewDir);
 			float spec = pow(max(dot(norm, halfwayDir), 0.0), _Specularity) * _SpecularStrength;
 			float gammaCorrected = min(pow(spec + diffuse, 1.0/2.2), 1.0);
             color = vec4(gammaCorrected, gammaCorrected, gammaCorrected, 1.0);
