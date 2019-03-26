@@ -100,7 +100,7 @@ void TextureData::updateTexture()
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTexture);
 	GLenum format = TextureManager::getTextureFormatFromData(componentCount);
 	glBindTexture(GL_TEXTURE_2D, texId);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data); //Issue is here 
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, currentTexture);
 }
 

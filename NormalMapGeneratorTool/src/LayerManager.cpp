@@ -1,11 +1,15 @@
 #include "LayerManager.h"
 #include "GL\glew.h"
-LayerManager::LayerManager()
+
+int LayerManager::getLayerCount()
 {
+	return layers.size();
 }
 
-LayerManager::~LayerManager()
+void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution)
 {
+	this->windowRes = windowRes;
+	this->maxBufferResolution = maxBufferResolution;
 }
 
 void LayerManager::addLayer(int texId, LayerType layerType, const std::string& layerName)
@@ -16,7 +20,13 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 		layerInfo.layerName = "Layer" + std::to_string(layers.size());
 	else
 		layerInfo.layerName = layerName;
+	layerInfo.fbs.init(windowRes, maxBufferResolution);
 	layers.push_back(layerInfo);
+}
+void LayerManager::updateFramebufferTextureDimensions(const glm::vec2 resolution)
+{
+	for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
+		layers.at(layerIndex).fbs.updateTextureDimensions(resolution);
 }
 std::string* LayerManager::getLayerNameAddress(int index)
 {
@@ -26,7 +36,7 @@ void LayerManager::draw()
 {
 	for (unsigned int i = 0; i < layers.size(); i++)
 	{
-		ImGui::Image((ImTextureID)layers.at(i).outputTextureId, ImVec2(50, 50)); ImGui::SameLine();
+		ImGui::Image((ImTextureID)layers.at(i).fbs.getColourTexture(), ImVec2(50, 50)); ImGui::SameLine();
 		char* buffer = &layers.at(i).layerName[0];
 		ImGui::InputText("##Layer Name", buffer, layers.at(i).layerName.size());
 		const char* items[] = { "Height Map", "Normal Map" };
@@ -47,21 +57,17 @@ void LayerManager::draw()
 		}
 	}
 }
-void LayerManager::setOutputTexture(int index, unsigned int texId)
+
+void LayerManager::bindFrameBuffer(int index)
 {
-	/*if (layers.at(index).outputTextureId == 0)
-		glGenTextures(1, &layers.at(index).outputTextureId);
-
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, layers.at(index).outputTextureId);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 512, 512);
-	glBindTexture(GL_TEXTURE_2D, 0);*/
-	layers.at(index).outputTextureId = texId;
+	layers.at(index).fbs.bindFrameBuffer();
 }
+
+unsigned int LayerManager::getColourTexture(int index)
+{
+	return layers.at(index).fbs.getColourTexture();
+}
+
 int LayerManager::getInputTexId(int index)
 {
 	return layers.at(index).inputTextureId;

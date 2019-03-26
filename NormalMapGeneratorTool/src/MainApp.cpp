@@ -291,6 +291,7 @@ int main(void)
 	bool isMaximized = false;
 	bool isBlurOn = false;
 
+	layerManager.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	previewFbs.init(windowSys.getWindowRes(), glm::vec2(1920, 1920));
 
@@ -307,6 +308,7 @@ int main(void)
 
 	layerManager.addLayer(heightMapTexData.GetTexId());
 	layerManager.addLayer(roughnessTexDataForPreview.GetTexId());
+	layerManager.addLayer(heightMapTexData.GetTexId());
 
 	while (!windowSys.isWindowClosing())
 	{
@@ -373,49 +375,51 @@ int main(void)
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, frameDrawingPanel, isBlurOn);
 		}
-
 		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
 		heightMapTexData.updateTexture();
 
 		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
-		fbs.bindFrameBuffer();
-		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
 
-		//glBindTexture(GL_TEXTURE_2D, );
-		normalmapPanel.setTextureID(layerManager.getInputTexId(0), false);
-		normalmapShader.use();
+		//fbs.bindFrameBuffer();
+		for (int layerIndex = 0; layerIndex < layerManager.getLayerCount(); layerIndex++)
+		{
+			layerManager.bindFrameBuffer(layerIndex);
+			glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
 
-		normalmapPanel.getTransform()->update();
-		//---- Applying Normal Map Shader Uniforms---//
-		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-		normalmapShader.applyShaderFloat(strengthValueUniform, normalViewStateUtility.normalMapStrength);
-		normalmapShader.applyShaderFloat(specularityUniform, normalViewStateUtility.specularity);
-		normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
-		normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
-		normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
-		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
-		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
-		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
-		normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
-		normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
-		normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
-		normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
-		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
-		normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
-		normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
-		normalmapPanel.draw(additionalNormalTextureId);
+			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
+			normalmapShader.use();
 
-		layerManager.setOutputTexture(0, fbs.getColourTexture());
+			normalmapPanel.getTransform()->update();
+			//---- Applying Normal Map Shader Uniforms---//
+			normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
+			normalmapShader.applyShaderFloat(strengthValueUniform, normalViewStateUtility.normalMapStrength);
+			normalmapShader.applyShaderFloat(specularityUniform, normalViewStateUtility.specularity);
+			normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
+			normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
+			normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
+			normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
+			normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
+			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
+			normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
+			normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
+			normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
+			normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
+			normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
+			normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
+			normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
+			normalmapPanel.draw(additionalNormalTextureId);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDisable(GL_DEPTH_TEST);
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		}
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
@@ -442,7 +446,7 @@ int main(void)
 					modalWindow.setModalDialog("ERROR", "The provided path : " + path + "\nIs incomplete, Check if the path is valid");
 				else
 					modalWindow.setModalDialog("ERROR", "The extension '" + fileExt + "' is not supported\n Choose from .png, .jpg, .tga or .bmp");
-				fbs.updateTextureDimensions(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
+				//fbs.updateTextureDimensions(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
 				continue;
 			}
 			//Image validation stage over
@@ -462,7 +466,7 @@ int main(void)
 		// Draw the frame by using the frame buffer texture
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
-		frameDrawingPanel.setTextureID(fbs.getColourTexture());
+		frameDrawingPanel.setTextureID(layerManager.getColourTexture(2));//fbs.getColourTexture());
 		frameDrawingPanel.draw();
 
 		// Set up the preview frame buffer and then render the 3d model
@@ -1976,6 +1980,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 	windowSys.setWindowRes(width, height);
 	fbs.updateTextureDimensions(windowSys.getWindowRes());
+	layerManager.updateFramebufferTextureDimensions(windowSys.getWindowRes());
 	previewFbs.updateTextureDimensions(windowSys.getWindowRes());
 }
 
