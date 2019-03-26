@@ -5,7 +5,7 @@
 #include "FrameBufferSystem.h"
 #include "ImGui\imgui.h"
 
-enum class LayerType { HEIGHT_MAP, NORMAL_MAP };
+enum class LayerType { HEIGHT_MAP=0, NORMAL_MAP };
 
 struct LayerInfo
 {
@@ -29,6 +29,7 @@ public:
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
 	void updateFramebufferTextureDimensions(const glm::vec2 resolution);
+	LayerType getLayerType(int index);
 	void bindFrameBuffer(int index);
 	unsigned int getColourTexture(int index);
 	int getInputTexId(int index);

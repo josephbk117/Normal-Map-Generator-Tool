@@ -404,7 +404,7 @@ int main(void)
 			normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
 			normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
 			normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
-			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
+			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);//(layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 0);
 			normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
 			normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
 			normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
@@ -418,7 +418,6 @@ int main(void)
 			glDisable(GL_DEPTH_TEST);
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		}
 
 		static char saveLocation[500] = { '\0' };

@@ -119,8 +119,8 @@ void main()
 		}
 
 		norm = normalize(norm);
-		vec3 cNorm = texture(textureTwo,textureUV).rgb * 2.0 - 1.0;
-		norm = blend_pd(norm, cNorm);
+		//vec3 cNorm = texture(textureTwo,textureUV).rgb * 2.0 - 1.0;
+		//norm = blend_pd(norm, cNorm);
 
 		if(_flipX_Ydir == true)
 			norm = norm.grb;

@@ -28,6 +28,10 @@ void LayerManager::updateFramebufferTextureDimensions(const glm::vec2 resolution
 	for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
 		layers.at(layerIndex).fbs.updateTextureDimensions(resolution);
 }
+LayerType LayerManager::getLayerType(int index)
+{
+	return layers.at(index).layerType;
+}
 std::string* LayerManager::getLayerNameAddress(int index)
 {
 	return &layers.at(index).layerName;
