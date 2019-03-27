@@ -48,8 +48,6 @@
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
 //TODO : Preview additional capabilities: i)Wireframe ii)Normals(per vertex & per-face) iii)Tangents iv)Bi-Tangents
 
-//#define NORA_CUSTOM_WINDOW_CHROME //For custom window chrome
-
 enum class LoadingOption
 {
 	MODEL, TEXTURE, NONE
@@ -246,6 +244,7 @@ int main(void)
 	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
 	int textureOneIndexUniform = normalmapShader.getUniformLocation("textureOne");
 	int textureTwoIndexUniform = normalmapShader.getUniformLocation("textureTwo");
+	int useNormalInputUniform = normalmapShader.getUniformLocation("_UseNormalInput");
 
 	//Brush uniforms
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
@@ -307,8 +306,9 @@ int main(void)
 	double initTime = glfwGetTime();
 
 	layerManager.addLayer(heightMapTexData.GetTexId());
-	layerManager.addLayer(roughnessTexDataForPreview.GetTexId());
-	layerManager.addLayer(heightMapTexData.GetTexId());
+	layerManager.addLayer(additionalNormalTextureId);
+	layerManager.addLayer(albedoTexDataForPreview.GetTexId());
+	layerManager.addLayer(minimizeTextureId);
 
 	while (!windowSys.isWindowClosing())
 	{
@@ -323,14 +323,6 @@ int main(void)
 
 		const glm::vec2 curMouseCoord = windowSys.getCursorPos();
 		HandleKeyboardInput(deltaTime, frameDrawingPanel, isMaximized);
-
-		const WindowSide currentMouseCoordWindowSide = WindowTransformUtility::getWindowSideBorderAtMouseCoord(curMouseCoord, windowSys.getWindowRes());
-		if (windowSideAtInitPos == WindowSide::LEFT || windowSideAtInitPos == WindowSide::RIGHT || currentMouseCoordWindowSide == WindowSide::LEFT || currentMouseCoordWindowSide == WindowSide::RIGHT)
-			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-		else if (windowSideAtInitPos == WindowSide::TOP || windowSideAtInitPos == WindowSide::BOTTOM || currentMouseCoordWindowSide == WindowSide::TOP || currentMouseCoordWindowSide == WindowSide::BOTTOM)
-			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-		else
-			ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNWSE);
 
 		//---- Making sure the dimensions do not change for drawing panel ----//
 		const float aspectRatio = windowSys.getAspectRatio();
@@ -351,20 +343,6 @@ int main(void)
 		}
 
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
-
-		float leftBorder = 300.0f / windowSys.getWindowRes().x;
-		float rightBorder = 1.0f - leftBorder;
-
-		float topBorder = 1.0f / windowSys.getWindowRes().y;
-		float bottomBorder = 1.0f - topBorder;
-
-		leftBorder = (leftBorder * 2.0f - 1.0f);
-		rightBorder = (rightBorder * 2.0f - 1.0f);
-		topBorder = (topBorder * 2.0f - 1.0f)*1.25f;
-		bottomBorder = (bottomBorder * 2.0f - 1.0f)*1.25f;
-
-		//frameDrawingPanel.getTransform()->setX(glm::clamp(frameDrawingPanel.getTransform()->getPosition().x, leftBorder, rightBorder));
-		//frameDrawingPanel.getTransform()->setY(glm::clamp(frameDrawingPanel.getTransform()->getPosition().y, topBorder, bottomBorder));
 		frameDrawingPanel.getTransform()->update();
 		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_LEFT);
 		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
@@ -382,43 +360,58 @@ int main(void)
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
 
-		//fbs.bindFrameBuffer();
+		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		normalmapPanel.getTransform()->update();
+		normalmapShader.use();
+		//---- Applying Normal Map Shader Uniforms---//
+		normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, glm::mat4(1));
+		normalmapShader.applyShaderFloat(strengthValueUniform, normalViewStateUtility.normalMapStrength);
+		normalmapShader.applyShaderFloat(specularityUniform, normalViewStateUtility.specularity);
+		normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
+		normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
+		normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
+		normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
+		normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
+		normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
+		normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
+		normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
+		normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
+		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
+		normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
+		normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
+		normalmapShader.applyShaderInt(useNormalInputUniform, 0);
+		//---- Draw each of the layers to a frame buffer----//
 		for (int layerIndex = 0; layerIndex < layerManager.getLayerCount(); layerIndex++)
 		{
 			layerManager.bindFrameBuffer(layerIndex);
-			glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(GL_LESS);
-
+			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 0);
 			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
-			normalmapShader.use();
-
-			normalmapPanel.getTransform()->update();
-			//---- Applying Normal Map Shader Uniforms---//
-			normalmapShader.applyShaderUniformMatrix(normalPanelModelMatrixUniform, normalmapPanel.getTransform()->getMatrix());
-			normalmapShader.applyShaderFloat(strengthValueUniform, normalViewStateUtility.normalMapStrength);
-			normalmapShader.applyShaderFloat(specularityUniform, normalViewStateUtility.specularity);
-			normalmapShader.applyShaderFloat(specularityStrengthUniform, normalViewStateUtility.specularityStrength);
-			normalmapShader.applyShaderFloat(lightIntensityUniform, normalViewStateUtility.lightIntensity);
-			normalmapShader.applyShaderVector3(lightDirectionUniform, normalViewStateUtility.getNormalizedLightDir());
-			normalmapShader.applyShaderFloat(widthUniform, heightMapTexData.getRes().x);
-			normalmapShader.applyShaderFloat(heightUniform, heightMapTexData.getRes().y);
-			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);//(layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 0);
-			normalmapShader.applyShaderBool(flipXYdirUniform, normalViewStateUtility.flipX_Ydir);
-			normalmapShader.applyShaderBool(RedChannelUniform, normalViewStateUtility.redChannelActive);
-			normalmapShader.applyShaderBool(GreenChannelUniform, normalViewStateUtility.greenChannelActive);
-			normalmapShader.applyShaderBool(BlueChannelUniform, normalViewStateUtility.blueChannelActive);
-			normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
-			normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
-			normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
-			normalmapPanel.draw(additionalNormalTextureId);
-
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glDisable(GL_DEPTH_TEST);
-			glClearColor(0.1f, 0.1f, 0.1f, 1.0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			normalmapPanel.draw();
 		}
+		//---- Bind main frame buffer and set output to cumulative blending ----//
+		glDisable(GL_DEPTH_TEST);
+		fbs.bindFrameBuffer();
+		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
+		normalmapPanel.draw(layerManager.getColourTexture(1));
+
+		if (layerManager.getLayerCount() > 2)
+		{
+			for (int i = 2; i < layerManager.getLayerCount(); i++)
+			{
+				normalmapPanel.setTextureID(fbs.getColourTexture(), false);
+				normalmapPanel.draw(layerManager.getColourTexture(i));
+			}
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
@@ -465,7 +458,7 @@ int main(void)
 		// Draw the frame by using the frame buffer texture
 		frameShader.use();
 		frameShader.applyShaderUniformMatrix(frameModelMatrixUniform, frameDrawingPanel.getTransform()->getMatrix());
-		frameDrawingPanel.setTextureID(layerManager.getColourTexture(2));//fbs.getColourTexture());
+		frameDrawingPanel.setTextureID(fbs.getColourTexture());
 		frameDrawingPanel.draw();
 
 		// Set up the preview frame buffer and then render the 3d model
@@ -1581,7 +1574,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
