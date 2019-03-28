@@ -18,10 +18,18 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 {
 	LayerInfo layerInfo;
 	layerInfo.inputTextureId = texId;
+	layerInfo.layerName = new char[200];
 	if (layerName == "")
-		layerInfo.layerName = "Layer" + std::to_string(layers.size());
+	{
+		std::string layerText = std::string("Layer ") + std::to_string(layers.size());
+		std::memcpy(&layerInfo.layerName[0], &layerText[0], layerText.size());
+		layerInfo.layerName[layerText.size()] = '\0';
+	}
 	else
-		layerInfo.layerName = layerName;
+	{
+		std::memcpy(layerInfo.layerName, &layerName[0], layerName.size());
+		layerInfo.layerName[layerName.size()] = '\0';
+	}
 	layerInfo.fbs.init(windowRes, maxBufferResolution);
 	layers.push_back(layerInfo);
 }
@@ -34,10 +42,7 @@ LayerType LayerManager::getLayerType(int index)
 {
 	return layers.at(index).layerType;
 }
-std::string* LayerManager::getLayerNameAddress(int index)
-{
-	return &layers.at(index).layerName;
-}
+
 void LayerManager::draw()
 {
 	std::set<unsigned int> markedForDeletionLayerIndices;
@@ -47,7 +52,7 @@ void LayerManager::draw()
 		char* buffer = &layers.at(i).layerName[0];
 		std::string inputText = "##Input text";
 		inputText += std::to_string(i);
-		ImGui::InputText(inputText.c_str(), buffer, layers.at(i).layerName.size());
+		ImGui::InputText(inputText.c_str(), buffer, 200);
 		const char* items[] = { "Height Map", "Normal Map" };
 		int item_current = (int)layers.at(i).layerType;
 		std::string comboBoxName = "##combo";
@@ -69,9 +74,7 @@ void LayerManager::draw()
 		std::string removeLayerButtonName = "Remove Layer ";
 		removeLayerButtonName += std::to_string(i);
 		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
-		{
 			markedForDeletionLayerIndices.insert(i);
-		}
 	}
 	if (ImGui::Button("Add Layer", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
@@ -80,7 +83,7 @@ void LayerManager::draw()
 	std::set<unsigned int>::iterator it;
 	for (it = markedForDeletionLayerIndices.begin(); it != markedForDeletionLayerIndices.end(); it++)
 	{
-		std::cout << "\n Remove at " << *it;
+		delete[] layers.at(*it).layerName;
 		layers.erase(layers.begin() + *it);
 	}
 }
@@ -98,4 +101,10 @@ unsigned int LayerManager::getColourTexture(int index)
 int LayerManager::getInputTexId(int index)
 {
 	return layers.at(index).inputTextureId;
+}
+
+LayerManager::~LayerManager()
+{
+	for (unsigned int i = 0; i < layers.size(); i++)
+		delete[] layers.at(i).layerName;
 }

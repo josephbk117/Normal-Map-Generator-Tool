@@ -11,7 +11,7 @@ struct LayerInfo
 {
 	int inputTextureId = 0;
 	unsigned int outputTextureId = 0;
-	std::string layerName = "Layer 1";
+	char* layerName;
 	LayerType layerType;
 	FrameBufferSystem fbs;
 };
@@ -24,7 +24,7 @@ private:
 	glm::vec2 maxBufferResolution;
 public:
 	LayerManager() {}
-	~LayerManager() {}
+	~LayerManager();
 	int getLayerCount();
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
@@ -33,7 +33,6 @@ public:
 	void bindFrameBuffer(int index);
 	unsigned int getColourTexture(int index);
 	int getInputTexId(int index);
-	std::string* getLayerNameAddress(int index);
 	void draw();
 };
 
