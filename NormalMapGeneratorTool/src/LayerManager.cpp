@@ -17,6 +17,7 @@ void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferR
 void LayerManager::addLayer(int texId, LayerType layerType, const std::string& layerName)
 {
 	LayerInfo layerInfo;
+	layerInfo.layerType = layerType;
 	layerInfo.inputTextureId = texId;
 	layerInfo.layerName = new char[200];
 	if (layerName == "")

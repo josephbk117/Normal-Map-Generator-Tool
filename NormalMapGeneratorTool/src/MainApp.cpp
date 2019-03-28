@@ -303,10 +303,10 @@ int main(void)
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
 
-	layerManager.addLayer(heightMapTexData.GetTexId());
-	layerManager.addLayer(additionalNormalTextureId);
-	layerManager.addLayer(albedoTexDataForPreview.GetTexId());
-	layerManager.addLayer(minimizeTextureId);
+	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
+	layerManager.addLayer(additionalNormalTextureId, LayerType::NORMAL_MAP);
+	layerManager.addLayer(albedoTexDataForPreview.GetTexId(), LayerType::HEIGHT_MAP);
+	layerManager.addLayer(minimizeTextureId, LayerType::HEIGHT_MAP);
 
 	while (!windowSys.isWindowClosing())
 	{

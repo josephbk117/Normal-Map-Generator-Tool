@@ -12,7 +12,7 @@ struct LayerInfo
 	int inputTextureId = 0;
 	unsigned int outputTextureId = 0;
 	char* layerName;
-	LayerType layerType;
+	LayerType layerType = LayerType::HEIGHT_MAP;
 	FrameBufferSystem fbs;
 };
 
