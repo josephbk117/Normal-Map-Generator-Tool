@@ -357,8 +357,6 @@ int main(void)
 		heightMapTexData.updateTexture();
 
 		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-		if (shouldSaveNormalMap)
-			SetStatesForSavingNormalMap();
 
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
@@ -381,7 +379,7 @@ int main(void)
 		normalmapShader.applyShaderBool(methodIndexUniform, normalViewStateUtility.methodIndex);
 		normalmapShader.applyShaderInt(textureOneIndexUniform, 0);
 		normalmapShader.applyShaderInt(textureTwoIndexUniform, 1);
-		normalmapShader.applyShaderInt(useNormalInputUniform, 0);
+		normalmapShader.applyShaderInt(useNormalInputUniform, 3);
 		//---- Draw each of the layers to a frame buffer----//
 		for (int layerIndex = 0; layerIndex < layerManager.getLayerCount(); layerIndex++)
 		{
@@ -391,6 +389,9 @@ int main(void)
 			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
 			normalmapPanel.draw();
 		}
+
+		if (shouldSaveNormalMap)
+			SetStatesForSavingNormalMap();
 		//---- Bind main frame buffer and set output to cumulative blending ----//
 		glDisable(GL_DEPTH_TEST);
 		fbs.bindFrameBuffer();
@@ -407,6 +408,10 @@ int main(void)
 				normalmapPanel.draw(layerManager.getColourTexture(i));
 			}
 		}
+
+		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
+		normalmapPanel.draw();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);

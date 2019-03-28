@@ -37,7 +37,6 @@ vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float meta
 vec3 TriSample(sampler2D inTexture ,vec2 TexCoords, float xOffset, float yOffset);
 vec3 SobelNormal(sampler2D inTexture, vec2 TexCoords, float xOffset, float yOffset);
 vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten);
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
 
 void main()
 {
@@ -46,10 +45,6 @@ void main()
 		float xOffset = 1.0/_HeightmapDimX;
 		float yOffset = 1.0/_HeightmapDimY;
         vec3 norm;
-
-		//vec2 TexCoords = ParallaxMapping(TexCoords, normalize(TBN*_CameraPosition - TBN*FragPos));
-		//if(TexCoords.x > 1.0 || TexCoords.y > 1.0 || TexCoords.x < 0.0 || TexCoords.y < 0.0)
-			//discard;
 		if(_MethodIndex == 0) //For method 1
 			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
 		else //For method 2
@@ -274,36 +269,7 @@ vec4 PBR_Colour(vec3 Normal, vec3 camPos, vec3 WorldPos, vec3 albedo, float meta
 
     return vec4(color, 1.0);
 }
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
-{ 
-    // number of depth layers
-    const float minLayers = 8;
-    const float maxLayers = 32;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
-    // calculate the size of each layer
-    float layerDepth = 1.0 / numLayers;
-    // depth of current layer
-    float currentLayerDepth = 0.0;
-    // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * 0.05; 
-    vec2 deltaTexCoords = P / numLayers;
-  
-    // get initial values
-    vec2  currentTexCoords     = texCoords;
-    float currentDepthMapValue = 1.0 - texture(heightmapTexture, currentTexCoords).r;
-      
-    while(currentLayerDepth < currentDepthMapValue)
-    {
-        // shift texture coordinates along direction of P
-        currentTexCoords -= deltaTexCoords;
-        // get depthmap value at current texture coordinates
-        currentDepthMapValue = 1.0 - texture(heightmapTexture, currentTexCoords).r;  
-        // get depth of next layer
-        currentLayerDepth += layerDepth;  
-    }
-    
-    return currentTexCoords;
-}
+
 vec4 LightingRamp(vec3 lightDir, vec3 viewDir, vec3 normal, sampler2D tex, float atten)
 {
 	
