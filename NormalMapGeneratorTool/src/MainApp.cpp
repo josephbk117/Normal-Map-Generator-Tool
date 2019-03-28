@@ -42,11 +42,9 @@
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
 //TODO : Fix memory error while using custom brush texture and exit the application
-//TODO : Parallax map option
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Preview additional capabilities: i)Wireframe ii)Normals(per vertex & per-face) iii)Tangents iv)Bi-Tangents
 
 enum class LoadingOption
 {
