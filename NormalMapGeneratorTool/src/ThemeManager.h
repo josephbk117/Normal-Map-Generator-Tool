@@ -176,8 +176,8 @@ public:
 
 	void init()
 	{
-		FileExplorer fileExplorer;
-		themesInDir = fileExplorer.getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
+		FileExplorer* fileExplorer = FileExplorer::instance;
+		themesInDir = fileExplorer->getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
 
 
 		PrimaryColour = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);

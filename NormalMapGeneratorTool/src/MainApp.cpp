@@ -108,7 +108,7 @@ TextureData matcapTexDataForPreview;
 
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
-FileExplorer fileExplorer;
+FileExplorer* fileExplorer;
 ModalWindow modalWindow;
 ThemeManager themeManager;
 DrawingPanel normalmapPanel;
@@ -138,6 +138,8 @@ int main(void)
 	glEnable(GL_BLEND);
 
 	SetupImGui();
+	FileExplorer::init();
+	fileExplorer = FileExplorer::instance;
 	//Load user preferences
 	PreferencesHandler::init("Resources\\Preference\\preference.npref");
 	preferencesInfo = PreferencesHandler::readPreferences();
@@ -429,7 +431,7 @@ int main(void)
 			ImageFormat imageFormat = ImageFormat::BMP;
 			//Image validation stage start
 			std::string path(saveLocation);
-			std::string fileExt = fileExplorer.getFileExtension(saveLocation);
+			std::string fileExt = fileExplorer->getFileExtension(saveLocation);
 			if (fileExt == ".tga")
 				imageFormat = ImageFormat::TGA;
 			else if (fileExt == ".bmp")
@@ -646,7 +648,7 @@ int main(void)
 			//________Layers Display________
 			DisplayLayerPanel(window_flags);
 		}
-		fileExplorer.display();
+		fileExplorer->display();
 		modalWindow.display();
 
 		//static bool ff = true;
@@ -666,6 +668,8 @@ int main(void)
 	delete modelPreviewObj;
 	delete cubeForSkybox;
 	delete previewGrid;
+
+	fileExplorer->shutDown();
 
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
@@ -896,7 +900,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	if (windowSys.isKeyPressedDown(GLFW_KEY_O) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
 		currentLoadingOption = LoadingOption::TEXTURE;
-		fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+		fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 		{
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
@@ -977,8 +981,8 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
 
 	static std::string currentBrush = "Circle";
-	static std::vector<std::string> grungeBrushPaths = fileExplorer.getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Grunge", false);
-	static std::vector<std::string> patternBrushPaths = fileExplorer.getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Patterns", false);
+	static std::vector<std::string> grungeBrushPaths = fileExplorer->getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Grunge", false);
+	static std::vector<std::string> patternBrushPaths = fileExplorer->getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Patterns", false);
 
 	if (ImGui::BeginMenu(currentBrush.c_str()))
 	{
@@ -1207,7 +1211,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					break;
 				case 6:
 					currentLoadingOption = LoadingOption::MODEL;
-					fileExplorer.displayDialog(FileType::MODEL, [&](std::string str)
+					fileExplorer->displayDialog(FileType::MODEL, [&](std::string str)
 					{
 						modelPreviewObj = modelLoader.createModelFromFile(str);
 					});
@@ -1341,7 +1345,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
-			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
 					albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
@@ -1358,7 +1362,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
-			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
 					metalnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
@@ -1375,7 +1379,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
-			fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
 					roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
@@ -1429,7 +1433,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			if (ImGui::MenuItem("Open Image", "CTRL+O"))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
-				fileExplorer.displayDialog(FileType::IMAGE, [&](std::string str)
+				fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
 					{
@@ -1606,7 +1610,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 	static bool didActuallyDraw = false;
 	const glm::vec2 currentMouseCoord = windowSys.getCursorPos();
 
-	if (state == GLFW_PRESS && !fileExplorer.shouldDisplay)
+	if (state == GLFW_PRESS && !fileExplorer->shouldDisplay)
 	{
 		const glm::vec2 wnCurMouse = glm::vec2(currentMouseCoord.x / windowSys.getWindowRes().x, 1.0f - currentMouseCoord.y / windowSys.getWindowRes().y);
 		const glm::vec2 wnPrevMouse = glm::vec2(prevMouseCoord.x / windowSys.getWindowRes().x, 1.0f - prevMouseCoord.y / windowSys.getWindowRes().y);

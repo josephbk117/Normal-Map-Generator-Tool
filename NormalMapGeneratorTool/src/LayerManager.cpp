@@ -1,7 +1,9 @@
 #include <set>
 #include <iostream>
-#include "LayerManager.h"
 #include "GL\glew.h"
+#include "LayerManager.h"
+#include "FileExplorer.h"
+#include "TextureLoader.h"
 
 int LayerManager::getLayerCount()
 {
@@ -79,7 +81,10 @@ void LayerManager::draw()
 	}
 	if (ImGui::Button("Add Layer", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{
-		std::cout << "\nAdd layer called";
+		FileExplorer::instance->displayDialog(FileType::IMAGE, [&](std::string str)
+		{
+			addLayer(TextureManager::loadTextureFromFile(str, true), LayerType::HEIGHT_MAP);
+		});
 	}
 	std::set<unsigned int>::iterator it;
 	for (it = markedForDeletionLayerIndices.begin(); it != markedForDeletionLayerIndices.end(); it++)

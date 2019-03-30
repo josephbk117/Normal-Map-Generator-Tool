@@ -4,18 +4,30 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-FileExplorer FileExplorer::instance;
+FileExplorer *FileExplorer::instance = nullptr;
 FileExplorer::FileExplorer()
 {
+}
+
+void FileExplorer::init()
+{
+	if (instance == nullptr)
+		instance = new FileExplorer();
 	std::string rootPath = "C:\\";
 	for (unsigned int i = 0; i < 5; i++)
 	{
 		if (std::experimental::filesystem::exists(rootPath))
-			roots.push_back(rootPath);
+			instance->roots.push_back(rootPath);
 		rootPath[0] = (char)((int)rootPath[0] + 1);
 	}
-	for (int i = 0; i < roots.size(); i++)
-		std::cout << "\nPATH : " << roots[i];
+	for (int i = 0; i < instance->roots.size(); i++)
+		std::cout << "\nPATH : " << instance->roots[i];
+}
+
+void FileExplorer::shutDown()
+{
+	if (instance != nullptr)
+		delete instance;
 }
 
 void FileExplorer::display()
@@ -258,8 +270,7 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string 
 }
 
 FileExplorer::~FileExplorer()
-{
-}
+{}
 
 bool FileExplorer::pathTypeCheck(std::vector<std::string> endTypes, std::string & _path)
 {
