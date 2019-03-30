@@ -51,7 +51,7 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
-const std::string VERSION_NAME = "v1.2 Beta";
+const std::string VERSION_NAME = "v1.5 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -395,8 +395,12 @@ int main(void)
 		fbs.bindFrameBuffer();
 		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
-		normalmapPanel.draw(layerManager.getColourTexture(1));
+		if (layerManager.getLayerCount() >= 2)
+			normalmapPanel.draw(layerManager.getColourTexture(1));
+		else
+			normalmapPanel.draw();
 
 		if (layerManager.getLayerCount() > 2)
 		{
@@ -547,8 +551,6 @@ int main(void)
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
 
-		//modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::translate(glm::scale(glm::mat4(), glm::vec3(10, 10, 10)), glm::vec3(0, 0.1f, 0)));
-		//previewPlane->draw();
 		glActiveTexture(GL_TEXTURE0);
 
 		// Set up preview shader uniforms
@@ -1577,7 +1579,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
