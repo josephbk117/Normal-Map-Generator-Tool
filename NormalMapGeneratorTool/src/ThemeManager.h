@@ -153,6 +153,7 @@ private:
 	}
 
 public:
+	static ThemeManager* instance;
 	enum class Theme
 	{
 		DEFAULT, DARK, LIGHT, CUSTOM
@@ -174,27 +175,33 @@ public:
 	ImVec4 Sate2Colour;
 	ImVec4 Sate3Colour;
 
-	void init()
+	static void init()
 	{
 		FileExplorer* fileExplorer = FileExplorer::instance;
-		themesInDir = fileExplorer->getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
+		if (instance == nullptr)
+			instance = new ThemeManager();
 
-
-		PrimaryColour = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
-		TitleColour = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
-		SecondaryColour = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
-		AccentColour1 = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
-		AccentColour2 = ImVec4(1, 1, 1, 1.1f);
-		AccentColour3 = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
-		ActiveColour1 = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-		DisabledColour1 = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		ActiveColour2 = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
-		DisabledColour2 = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
-		Sate1Colour = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
-		Sate2Colour = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-		Sate3Colour = ImVec4(0.10f, 0.1f, 0.25f, 0.01f);
+		instance->themesInDir = fileExplorer->getAllFilesInDirectory("Resources\\Themes\\", false, ".nort");
+		
+		instance->PrimaryColour = ImVec4(40 / 255.0f, 49 / 255.0f, 73.0f / 255.0f, 1.1f);
+		instance->TitleColour = ImVec4(30 / 255.0f, 39 / 255.0f, 63.0f / 255.0f, 1.1f);
+		instance->SecondaryColour = ImVec4(247 / 255.0f, 56 / 255.0f, 89 / 255.0f, 1.1f);
+		instance->AccentColour1 = ImVec4(64.0f / 255.0f, 75.0f / 255.0f, 105.0f / 255.0f, 1.1f);
+		instance->AccentColour2 = ImVec4(1, 1, 1, 1.1f);
+		instance->AccentColour3 = ImVec4(40 / 255.0f, 40 / 255.0f, 40 / 255.0f, 1.1f);
+		instance->ActiveColour1 = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+		instance->DisabledColour1 = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+		instance->ActiveColour2 = ImVec4(0.14f, 0.44f, 0.80f, 1.00f);
+		instance->DisabledColour2 = ImVec4(0.14f, 0.44f, 0.80f, 0.78f);
+		instance->Sate1Colour = ImVec4(0.30f, 0.30f, 0.70f, 0.46f);
+		instance->Sate2Colour = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+		instance->Sate3Colour = ImVec4(0.10f, 0.1f, 0.25f, 0.01f);
 	}
-
+	static void shutDown()
+	{
+		if (instance != nullptr)
+			delete instance;
+	}
 	std::vector<std::string> getAllLoadedThemes()
 	{
 		std::vector<std::string> cleaned;
@@ -204,12 +211,10 @@ public:
 		}
 		return cleaned;
 	}
-
 	int getNumberOfThemes()
 	{
 		return themesInDir.size() + 3;
 	}
-
 	int getIndexOfTheme(const std::string themeName)
 	{
 		if (themeName == "Default")
@@ -227,7 +232,6 @@ public:
 		}
 		return 0;
 	}
-
 	void setupThemeFromName(const std::string & themeName)
 	{
 		if (themeName == "Default")
@@ -241,7 +245,6 @@ public:
 			setThemeFromFile("Resources\\Themes\\" + themeName + ".nort");
 		}
 	}
-
 	char** getRawData()
 	{
 		if (themeItems == nullptr)
@@ -262,7 +265,6 @@ public:
 		}
 		return themeItems;
 	}
-
 	void enableInBuiltTheme(Theme theme)
 	{
 		currentTheme = theme;
@@ -408,11 +410,5 @@ public:
 		}
 		styleColorsDark();
 	}
-
-	~ThemeManager()
-	{
-		for (int i = 0; i < getNumberOfThemes(); i++)
-			delete[] themeItems[i];
-		delete[] themeItems;
-	}
 };
+ThemeManager* ThemeManager::instance = nullptr;

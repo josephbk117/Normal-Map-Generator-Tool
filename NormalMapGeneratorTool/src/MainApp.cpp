@@ -109,8 +109,8 @@ TextureData matcapTexDataForPreview;
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileExplorer* fileExplorer;
+ThemeManager* themeManager;
 ModalWindow modalWindow;
-ThemeManager themeManager;
 DrawingPanel normalmapPanel;
 UndoRedoSystem undoRedoSystem;
 
@@ -138,6 +138,7 @@ int main(void)
 	glEnable(GL_BLEND);
 
 	SetupImGui();
+	//Initalize the File Explorer singleton
 	FileExplorer::init();
 	fileExplorer = FileExplorer::instance;
 	//Load user preferences
@@ -145,8 +146,9 @@ int main(void)
 	preferencesInfo = PreferencesHandler::readPreferences();
 	//Allocate undo/redo memory based on user preferences
 	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
-
-	themeManager.init();
+	//Initialize the theme manager singleton
+	ThemeManager::init();
+	themeManager = ThemeManager::instance;
 
 	windowSys.setFrameBufferResizeCallback(framebuffer_size_callback);
 	windowSys.setScrollCallback(scroll_callback);
@@ -670,7 +672,7 @@ int main(void)
 	delete previewGrid;
 
 	fileExplorer->shutDown();
-
+	themeManager->shutDown();
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -686,9 +688,9 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::SetNextWindowPos(ImVec2(0, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.getWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", &open, window_flags);
-	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
-	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
+	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager->AccentColour2))
 	{
 		if (!windowSys.getIfFullscreen())
 			windowSys.setFullscreen(true);
@@ -698,7 +700,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Toggle Fullscreen (Ctrl + T)");
 	ImGui::SameLine();
-	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
+	if (ImGui::ImageButton((ImTextureID)clearViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager->AccentColour2))
 	{
 		std::memset(heightMapTexData.getTextureData(), 255, heightMapTexData.getRes().y * heightMapTexData.getRes().x * heightMapTexData.getComponentCount());
 		undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -707,7 +709,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Clear the panel (Ctrl + Alt + V)");
 	ImGui::SameLine();
-	if (ImGui::ImageButton((ImTextureID)resetViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 0.0f), ImVec2(1.4f, 1.0f), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
+	if (ImGui::ImageButton((ImTextureID)resetViewTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 0.0f), ImVec2(1.4f, 1.0f), -1, ImVec4(0, 0, 0, 0), themeManager->AccentColour2))
 	{
 		frameDrawingPanel.getTransform()->setPosition(0, 0);
 		normalViewStateUtility.zoomLevel = 1.0f;
@@ -734,24 +736,24 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
-	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { normalViewStateUtility.mapDrawViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + H)");
 
 	ImGui::SameLine(0, 5);
-	if (normalViewStateUtility.mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (normalViewStateUtility.mapDrawViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { normalViewStateUtility.mapDrawViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + J)");
 
 	ImGui::SameLine(0, 5);
-	if (normalViewStateUtility.mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (normalViewStateUtility.mapDrawViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { normalViewStateUtility.mapDrawViewMode = 2; }
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + K)");
@@ -977,8 +979,8 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
 	ImGui::Spacing();
-	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
-	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager->SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 
 	static std::string currentBrush = "Circle";
 	static std::vector<std::string> grungeBrushPaths = fileExplorer->getAllFilesInDirectory(BRUSH_TEXTURES_PATH + "Grunge", false);
@@ -1078,29 +1080,29 @@ inline void DisplayNormalSettingsUserInterface()
 	ImGui::Text("Method");
 
 	if (ImGui::SliderFloat(" Normal Strength", &normalViewStateUtility.normalMapStrength, -10.0f, 10.0f, "%.2f")) {}
-	ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Flip X-Y", ImVec2(ImGui::GetContentRegionAvailWidth(), 40))) { normalViewStateUtility.flipX_Ydir = !normalViewStateUtility.flipX_Ydir; }
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(CTRL + A)");
 	ImGui::PopStyleColor();
 	const float width = ImGui::GetContentRegionAvailWidth() / 3.0f - 7;
 
-	if (!normalViewStateUtility.redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (!normalViewStateUtility.redChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("R", ImVec2(width, 40))) { normalViewStateUtility.redChannelActive = !normalViewStateUtility.redChannelActive; } ImGui::SameLine();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(SHIFT + R)");
 	ImGui::PopStyleColor();
 
-	if (!normalViewStateUtility.greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (!normalViewStateUtility.greenChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("G", ImVec2(width, 40))) { normalViewStateUtility.greenChannelActive = !normalViewStateUtility.greenChannelActive; } ImGui::SameLine();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(SHIFT + G)");
 	ImGui::PopStyleColor();
 
-	if (!normalViewStateUtility.blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (!normalViewStateUtility.blueChannelActive) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("B", ImVec2(width, 40))) { normalViewStateUtility.blueChannelActive = !normalViewStateUtility.blueChannelActive; }
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(SHIFT + B)");
@@ -1131,12 +1133,12 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager->SecondaryColour);
 	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 300, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Preview_Bar", &open, window_flags);
 
-	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.45f, 1), ImVec2(1.45f, 0), -1, ImVec4(0, 0, 0, 0), themeManager.AccentColour2))
+	if (ImGui::ImageButton((ImTextureID)maximizePreviewTexId, ImVec2(80, 40), ImVec2(-0.45f, 1), ImVec2(1.45f, 0), -1, ImVec4(0, 0, 0, 0), themeManager->AccentColour2))
 	{
 		isPreviewWindowMaximized = true;
 		ImGui::OpenPopup("Preview");
@@ -1257,24 +1259,24 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
-	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 1; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + H)");
 
 	ImGui::SameLine(0, 5);
-	if (previewStateUtility.modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (previewStateUtility.modelViewMode == 2) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Normal", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 2; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + J)");
 
 	ImGui::SameLine(0, 5);
-	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager.AccentColour1);
-	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager.SecondaryColour);
+	if (previewStateUtility.modelViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
+	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
 	if (ImGui::Button("Lighting", ImVec2(modeButtonWidth, 40))) { previewStateUtility.modelViewMode = 3; }
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
@@ -1404,7 +1406,7 @@ inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 	ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager.SecondaryColour);
+	ImGui::PushStyleColor(ImGuiCol_SliderGrab, themeManager->SecondaryColour);
 	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 300, 42), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(300, windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Layer_Panel", &open, window_flags);
@@ -1481,24 +1483,24 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndMenu();
 		}
 
-		static int item_current = themeManager.getIndexOfTheme(preferencesInfo.defaultTheme);
+		static int item_current = themeManager->getIndexOfTheme(preferencesInfo.defaultTheme);
 		static int prev_item = -1;
 		ImGui::PushItemWidth(180);
-		ImGui::Combo("##combo", &item_current, themeManager.getRawData(), themeManager.getNumberOfThemes());
+		ImGui::Combo("##combo", &item_current, themeManager->getRawData(), themeManager->getNumberOfThemes());
 		ImGui::PopItemWidth();
 		ImGui::PopFont();
 		if (prev_item != item_current)
 		{
 			if (item_current >= 3)
-				themeManager.setThemeFromFile(THEMES_PATH + (std::string(themeManager.getRawData()[item_current]) + ".nort"));
+				themeManager->setThemeFromFile(THEMES_PATH + (std::string(themeManager->getRawData()[item_current]) + ".nort"));
 			else
 			{
 				if (item_current == 0)
-					themeManager.enableInBuiltTheme(ThemeManager::Theme::DEFAULT);
+					themeManager->enableInBuiltTheme(ThemeManager::Theme::DEFAULT);
 				else if (item_current == 1)
-					themeManager.enableInBuiltTheme(ThemeManager::Theme::DARK);
+					themeManager->enableInBuiltTheme(ThemeManager::Theme::DARK);
 				else if (item_current == 2)
-					themeManager.enableInBuiltTheme(ThemeManager::Theme::LIGHT);
+					themeManager->enableInBuiltTheme(ThemeManager::Theme::LIGHT);
 			}
 		}
 		prev_item = item_current;
@@ -1540,11 +1542,11 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::InputText("##Path", defaultPath, 500);
 			ImGui::Text("Set default theme :");
 			static int preference_item_current = item_current;
-			ImGui::Combo("##combo", &preference_item_current, themeManager.getRawData(), themeManager.getNumberOfThemes());
+			ImGui::Combo("##combo", &preference_item_current, themeManager->getRawData(), themeManager->getNumberOfThemes());
 			ImGui::Text("These changes take effect on next application start up");
 			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
 			{
-				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeManager.getRawData()[preference_item_current]));
+				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeManager->getRawData()[preference_item_current]));
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Reset to defaults", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))

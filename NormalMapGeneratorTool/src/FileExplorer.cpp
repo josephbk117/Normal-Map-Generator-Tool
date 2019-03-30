@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-FileExplorer *FileExplorer::instance = nullptr;
+FileExplorer* FileExplorer::instance = nullptr;
 FileExplorer::FileExplorer()
 {
 }
