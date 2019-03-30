@@ -397,18 +397,16 @@ int main(void)
 		//---- Bind main frame buffer and set output to cumulative blending ----//
 		glDisable(GL_DEPTH_TEST);
 		fbs.bindFrameBuffer();
-		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
+		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
-		if (layerManager.getLayerCount() >= 2)
-			normalmapPanel.draw(layerManager.getColourTexture(1));
-		else
-			normalmapPanel.draw();
-
-		if (layerManager.getLayerCount() > 2)
+		normalmapShader.applyShaderInt(normalMapModeOnUniform, 0);
+		normalmapPanel.draw();
+		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
+		if (layerManager.getLayerCount() >= 1)
 		{
-			for (int i = 2; i < layerManager.getLayerCount(); i++)
+			for (int i = 1; i < layerManager.getLayerCount(); i++)
 			{
 				normalmapPanel.setTextureID(fbs.getColourTexture(), false);
 				normalmapPanel.draw(layerManager.getColourTexture(i));
@@ -1585,7 +1583,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+	}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
