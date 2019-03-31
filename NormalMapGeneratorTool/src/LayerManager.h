@@ -29,6 +29,7 @@ public:
 	~LayerManager();
 	int getLayerCount();
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
+	void updateLayerTexture(int index, unsigned int textureId);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
 	void setLayerActiveState(int index, bool isActive);
 	bool isLayerActive(int index);

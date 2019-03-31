@@ -52,6 +52,7 @@ enum class LoadingOption
 	MODEL, TEXTURE, NONE
 };
 
+#pragma region STRING_CONSTANTS
 const std::string VERSION_NAME = "v1.5 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
@@ -68,8 +69,9 @@ const std::string CYLINDER_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cylinder.fbx";
 const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.fbx";
 const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.fbx";
 const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.fbx";
+#pragma endregion
 
-
+#pragma region FUNCTION_DECLARATIONS
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
@@ -90,6 +92,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
 inline void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
 void SetStatesForSavingNormalMap()noexcept;
 void SetupImGui();
+#pragma endregion
 
 WindowSystem windowSys;
 MeshLoadingSystem::MeshLoader modelLoader;
@@ -119,9 +122,11 @@ std::string heightImageLoadLocation = "";
 PreferenceInfo preferencesInfo;
 LayerManager layerManager;
 
+#pragma region UI TEXTURE IDS
 unsigned int toggleFullscreenTexId, resetViewTexId, clearViewTexId, maximizePreviewTexId; // UI textureIds
 unsigned int closeTextureId, restoreTextureId, minimizeTextureId, logoTextureId; // Window textureIds
 unsigned int defaultWhiteTextureId;
+#pragma endregion
 
 bool canPerformPreviewWindowMouseOperations = false;
 bool isPreviewWindowMaximized = false;
@@ -177,9 +182,6 @@ int main(void)
 	clearViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
 	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
-
-	unsigned int additionalNormalTextureId = TextureManager::loadTextureFromFile(TEXTURES_PATH + "Normal Maps\\sample normal 1.png", true);
-
 	defaultWhiteTextureId = TextureManager::loadTextureFromColour(ColourData(1, 1, 1, 1));
 
 	std::vector<std::string> cubeMapImagePaths;
@@ -202,6 +204,10 @@ int main(void)
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
+	Camera camera;
+	camera.init(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
+
+#pragma region SHADER PROGRAMS
 	ShaderProgram normalmapShader;
 	normalmapShader.compileShaders(SHADERS_PATH + "normalPanel.vs", SHADERS_PATH + "normalPanel.fs");
 	normalmapShader.linkShaders();
@@ -225,10 +231,9 @@ int main(void)
 	ShaderProgram gridLineShader;
 	gridLineShader.compileShaders(SHADERS_PATH + "gridLines.vs", SHADERS_PATH + "gridLines.fs");
 	gridLineShader.linkShaders();
+#pragma endregion
 
-	Camera camera;
-	camera.init(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-
+#pragma region SHADER UNIFORM IDS
 	//Normal map uniforms
 	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
@@ -289,6 +294,7 @@ int main(void)
 	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
 	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
 	int gridLineProjectionMatrixUniform = gridLineShader.getUniformLocation("projection");
+#pragma endregion
 
 	bool isMaximized = false;
 	bool isBlurOn = false;
@@ -309,9 +315,6 @@ int main(void)
 	double initTime = glfwGetTime();
 
 	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
-	layerManager.addLayer(additionalNormalTextureId, LayerType::NORMAL_MAP);
-	layerManager.addLayer(albedoTexDataForPreview.GetTexId(), LayerType::HEIGHT_MAP);
-	layerManager.addLayer(minimizeTextureId, LayerType::HEIGHT_MAP);
 
 	while (!windowSys.isWindowClosing())
 	{
@@ -1562,8 +1565,6 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::EndPopup();
 		}
 
-
-
 #ifdef NORA_CUSTOM_WINDOW_CHROME
 		ImGui::Indent(windowSys.GetWindowRes().x - 160);
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
@@ -1584,10 +1585,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			//ImGui::PopStyleColor();
 		ImGui::PopStyleVar();
 #endif
-	}
+			}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-}
+		}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1678,7 +1679,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					}
 					else
 					{
-
 						const float left = (curX - convertedBrushScale.x) * maxWidth;
 						const float right = (curX + convertedBrushScale.x) * maxWidth;
 						const float bottom = (curY - convertedBrushScale.y) * maxHeight;
@@ -1688,7 +1688,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 							SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
 						else
 							SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
-
 					}
 				}
 				else if (isBlurOn)
@@ -1807,7 +1806,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);

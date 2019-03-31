@@ -16,6 +16,11 @@ void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferR
 	this->maxBufferResolution = maxBufferResolution;
 }
 
+void LayerManager::updateLayerTexture(int index, unsigned int textureId)
+{
+	layers.at(index).inputTextureId = textureId;
+}
+
 void LayerManager::addLayer(int texId, LayerType layerType, const std::string& layerName)
 {
 	LayerInfo layerInfo;

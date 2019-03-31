@@ -32,7 +32,7 @@ void main()
 	{
 		vec3 n1 = texture(textureOne,textureUV).rgb * 2.0 - 1.0;
 		vec3 n2 = texture(textureTwo,textureUV).rgb * 2.0 - 1.0;
-		vec3 norm = blend_rnm(n1, n2);
+		vec3 norm = blend_pd(n1, n2);
 		color = vec4(norm * 0.5 + 0.5, 1.0);
 	}
 	else
