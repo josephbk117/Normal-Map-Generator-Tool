@@ -134,6 +134,7 @@ bool isPreviewPanelActive = true;
 
 int main(void)
 {
+#pragma region Window Initialization
 	windowSys.init("Nora Normal Map Editor " + VERSION_NAME, 1600, 800);
 	if (glewInit() != GLEW_OK)
 	{
@@ -158,8 +159,9 @@ int main(void)
 
 	windowSys.setFrameBufferResizeCallback(framebuffer_size_callback);
 	windowSys.setScrollCallback(scroll_callback);
-	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
+#pragma endregion
 
+	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
 	ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
 	ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
 	ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
@@ -313,15 +315,11 @@ int main(void)
 
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
-
 	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
-
 	while (!windowSys.isWindowClosing())
 	{
 		const double deltaTime = glfwGetTime() - initTime;
 		initTime = glfwGetTime();
-
-		glLineWidth(previewStateUtility.normDisplayThickness);
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
 		static glm::vec2 initPos = glm::vec2(-1000, -1000);
@@ -559,19 +557,19 @@ int main(void)
 		modelAttribViewShader.applyShaderFloat(modelAttributesNormalLengthUniform, previewStateUtility.normDisplayLineLength);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-
 		glActiveTexture(GL_TEXTURE0);
 
+#pragma region GRID SETUP & RENDER
 		// Set up preview shader uniforms
 		gridLineShader.use();
 		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
 		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
 		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		previewGrid->draw();
-
+#pragma endregion
 		// Set up the default framebuffer
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+#pragma region  SETUP & RENDER BRUSH DATA
 		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
 			glm::vec2 heightRes = heightMapTexData.getRes();
@@ -594,7 +592,6 @@ int main(void)
 			else
 				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x));
 		}
-
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x)*2.0f) - 1.0f,
@@ -608,7 +605,7 @@ int main(void)
 
 		brushPanel.setTextureID(brushData.textureData.GetTexId());
 		brushPanel.draw();
-
+#pragma endregion
 		ImGui_ImplOpenGL2_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -1240,7 +1237,8 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Checkbox("Normals", &previewStateUtility.showNormals); ImGui::SameLine();
 	float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
 	ImGui::PushItemWidth(availWidth);
-	ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f");
+	if(ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f"))
+		glLineWidth(previewStateUtility.normDisplayThickness);
 	ImGui::SameLine();
 	ImGui::SliderFloat("##Normal Length", &previewStateUtility.normDisplayLineLength, 0.1f, 10.0f, "Length:%.2f");
 	ImGui::PopItemWidth();
@@ -1564,31 +1562,10 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			ImGui::PopItemWidth();
 			ImGui::EndPopup();
 		}
-
-#ifdef NORA_CUSTOM_WINDOW_CHROME
-		ImGui::Indent(windowSys.GetWindowRes().x - 160);
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(5, 10));
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-		//if )
-			//ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ACCENT_COL);
-		if (ImGui::ImageButton((ImTextureID)minimizeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Minimize(); }
-		if (ImGui::ImageButton((ImTextureID)restoreTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5))
-		{
-			if (windowSys.IsFullscreen())
-				windowSys.SetFullscreen(false);
-			else
-				windowSys.SetFullscreen(true);
-		}
-		if (ImGui::ImageButton((ImTextureID)closeTexture, ImVec2(30, 30), ImVec2(0, 0), ImVec2(1, 1), 5)) { windowSys.Close(); }
-		ImGui::PopStyleColor();
-		//if (isUsingCustomTheme)
-			//ImGui::PopStyleColor();
-		ImGui::PopStyleVar();
-#endif
-			}
+	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-		}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
@@ -1806,7 +1783,7 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-}
+		}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
@@ -1866,7 +1843,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			}
 		}
 	}
-}
+	}
 
 inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {

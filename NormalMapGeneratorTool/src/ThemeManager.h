@@ -335,8 +335,8 @@ public:
 				if (line[0] == '#' || line.size() < 10)
 					continue;
 				std::string colourType, colourValue;
-				int indexOfColon = line.find(':');
-				int indexOfSemiColon = line.find(';');
+				const int indexOfColon = line.find(':');
+				const int indexOfSemiColon = line.find(';');
 				colourType = line.substr(0, indexOfColon - 1);
 				colourValue = line.substr(indexOfColon + 1, indexOfSemiColon - (indexOfColon + 1));
 
