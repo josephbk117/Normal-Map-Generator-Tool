@@ -20,6 +20,7 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 {
 	LayerInfo layerInfo;
 	layerInfo.layerType = layerType;
+	layerInfo.isActive = true;
 	layerInfo.inputTextureId = texId;
 	layerInfo.layerName = new char[200];
 	if (layerName == "")
@@ -35,6 +36,14 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 	}
 	layerInfo.fbs.init(windowRes, maxBufferResolution);
 	layers.push_back(layerInfo);
+}
+void LayerManager::setLayerActiveState(int index, bool isActive)
+{
+	layers.at(index).isActive = isActive;
+}
+bool LayerManager::isLayerActive(int index)
+{
+	return layers.at(index).isActive;
 }
 void LayerManager::updateFramebufferTextureDimensions(const glm::vec2 resolution)
 {
@@ -78,6 +87,9 @@ void LayerManager::draw()
 		removeLayerButtonName += std::to_string(i);
 		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
 			markedForDeletionLayerIndices.insert(i);
+		std::string hideLayerButtonName = "Toggle Layer Visibility " + std::to_string(i);
+		if (ImGui::Button(hideLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
+			setLayerActiveState(i, !isLayerActive(i));
 	}
 	if (ImGui::Button("Add Layer", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
 	{

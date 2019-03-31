@@ -408,6 +408,8 @@ int main(void)
 		{
 			for (int i = 1; i < layerManager.getLayerCount(); i++)
 			{
+				if (!layerManager.isLayerActive(i))
+					continue;
 				normalmapPanel.setTextureID(fbs.getColourTexture(), false);
 				normalmapPanel.draw(layerManager.getColourTexture(i));
 			}
@@ -1583,7 +1585,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	}
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
-	}
+}
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)

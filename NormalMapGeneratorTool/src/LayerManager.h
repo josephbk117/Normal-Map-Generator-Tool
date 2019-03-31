@@ -12,6 +12,7 @@ struct LayerInfo
 	int inputTextureId = 0;
 	unsigned int outputTextureId = 0;
 	char* layerName;
+	bool isActive;
 	LayerType layerType = LayerType::HEIGHT_MAP;
 	FrameBufferSystem fbs;
 };
@@ -28,6 +29,8 @@ public:
 	int getLayerCount();
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
+	void setLayerActiveState(int index, bool isActive);
+	bool isLayerActive(int index);
 	void updateFramebufferTextureDimensions(const glm::vec2 resolution);
 	LayerType getLayerType(int index);
 	void bindFrameBuffer(int index);
