@@ -33,6 +33,7 @@
 #include "PreferencesHandler.h"
 #include "LayerManager.h"
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
+//Possible cause : Input tak ove by IMGUI
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
@@ -387,6 +388,7 @@ int main(void)
 		{
 			layerManager.bindFrameBuffer(layerIndex);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			normalmapShader.applyShaderFloat(strengthValueUniform, layerManager.getLayerStrength(layerIndex));
 			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 0);
 			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
 			normalmapPanel.draw();

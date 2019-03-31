@@ -9,10 +9,11 @@ enum class LayerType { HEIGHT_MAP=0, NORMAL_MAP };
 
 struct LayerInfo
 {
-	int inputTextureId = 0;
+	unsigned int inputTextureId = 0;
 	unsigned int outputTextureId = 0;
 	char* layerName;
 	bool isActive;
+	float strength;
 	LayerType layerType = LayerType::HEIGHT_MAP;
 	FrameBufferSystem fbs;
 };
@@ -32,6 +33,7 @@ public:
 	void setLayerActiveState(int index, bool isActive);
 	bool isLayerActive(int index);
 	void updateFramebufferTextureDimensions(const glm::vec2 resolution);
+	float getLayerStrength(int index);
 	LayerType getLayerType(int index);
 	void bindFrameBuffer(int index);
 	unsigned int getColourTexture(int index);

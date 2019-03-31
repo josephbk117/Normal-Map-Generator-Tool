@@ -21,6 +21,7 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 	LayerInfo layerInfo;
 	layerInfo.layerType = layerType;
 	layerInfo.isActive = true;
+	layerInfo.strength = 2.0f;
 	layerInfo.inputTextureId = texId;
 	layerInfo.layerName = new char[200];
 	if (layerName == "")
@@ -50,6 +51,10 @@ void LayerManager::updateFramebufferTextureDimensions(const glm::vec2 resolution
 	for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
 		layers.at(layerIndex).fbs.updateTextureDimensions(resolution);
 }
+float LayerManager::getLayerStrength(int index)
+{
+	return layers.at(index).strength;
+}
 LayerType LayerManager::getLayerType(int index)
 {
 	return layers.at(index).layerType;
@@ -62,13 +67,13 @@ void LayerManager::draw()
 	{
 		ImGui::Image((ImTextureID)layers.at(i).fbs.getColourTexture(), ImVec2(50, 50)); ImGui::SameLine();
 		char* buffer = &layers.at(i).layerName[0];
-		std::string inputText = "##Input text";
-		inputText += std::to_string(i);
+		std::string inputText = "##Input text" + std::to_string(i);
 		ImGui::InputText(inputText.c_str(), buffer, 200);
+		std::string heightStrengthSliderName = "##Slider Value" + std::to_string(i);
+		ImGui::SliderFloat(heightStrengthSliderName.c_str(), &layers.at(i).strength, -10.0f, 10.0f, "Strength: %.2f");
 		const char* items[] = { "Height Map", "Normal Map" };
 		int item_current = (int)layers.at(i).layerType;
-		std::string comboBoxName = "##combo";
-		comboBoxName += std::to_string(i);
+		std::string comboBoxName = "##combo" + std::to_string(i);
 		if (ImGui::Combo(comboBoxName.c_str(), &item_current, items, IM_ARRAYSIZE(items)))
 		{
 			switch (item_current)
@@ -83,11 +88,11 @@ void LayerManager::draw()
 				break;
 			}
 		}
-		std::string removeLayerButtonName = "Remove Layer ";
-		removeLayerButtonName += std::to_string(i);
-		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
+		std::string removeLayerButtonName = "Remove Layer " + std::to_string(i);
+		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 30)))
 			markedForDeletionLayerIndices.insert(i);
-		std::string hideLayerButtonName = "Toggle Layer Visibility " + std::to_string(i);
+		ImGui::SameLine();
+		std::string hideLayerButtonName = "Toggle Visibility " + std::to_string(i);
 		if (ImGui::Button(hideLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
 			setLayerActiveState(i, !isLayerActive(i));
 	}
@@ -101,6 +106,7 @@ void LayerManager::draw()
 	std::set<unsigned int>::iterator it;
 	for (it = markedForDeletionLayerIndices.begin(); it != markedForDeletionLayerIndices.end(); it++)
 	{
+		glDeleteTextures(1, &layers.at(*it).inputTextureId);
 		delete[] layers.at(*it).layerName;
 		layers.erase(layers.begin() + *it);
 	}

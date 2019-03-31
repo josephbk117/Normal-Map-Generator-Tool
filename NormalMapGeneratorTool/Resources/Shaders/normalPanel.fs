@@ -73,7 +73,9 @@ void main()
 			}
 		}
 		else
+		{
 			color = texture(textureOne,textureUV);
+		}
 	}
 }
 
