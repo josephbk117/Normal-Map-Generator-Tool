@@ -68,13 +68,15 @@ void main()
 			}
 			else
 			{
-				color = vec4(norm*0.5 + 0.5,1.0);
+				color = vec4(norm * 0.5 + 0.5,1.0);
 				color.rgb *= vec3(_Channel_R, _Channel_G, _Channel_B);
 			}
 		}
 		else
 		{
 			color = texture(textureOne,textureUV);
+			if(_normalMapModeOn == 3)
+				color.rgb = mix(color.rgb, vec3(0.5,0.5,1.0), 1.0 - (_HeightmapStrength * 0.1));
 		}
 	}
 }

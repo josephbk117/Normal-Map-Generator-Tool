@@ -389,7 +389,7 @@ int main(void)
 			layerManager.bindFrameBuffer(layerIndex);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			normalmapShader.applyShaderFloat(strengthValueUniform, layerManager.getLayerStrength(layerIndex));
-			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 0);
+			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 3);
 			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
 			normalmapPanel.draw();
 		}
