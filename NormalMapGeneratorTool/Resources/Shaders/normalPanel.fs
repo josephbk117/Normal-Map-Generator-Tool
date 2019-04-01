@@ -18,6 +18,7 @@ uniform int _Channel_G;
 uniform int _Channel_B;
 uniform int _MethodIndex; // 0 - Method 1, 1 - Method 2
 uniform int _UseNormalInput; // 1 - true, 0 - false;
+uniform int _NormalBlendingMethod; //-0:- RNB, 1:- UB, 2:- PDB
 
 // Inputs will be in -1.0 to +1.0 range for blending methods
 vec3 blend_rnm(vec3 n1, vec3 n2);
@@ -32,7 +33,13 @@ void main()
 	{
 		vec3 n1 = texture(textureOne,textureUV).rgb * 2.0 - 1.0;
 		vec3 n2 = texture(textureTwo,textureUV).rgb * 2.0 - 1.0;
-		vec3 norm = blend_pd(n1, n2);
+		vec3 norm;
+		if(_NormalBlendingMethod == 0)
+			norm = blend_rnm(n1, n2);
+		else if(_NormalBlendingMethod == 1)
+			norm = blend_udn(n1, n2);
+		else
+			norm = blend_pd(n1, n2);
 		color = vec4(norm * 0.5 + 0.5, 1.0);
 	}
 	else
@@ -80,7 +87,7 @@ void main()
 		}
 	}
 }
-
+// Reoriented Normal Blending
 vec3 blend_rnm(vec3 n1, vec3 n2)
 {
 	 n1 = n1 * 0.5 + 0.5;
@@ -89,10 +96,12 @@ vec3 blend_rnm(vec3 n1, vec3 n2)
      n2 = n2*vec3(-2, -2, 2) + vec3( 1,  1, -1);
      return n1*dot(n1, n2)/n1.z - n2;
 }
+// Unreal Blending
 vec3 blend_udn(vec3 n1, vec3 n2)
 {
 	return normalize(vec3(n1.xy + n2.xy, n1.z));
 }
+//Partial derivative Blending
 vec3 blend_pd(vec3 n1, vec3 n2)
 {
 	return normalize(vec3(n1.xy*n2.z + n2.xy*n1.z, n1.z*n2.z));

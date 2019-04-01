@@ -47,6 +47,11 @@ void LayerManager::setLayerActiveState(int index, bool isActive)
 {
 	layers.at(index).isActive = isActive;
 }
+
+NormalBlendMethod LayerManager::getNormalBlendMethod(int index)
+{
+	return layers.at(index).normalBlendMethod;
+}
 bool LayerManager::isLayerActive(int index)
 {
 	return layers.at(index).isActive;
@@ -76,23 +81,23 @@ void LayerManager::draw()
 		ImGui::InputText(inputText.c_str(), buffer, 200);
 		std::string heightStrengthSliderName = "##Slider Value" + std::to_string(i);
 		ImGui::SliderFloat(heightStrengthSliderName.c_str(), &layers.at(i).strength, -10.0f, 10.0f, "Strength: %.2f");
-		const char* items[] = { "Height Map", "Normal Map" };
+
+		const char* textureTypeItems[] = { "Height Map", "Normal Map" };
 		int item_current = (int)layers.at(i).layerType;
+
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.5f);
 		std::string comboBoxName = "##combo" + std::to_string(i);
-		if (ImGui::Combo(comboBoxName.c_str(), &item_current, items, IM_ARRAYSIZE(items)))
-		{
-			switch (item_current)
-			{
-			case 0:
-				layers.at(i).layerType = LayerType::HEIGHT_MAP;
-				break;
-			case 1:
-				layers.at(i).layerType = LayerType::NORMAL_MAP;
-				break;
-			default:
-				break;
-			}
-		}
+		if (ImGui::Combo(comboBoxName.c_str(), &item_current, textureTypeItems, IM_ARRAYSIZE(textureTypeItems)))
+			layers.at(i).layerType = (LayerType)item_current;
+
+		ImGui::SameLine();
+		const char* blendingMethodItems[] = { "Reoriented Normal Blending", "Unreal Blending", "Partial Derivative Blending" };
+		item_current = (int)layers.at(i).normalBlendMethod;
+		comboBoxName = "##combo2" + std::to_string(i);
+		if (ImGui::Combo(comboBoxName.c_str(), &item_current, blendingMethodItems, IM_ARRAYSIZE(blendingMethodItems)))
+			layers.at(i).normalBlendMethod = (NormalBlendMethod)item_current;
+		ImGui::PopItemWidth();
+
 		std::string removeLayerButtonName = "Remove Layer " + std::to_string(i);
 		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 30)))
 			markedForDeletionLayerIndices.insert(i);

@@ -5,7 +5,8 @@
 #include "FrameBufferSystem.h"
 #include "ImGui\imgui.h"
 
-enum class LayerType { HEIGHT_MAP=0, NORMAL_MAP };
+enum class LayerType { HEIGHT_MAP = 0, NORMAL_MAP };
+enum class NormalBlendMethod { REORIENTED_NORMAL_BLENDING = 0, UNREAL_NORMAL_BLENDING, PARTIAL_DERIVATIVE_NORMAL_BLENDING };
 
 struct LayerInfo
 {
@@ -15,6 +16,7 @@ struct LayerInfo
 	bool isActive;
 	float strength;
 	LayerType layerType = LayerType::HEIGHT_MAP;
+	NormalBlendMethod normalBlendMethod = NormalBlendMethod::REORIENTED_NORMAL_BLENDING;
 	FrameBufferSystem fbs;
 };
 
@@ -32,6 +34,7 @@ public:
 	void updateLayerTexture(int index, unsigned int textureId);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
 	void setLayerActiveState(int index, bool isActive);
+	NormalBlendMethod getNormalBlendMethod(int index);
 	bool isLayerActive(int index);
 	void updateFramebufferTextureDimensions(const glm::vec2 resolution);
 	float getLayerStrength(int index);

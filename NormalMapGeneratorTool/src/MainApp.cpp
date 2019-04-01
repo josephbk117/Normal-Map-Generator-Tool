@@ -255,6 +255,7 @@ int main(void)
 	int textureOneIndexUniform = normalmapShader.getUniformLocation("textureOne");
 	int textureTwoIndexUniform = normalmapShader.getUniformLocation("textureTwo");
 	int useNormalInputUniform = normalmapShader.getUniformLocation("_UseNormalInput");
+	int normalBlendingMethod = normalmapShader.getUniformLocation("_NormalBlendingMethod");
 
 	//Brush uniforms
 	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
@@ -404,6 +405,7 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
+		normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(0));
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, 0);
 		normalmapPanel.draw();
 		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
@@ -413,6 +415,7 @@ int main(void)
 			{
 				if (!layerManager.isLayerActive(i))
 					continue;
+				normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(i));
 				normalmapPanel.setTextureID(fbs.getColourTexture(), false);
 				normalmapPanel.draw(layerManager.getColourTexture(i));
 			}
