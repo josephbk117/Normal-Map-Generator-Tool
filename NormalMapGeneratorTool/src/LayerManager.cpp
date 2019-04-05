@@ -72,41 +72,52 @@ LayerType LayerManager::getLayerType(int index)
 
 void LayerManager::draw()
 {
+	ImGui::Image((ImTextureID)layers.at(0).fbs.getColourTexture(), ImVec2(50, 50)); ImGui::SameLine();
+	char* buffer = &layers.at(0).layerName[0];
+	std::string inputText = "##Input text" + std::to_string(0);
+	ImGui::InputText(inputText.c_str(), buffer, 200);
+	float availableItemWidth = ImGui::GetContentRegionAvailWidth();
+
 	std::set<unsigned int> markedForDeletionLayerIndices;
-	for (unsigned int i = 0; i < layers.size(); i++)
+	for (unsigned int i = 1; i < layers.size(); i++)
 	{
 		ImGui::Image((ImTextureID)layers.at(i).fbs.getColourTexture(), ImVec2(50, 50)); ImGui::SameLine();
 		char* buffer = &layers.at(i).layerName[0];
 		std::string inputText = "##Input text" + std::to_string(i);
 		ImGui::InputText(inputText.c_str(), buffer, 200);
 		std::string heightStrengthSliderName = "##Slider Value" + std::to_string(i);
+		ImGui::PushItemWidth(availableItemWidth);
 		ImGui::SliderFloat(heightStrengthSliderName.c_str(), &layers.at(i).strength, -10.0f, 10.0f, "Strength: %.2f");
+		ImGui::PopItemWidth();
 
 		const char* textureTypeItems[] = { "Height Map", "Normal Map" };
 		int item_current = (int)layers.at(i).layerType;
 
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth()*0.5f);
+		ImGui::PushItemWidth(availableItemWidth * 0.5f);
 		std::string comboBoxName = "##combo" + std::to_string(i);
 		if (ImGui::Combo(comboBoxName.c_str(), &item_current, textureTypeItems, IM_ARRAYSIZE(textureTypeItems)))
 			layers.at(i).layerType = (LayerType)item_current;
+		ImGui::PopItemWidth();
 
 		ImGui::SameLine();
 		const char* blendingMethodItems[] = { "Reoriented Normal Blending", "Unreal Blending", "Partial Derivative Blending" };
 		item_current = (int)layers.at(i).normalBlendMethod;
 		comboBoxName = "##combo2" + std::to_string(i);
+
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
 		if (ImGui::Combo(comboBoxName.c_str(), &item_current, blendingMethodItems, IM_ARRAYSIZE(blendingMethodItems)))
 			layers.at(i).normalBlendMethod = (NormalBlendMethod)item_current;
 		ImGui::PopItemWidth();
 
 		std::string removeLayerButtonName = "Remove Layer##" + std::to_string(i);
-		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 30)))
+		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(availableItemWidth * 0.5f, 30)))
 			markedForDeletionLayerIndices.insert(i);
 		ImGui::SameLine();
 		std::string hideLayerButtonName = "Toggle Visibility##" + std::to_string(i);
 		if (ImGui::Button(hideLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
 			setLayerActiveState(i, !isLayerActive(i));
 	}
-	if (ImGui::Button("Add Layer", ImVec2(ImGui::GetContentRegionAvailWidth(), 40)))
+	if (ImGui::Button("Add Layer", ImVec2(availableItemWidth, 40)))
 	{
 		FileExplorer::instance->displayDialog(FileType::IMAGE, [&](std::string str)
 		{

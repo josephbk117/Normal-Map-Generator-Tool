@@ -33,7 +33,7 @@
 #include "PreferencesHandler.h"
 #include "LayerManager.h"
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
-//Possible cause : Input tak ove by IMGUI
+//Possible cause : Input take over by IMGUI
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
@@ -53,7 +53,7 @@ enum class LoadingOption
 };
 
 #pragma region STRING_CONSTANTS
-const std::string VERSION_NAME = "v1.5 Beta";
+const std::string VERSION_NAME = "v1.3 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -131,6 +131,7 @@ unsigned int defaultWhiteTextureId;
 bool canPerformPreviewWindowMouseOperations = false;
 bool isPreviewWindowMaximized = false;
 bool isPreviewPanelActive = true;
+bool isUsingLayerOutput = false;
 
 int main(void)
 {
@@ -390,8 +391,10 @@ int main(void)
 		{
 			layerManager.bindFrameBuffer(layerIndex);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			normalmapShader.applyShaderFloat(strengthValueUniform, layerManager.getLayerStrength(layerIndex));
+			normalmapShader.applyShaderFloat(strengthValueUniform, (layerIndex == 0) ? normalViewStateUtility.normalMapStrength : layerManager.getLayerStrength(layerIndex));
 			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 3);
+			if (layerIndex == 0 && !isUsingLayerOutput)
+				normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
 			normalmapPanel.setTextureID(layerManager.getInputTexId(layerIndex), false);
 			normalmapPanel.draw();
 		}
@@ -401,30 +404,34 @@ int main(void)
 		//---- Bind main frame buffer and set output to cumulative blending ----//
 		glDisable(GL_DEPTH_TEST);
 		fbs.bindFrameBuffer();
-		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
+		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
 		normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(0));
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, 0);
 		normalmapPanel.draw();
-		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
 
-		if (layerManager.getLayerCount() >= 1)
+		if (isUsingLayerOutput)
 		{
-			for (int i = 1; i < layerManager.getLayerCount(); i++)
+			normalmapShader.applyShaderInt(useNormalInputUniform, 1);
+
+			if (layerManager.getLayerCount() >= 1)
 			{
-				if (!layerManager.isLayerActive(i))
-					continue;
-				normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(i));
-				normalmapPanel.setTextureID(fbs.getColourTexture(), false);
-				normalmapPanel.draw(layerManager.getColourTexture(i));
+				for (int i = 1; i < layerManager.getLayerCount(); i++)
+				{
+					if (!layerManager.isLayerActive(i))
+						continue;
+					normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(i));
+					normalmapPanel.setTextureID(fbs.getColourTexture(), false);
+					normalmapPanel.draw(layerManager.getColourTexture(i));
+				}
 			}
+			normalmapShader.applyShaderInt(useNormalInputUniform, 2);
+			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
+			normalmapPanel.draw();
 		}
 
-		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
-		normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
-		normalmapPanel.draw();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
@@ -738,13 +745,25 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::Spacing();
 	ImGui::Text("VIEW MODE");
 	ImGui::Separator();
+	ImGui::Spacing();
+	static int item_type;
+	ImGui::RadioButton("RAW DATA", &item_type, 0); ImGui::SameLine();
+	ImGui::RadioButton("LAYER OUTPUT", &item_type, 1);
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
 	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
-
 	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
-	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { normalViewStateUtility.mapDrawViewMode = 3; }
+
+	isUsingLayerOutput = (item_type == 0) ? false : true;
+	if (isUsingLayerOutput)
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40)))
+	{
+		normalViewStateUtility.mapDrawViewMode = (isUsingLayerOutput) ? 3 : 0;
+	}
+	if (isUsingLayerOutput)
+		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Ctrl + H)");
@@ -1114,7 +1133,6 @@ inline void DisplayNormalSettingsUserInterface()
 		ImGui::SetTooltip("(SHIFT + B)");
 	ImGui::PopStyleColor();
 }
-
 inline void DisplayLightSettingsUserInterface()
 {
 	ImGui::Text("LIGHT SETTINGS");
@@ -1131,7 +1149,6 @@ inline void DisplayLightSettingsUserInterface()
 	if (ImGui::SliderFloat("## Z Angle", &normalViewStateUtility.lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-
 inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 {
 	bool open = true;
@@ -1241,7 +1258,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Checkbox("Normals", &previewStateUtility.showNormals); ImGui::SameLine();
 	float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
 	ImGui::PushItemWidth(availWidth);
-	if(ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f"))
+	if (ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f"))
 		glLineWidth(previewStateUtility.normDisplayThickness);
 	ImGui::SameLine();
 	ImGui::SliderFloat("##Normal Length", &previewStateUtility.normDisplayLineLength, 0.1f, 10.0f, "Length:%.2f");
@@ -1405,7 +1422,6 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-
 inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
 {
 	bool open = true;
@@ -1427,7 +1443,6 @@ inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
@@ -1587,7 +1602,6 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		delete[] dataBuffer;
 	}
 }
-
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
 	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
@@ -1700,7 +1714,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 	}
 	prevState = state;
 }
-
 inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
 {
 #ifdef NORA_CUSTOM_WINDOW_CHROME 
@@ -1794,7 +1807,6 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 	}
 #endif
 }
-
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
 {
 	if (state == GLFW_PRESS)
@@ -1809,7 +1821,6 @@ inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseBu
 		prevMiddleMouseButtonCoord = windowSys.getCursorPos();
 	}
 }
-
 inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	const glm::vec2 pixelPos(xpos, ypos);
@@ -1847,8 +1858,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			}
 		}
 	}
-	}
-
+}
 inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	const float xMag = static_cast<float>(endX - startX);
@@ -1879,7 +1889,6 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureDat
 		}
 	}
 }
-
 inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	//Crashes when drawing with blur at bottom of panel
@@ -1957,7 +1966,6 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	delete[] tempPixelData;
 	tempPixelData = nullptr;
 }
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	width = glm::clamp(width, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().x);
@@ -1968,7 +1976,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	layerManager.updateFramebufferTextureDimensions(windowSys.getWindowRes());
 	previewFbs.updateTextureDimensions(windowSys.getWindowRes());
 }
-
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
 	if (!canPerformPreviewWindowMouseOperations)
