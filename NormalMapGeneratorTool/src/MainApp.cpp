@@ -409,6 +409,7 @@ int main(void)
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, 0);
 		normalmapPanel.draw();
 		normalmapShader.applyShaderInt(useNormalInputUniform, 1);
+
 		if (layerManager.getLayerCount() >= 1)
 		{
 			for (int i = 1; i < layerManager.getLayerCount(); i++)

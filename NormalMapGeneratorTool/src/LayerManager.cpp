@@ -98,11 +98,11 @@ void LayerManager::draw()
 			layers.at(i).normalBlendMethod = (NormalBlendMethod)item_current;
 		ImGui::PopItemWidth();
 
-		std::string removeLayerButtonName = "Remove Layer " + std::to_string(i);
+		std::string removeLayerButtonName = "Remove Layer##" + std::to_string(i);
 		if (ImGui::Button(removeLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 30)))
 			markedForDeletionLayerIndices.insert(i);
 		ImGui::SameLine();
-		std::string hideLayerButtonName = "Toggle Visibility " + std::to_string(i);
+		std::string hideLayerButtonName = "Toggle Visibility##" + std::to_string(i);
 		if (ImGui::Button(hideLayerButtonName.c_str(), ImVec2(ImGui::GetContentRegionAvailWidth(), 30)))
 			setLayerActiveState(i, !isLayerActive(i));
 	}
