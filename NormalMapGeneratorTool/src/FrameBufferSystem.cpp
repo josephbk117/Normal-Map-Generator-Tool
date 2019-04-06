@@ -68,9 +68,35 @@ void FrameBufferSystem::updateTextureDimensions(const glm::vec2 & windowRes) noe
 	updateTextureDimensions(windowRes.x, windowRes.y);
 }
 
-int FrameBufferSystem::GetCurrentlyBoundFBO() noexcept
+unsigned int FrameBufferSystem::getFrameBufferId() const
+{
+	return framebuffer;
+}
+
+unsigned int FrameBufferSystem::getCurrentlyBoundFBO() noexcept
 {
 	return currentlyBoundFBO;
+}
+
+void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferSystem& destination,
+	const glm::vec2& srcStartCoord, const glm::vec2& srcEndCoord, const glm::vec2& destStartCoord,
+	const glm::vec2& destEndCoord) noexcept
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, destination.getFrameBufferId());
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, source.getFrameBufferId());
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glBlitFramebuffer(srcStartCoord.x, srcStartCoord.y, srcEndCoord.x, srcEndCoord.y,
+					  destStartCoord.x, destStartCoord.y, destEndCoord.x, destEndCoord.y,
+					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, currentlyBoundFBO);
+}
+
+void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::vec2 screenRes)noexcept
+{
+	blit(source, destination, glm::vec2(0, 0), screenRes, glm::vec2(0, 0), screenRes);
 }
 
 FrameBufferSystem::~FrameBufferSystem()

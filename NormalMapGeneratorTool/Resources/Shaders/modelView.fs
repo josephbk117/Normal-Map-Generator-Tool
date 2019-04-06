@@ -47,8 +47,10 @@ void main()
         vec3 norm;
 		if(_MethodIndex == 0) //For method 1
 			norm = TriSample(heightmapTexture, TexCoords, xOffset, yOffset);
-		else //For method 2
+		else if(_MethodIndex == 1)//For method 2
 			norm = SobelNormal(heightmapTexture, TexCoords, xOffset, yOffset);
+		else if(_MethodIndex == 2)
+			norm = texture(heightmapTexture, TexCoords).rgb * 2.0 - 1.0;
 
 		norm = normalize(norm);
 		if(_flipX_Ydir == true)

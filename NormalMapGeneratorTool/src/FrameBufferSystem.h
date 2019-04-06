@@ -13,6 +13,7 @@ public:
 	void init(const glm::vec2& windowRes, const glm::vec2& maxBufferResolution);
 	//Initialize frame buffer with certain resolution
 	void init(int windowWidth, int windowHeight, int maxBufferWidth, int maxBufferHeight);
+	//Make the this the new bound frame buffer
 	void bindFrameBuffer() noexcept;
 	//Bind the colour buffer texture which is linked with the framebuffer
 	void bindColourTexture() noexcept;
@@ -26,7 +27,14 @@ public:
 	void updateTextureDimensions(int windowWidth, int windowHeight) noexcept;
 	//Change resolution of existing frame buffer
 	void updateTextureDimensions(const glm::vec2 &windowRes) noexcept;
-	static int GetCurrentlyBoundFBO() noexcept;
+	//Get the frame buffer id
+	unsigned int getFrameBufferId() const;
+	//Get the FBO that is current bound
+	static unsigned int getCurrentlyBoundFBO() noexcept;
+	static void blit(const FrameBufferSystem& source, const FrameBufferSystem& destination,
+		const glm::vec2& srcStartCoord, const glm::vec2& srcEndCoord, const glm::vec2& destStartCoord, 
+		const glm::vec2& destEndCoord)noexcept;
+	static void blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::vec2 screenRes)noexcept;
 	~FrameBufferSystem();
 };
 

@@ -307,6 +307,9 @@ int main(void)
 	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	previewFbs.init(windowSys.getWindowRes(), glm::vec2(1920, 1920));
 
+	FrameBufferSystem layersNormalOutputFbs;
+	layersNormalOutputFbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
+
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
@@ -427,6 +430,9 @@ int main(void)
 					normalmapPanel.draw(layerManager.getColourTexture(i));
 				}
 			}
+
+			FrameBufferSystem::blit(fbs, layersNormalOutputFbs, windowSys.getMaxWindowRes());
+
 			normalmapShader.applyShaderInt(useNormalInputUniform, 2);
 			normalmapShader.applyShaderInt(normalMapModeOnUniform, normalViewStateUtility.mapDrawViewMode);
 			normalmapPanel.draw();
@@ -498,7 +504,7 @@ int main(void)
 		static glm::vec2 prevMcord;
 		glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
 
-		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && canPerformPreviewWindowMouseOperations/*&& windowSideVal == WindowSide::RIGHT && curMouseCoord.y < 400*/)
+		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && canPerformPreviewWindowMouseOperations)
 		{
 			circleAround += offset.x * 0.01f;
 			yAxis += offset.y * 0.01f;
@@ -508,7 +514,7 @@ int main(void)
 		cameraPosition.z = glm::cos(circleAround) * previewStateUtility.modelPreviewZoomLevel;
 		cameraPosition.y = yAxis;
 
-		if (glm::distance(cameraPosition, glm::vec3(0)) > previewStateUtility.modelPreviewZoomLevel)
+		if (glm::length(cameraPosition) > previewStateUtility.modelPreviewZoomLevel)
 		{
 			cameraPosition = -glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
 		}
@@ -541,12 +547,12 @@ int main(void)
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
-		modelViewShader.applyShaderBool(modelMethodIndexUniform, normalViewStateUtility.methodIndex);
+		modelViewShader.applyShaderInt(modelMethodIndexUniform, (isUsingLayerOutput) ? 2 : normalViewStateUtility.methodIndex);//(isUsingLayerOutput) ? 2 : previewStateUtility.modelViewMode);
 
 		modelViewShader.applyShaderBool(modelUseMatcapUniform, previewStateUtility.useMatcap);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, heightMapTexData.GetTexId());
+		glBindTexture(GL_TEXTURE_2D, (isUsingLayerOutput) ? layersNormalOutputFbs.getColourTexture() : heightMapTexData.GetTexId());
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, albedoTexDataForPreview.GetTexId());
 		glActiveTexture(GL_TEXTURE2);
@@ -760,7 +766,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40)))
 	{
-		normalViewStateUtility.mapDrawViewMode = (isUsingLayerOutput) ? 3 : 0;
+		normalViewStateUtility.mapDrawViewMode = (isUsingLayerOutput) ? normalViewStateUtility.mapDrawViewMode : 0;
 	}
 	if (isUsingLayerOutput)
 		ImGui::PopStyleVar();
