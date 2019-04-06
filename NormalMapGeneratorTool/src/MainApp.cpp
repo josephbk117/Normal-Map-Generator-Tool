@@ -547,7 +547,7 @@ int main(void)
 
 		modelViewShader.applyShaderVector3(modelDiffuseColourUniform, previewStateUtility.diffuseColour);
 		modelViewShader.applyShaderVector3(modelLightColourUniform, previewStateUtility.lightColour);
-		modelViewShader.applyShaderInt(modelMethodIndexUniform, (isUsingLayerOutput) ? 2 : normalViewStateUtility.methodIndex);//(isUsingLayerOutput) ? 2 : previewStateUtility.modelViewMode);
+		modelViewShader.applyShaderInt(modelMethodIndexUniform, (isUsingLayerOutput) ? 2 : normalViewStateUtility.methodIndex);
 
 		modelViewShader.applyShaderBool(modelUseMatcapUniform, previewStateUtility.useMatcap);
 
@@ -1291,7 +1291,12 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 
 	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
-	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = 1; }
+
+	if (isUsingLayerOutput)
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	if (ImGui::Button("Height", ImVec2(modeButtonWidth - 5, 40))) { previewStateUtility.modelViewMode = (isUsingLayerOutput) ? previewStateUtility.modelViewMode : 1; }
+	if (isUsingLayerOutput)
+		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Alt + H)");
@@ -1806,11 +1811,11 @@ inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowS
 				glm::vec2 winPos = windowSys.GetWindowPos();
 				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
 			}
-		}
+	}
 		windowSideAtInitPos = WindowSide::NONE;
 		initPos = glm::vec2(-1000, -1000);
 		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-	}
+}
 #endif
 }
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
