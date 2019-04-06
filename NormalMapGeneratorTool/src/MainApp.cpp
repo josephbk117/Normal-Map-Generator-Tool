@@ -201,7 +201,7 @@ int main(void)
 	metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId);
 	matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
-	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
+	heightImageLoadLocation = TEXTURES_PATH + "wall specular.png";
 	TextureManager::getTextureDataFromFile(heightImageLoadLocation, heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -495,8 +495,9 @@ int main(void)
 		// Set up the preview frame buffer and then render the 3d model
 		previewFbs.bindFrameBuffer();
 
-		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
 
 		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
@@ -515,16 +516,14 @@ int main(void)
 		cameraPosition.y = yAxis;
 
 		if (glm::length(cameraPosition) > previewStateUtility.modelPreviewZoomLevel)
-		{
 			cameraPosition = -glm::normalize(cameraPosition) * previewStateUtility.modelPreviewZoomLevel;
-		}
 		prevMcord = windowSys.getCursorPos();
 
 		// Set up preview model uniforms
 		modelViewShader.use();
 		modelViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
-		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 100.0f));
+		modelViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelViewShader.applyShaderVector3(modelCameraPos, cameraPosition);
 		modelViewShader.applyShaderInt(modelNormalMapModeUniform, previewStateUtility.modelViewMode);
 		modelViewShader.applyShaderFloat(modelNormalMapStrengthUniform, normalViewStateUtility.normalMapStrength);
@@ -569,7 +568,7 @@ int main(void)
 		modelAttribViewShader.use();
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
-		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 1.0f, 100.0f));
+		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewProjectionUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
 		modelAttribViewShader.applyShaderBool(modelAttributesShowNormalsUniform, previewStateUtility.showNormals);
 		modelAttribViewShader.applyShaderFloat(modelAttributesNormalLengthUniform, previewStateUtility.normDisplayLineLength);
 		if (modelPreviewObj != nullptr)
