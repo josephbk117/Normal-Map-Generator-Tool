@@ -38,7 +38,7 @@ glm::vec2 TextureManager::getImageDimensions(const std::string & path)
 	return glm::vec2(width, height);
 }
 
-unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool linearColourSpace)
+unsigned int TextureManager::createTextureFromFile(const std::string & path, bool linearColourSpace)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -81,7 +81,7 @@ unsigned int TextureManager::loadTextureFromFile(const std::string & path, bool 
 	return textureID;
 }
 
-unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>& paths)
+unsigned int TextureManager::createCubemapFromFile(const std::vector<std::string>& paths)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -114,7 +114,7 @@ unsigned int TextureManager::loadCubemapFromFile(const std::vector<std::string>&
 	return textureID;
 }
 
-unsigned int TextureManager::loadTextureFromData(TextureData & textureData)
+unsigned int TextureManager::createTextureFromData(TextureData & textureData)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -190,11 +190,11 @@ void TextureManager::SaveImage(std::string path, const glm::vec2 & imageRes, Ima
 	}
 }
 
-unsigned int TextureManager::loadTextureFromColour(const ColourData & colour)
+unsigned int TextureManager::createTextureFromColour(const ColourData & colour)
 {
 	TextureData texData;
 	glm::vec4 col = colour.getColour_8_Bit();
 	unsigned char data[4] = { col[0], col[1], col[2], col[3] };
 	texData.setTextureData(data, 1, 1, 4);
-	return TextureManager::loadTextureFromData(texData);
+	return TextureManager::createTextureFromData(texData);
 }

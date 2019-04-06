@@ -79,7 +79,6 @@ void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brus
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
-inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
 inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
@@ -176,16 +175,16 @@ int main(void)
 	brushPanel.init(1.0f, 1.0f);
 
 	//Windowing related images
-	closeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
-	restoreTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
-	minimizeTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
-	logoTextureId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "icon.png");
+	closeTextureId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "closeIcon.png");
+	restoreTextureId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "maxWinIcon.png");
+	minimizeTextureId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "toTrayIcon.png");
+	logoTextureId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "icon.png");
 
-	toggleFullscreenTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "toggleFullscreen.png");
-	clearViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
-	resetViewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
-	maximizePreviewTexId = TextureManager::loadTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
-	defaultWhiteTextureId = TextureManager::loadTextureFromColour(ColourData(1, 1, 1, 1));
+	toggleFullscreenTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "toggleFullscreen.png");
+	clearViewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
+	resetViewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
+	maximizePreviewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
+	defaultWhiteTextureId = TextureManager::createTextureFromColour(ColourData(1, 1, 1, 1));
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -195,15 +194,15 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
-	unsigned int cubeMapTextureId = TextureManager::loadCubemapFromFile(cubeMapImagePaths);
-	albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
-	roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(TEXTURES_PATH + "wall specular.png"));
+	unsigned int cubeMapTextureId = TextureManager::createCubemapFromFile(cubeMapImagePaths);
+	albedoTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
+	roughnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall specular.png"));
 	metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId);
-	matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
+	matcapTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
 	heightImageLoadLocation = TEXTURES_PATH + "wall specular.png";
 	TextureManager::getTextureDataFromFile(heightImageLoadLocation, heightMapTexData);
-	heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+	heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
 	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
@@ -362,11 +361,10 @@ int main(void)
 			HandleMiddleMouseButtonInput(middleMouseButtonState, prevMiddleMouseButtonCoord, deltaTime, frameDrawingPanel);
 			HandleLeftMouseButtonInput_NormalMapInteraction(leftMouseButtonState, frameDrawingPanel, isBlurOn);
 		}
-		HandleLeftMouseButtonInput_UI(leftMouseButtonState, initPos, windowSideAtInitPos, curMouseCoord.x, curMouseCoord.y, isMaximized, prevGlobalFirstMouseCoord);
+
 		heightMapTexData.updateTexture();
 
 		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-
 		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
@@ -937,7 +935,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+				heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
 				heightMapTexData.setTextureDirty();
 				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
 
@@ -1031,7 +1029,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 				{
 					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths[i], brushData.textureData);
-					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
+					brushData.textureData.SetTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -1044,7 +1042,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 				{
 					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths[i], brushData.textureData);
-					brushData.textureData.SetTexId(TextureManager::loadTextureFromData(brushData.textureData));
+					brushData.textureData.SetTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -1341,7 +1339,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					{
 						previewStateUtility.useMatcap = true;
 						std::string matcapPath = MATCAP_TEXTURES_PATH + current_matcap_item + ".png";
-						matcapTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(matcapPath));
+						matcapTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(matcapPath));
 					}
 				}
 				if (is_selected)
@@ -1384,7 +1382,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					albedoTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+					albedoTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
@@ -1401,7 +1399,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					metalnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+					metalnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
@@ -1418,7 +1416,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					roughnessTexDataForPreview.SetTexId(TextureManager::loadTextureFromFile(str));
+					roughnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
@@ -1473,9 +1471,9 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 					{
 						TextureManager::getTextureDataFromFile(str, heightMapTexData);
 						heightImageLoadLocation = str;
-						heightMapTexData.SetTexId(TextureManager::loadTextureFromData(heightMapTexData));
+						heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
 						heightMapTexData.setTextureDirty();
-						normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+						layerManager.updateLayerTexture(0, heightMapTexData.GetTexId());
 
 						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 						undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -1723,99 +1721,6 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 		}
 	}
 	prevState = state;
-}
-inline void HandleLeftMouseButtonInput_UI(int state, glm::vec2 &initPos, WindowSide &windowSideAtInitPos, double x, double y, bool &isMaximized, glm::vec2 &prevGlobalFirstMouseCoord)
-{
-#ifdef NORA_CUSTOM_WINDOW_CHROME 
-	if (state == GLFW_PRESS)
-	{
-		if (initPos == glm::vec2(-1000, -1000))
-		{
-			windowSideAtInitPos = WindowTransformUtility::GetWindowAreaAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y); //WindowTransformUtility::GetWindowSideAtMouseCoord((int)x, (int)y, windowSys.GetWindowRes().x, windowSys.GetWindowRes().y);
-			initPos = glm::vec2(x, y);
-		}
-
-		if (y < 40 && y >= WindowTransformUtility::BORDER_SIZE)
-		{
-			if (windowSideAtInitPos == WindowSide::NONE)
-			{
-				glm::vec2 currentPos(x, y);
-				if (prevGlobalFirstMouseCoord != currentPos && prevGlobalFirstMouseCoord != glm::vec2(-500, -500))
-				{
-					glm::vec2 winPos = windowSys.GetWindowPos();
-					windowSys.SetWindowPos(winPos.x + currentPos.x - initPos.x, winPos.y + currentPos.y - initPos.y);
-				}
-			}
-		}
-		prevGlobalFirstMouseCoord = glm::vec2(x, y);
-	}
-	else
-	{
-		if (windowSideAtInitPos == WindowSide::LEFT)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				glm::vec2 winPos = windowSys.GetWindowPos();
-				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
-				const glm::vec2 diff = (currentPos + glm::vec2(winPos.x, 0)) - (initPos + glm::vec2(winPos.x, 0));
-				windowSys.SetWindowRes(windowSys.GetWindowRes().x - diff.x, windowSys.GetWindowRes().y);
-			}
-		}
-		else if (windowSideAtInitPos == WindowSide::RIGHT)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				glm::vec2 diff = currentPos - initPos;
-				windowSys.SetWindowRes(windowSys.GetWindowRes().x + diff.x, windowSys.GetWindowRes().y);
-			}
-		}
-		else if (windowSideAtInitPos == WindowSide::BOTTOM_RIGHT)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				glm::vec2 diff = currentPos - initPos;
-				windowSys.SetWindowRes(windowSys.GetWindowRes() + diff);
-			}
-		}
-		else if (windowSideAtInitPos == WindowSide::TOP)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				glm::vec2 diff = currentPos - initPos;
-				windowSys.SetWindowRes(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y - diff.y);
-				glm::vec2 winPos = windowSys.GetWindowPos();
-				windowSys.SetWindowPos(winPos.x + currentPos.x - initPos.x, winPos.y + currentPos.y - initPos.y);
-			}
-		}
-		else if (windowSideAtInitPos == WindowSide::BOTTOM)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				const glm::vec2 diff = currentPos - initPos;
-				windowSys.SetWindowRes(windowSys.GetWindowRes().x, windowSys.GetWindowRes().y + diff.y);
-			}
-		}
-		else if (windowSideAtInitPos == WindowSide::BOTTOM_LEFT)
-		{
-			glm::vec2 currentPos(x, y);
-			if (initPos != currentPos && initPos != glm::vec2(-1000, -1000))
-			{
-				glm::vec2 diff = currentPos - initPos;
-				windowSys.SetWindowRes(windowSys.GetWindowRes().x - diff.x, windowSys.GetWindowRes().y + diff.y);
-				glm::vec2 winPos = windowSys.GetWindowPos();
-				windowSys.SetWindowPos(winPos.x + currentPos.x, winPos.y);
-			}
-	}
-		windowSideAtInitPos = WindowSide::NONE;
-		initPos = glm::vec2(-1000, -1000);
-		prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
-}
-#endif
 }
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
 {

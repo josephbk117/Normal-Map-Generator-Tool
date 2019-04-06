@@ -121,7 +121,7 @@ void LayerManager::draw()
 	{
 		FileExplorer::instance->displayDialog(FileType::IMAGE, [&](std::string str)
 		{
-			addLayer(TextureManager::loadTextureFromFile(str, true), LayerType::HEIGHT_MAP);
+			addLayer(TextureManager::createTextureFromFile(str, true), LayerType::HEIGHT_MAP);
 		});
 	}
 	std::set<unsigned int>::iterator it;
