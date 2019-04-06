@@ -15,6 +15,6 @@ public:
 
 	//Provide new data to existing model
 	void updateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount);
-	void draw();
+	void draw() const;
 };
 

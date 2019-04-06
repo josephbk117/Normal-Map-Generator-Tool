@@ -172,6 +172,7 @@
     <ClCompile Include="src\UndoRedoSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GLutil.h" />
     <ClInclude Include="src\LayerManager.h" />
     <ClInclude Include="src\PreferencesHandler.h" />
     <ClInclude Include="src\ModalWindow.h" />

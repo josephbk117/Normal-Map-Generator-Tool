@@ -35,6 +35,7 @@ public:
 		const glm::vec2& srcStartCoord, const glm::vec2& srcEndCoord, const glm::vec2& destStartCoord, 
 		const glm::vec2& destEndCoord)noexcept;
 	static void blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::vec2 screenRes)noexcept;
+	static void bindDefaultFrameBuffer()noexcept;
 	~FrameBufferSystem();
 };
 

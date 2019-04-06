@@ -12,6 +12,7 @@
 #include "ImGui\imgui_impl_glfw.h"
 #include "ImGui\imgui_impl_opengl2.h"
 
+#include "GLutil.h"
 #include "Camera.h"
 #include "DrawingPanel.h"
 #include "FrameBufferSystem.h"
@@ -37,7 +38,6 @@
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
 //TODO : Mouse control when preview maximize panel opens
-//TODO : Add layers, Definition for layer type can be height map / direct normal map. | Use various blending methods |
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Reset view should make non 1:1 images fit in screen
@@ -142,7 +142,9 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-	glEnable(GL_BLEND);
+	GL::enableBlending();
+	GL::enableFaceCulling();
+	GL::setFaceCullingMode(FaceCullingMode::BACK_FACE_CULLING);
 
 	SetupImGui();
 	//Initalize the File Explorer singleton
@@ -162,9 +164,9 @@ int main(void)
 #pragma endregion
 
 	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
-	ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
-	ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
-	ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
+	const ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
+	const ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
+	const ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
 
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -200,7 +202,7 @@ int main(void)
 	metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId);
 	matcapTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
-	heightImageLoadLocation = TEXTURES_PATH + "wall specular.png";
+	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
 	TextureManager::getTextureDataFromFile(heightImageLoadLocation, heightMapTexData);
 	heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -303,6 +305,8 @@ int main(void)
 	bool isBlurOn = false;
 
 	layerManager.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
+	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
+
 	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	previewFbs.init(windowSys.getWindowRes(), glm::vec2(1920, 1920));
 
@@ -311,15 +315,12 @@ int main(void)
 
 	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
-	glm::vec2 prevGlobalFirstMouseCoord = glm::vec2(-500, -500);
 
 	bool shouldSaveNormalMap = false;
 	bool changeSize = false;
-	glm::vec2 prevWindowSize = glm::vec2(500, 500);
 
 	//std::thread applyPanelChangeThread(ApplyChangesToPanel);
 	double initTime = glfwGetTime();
-	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
 	while (!windowSys.isWindowClosing())
 	{
 		const double deltaTime = glfwGetTime() - initTime;
@@ -365,9 +366,9 @@ int main(void)
 		heightMapTexData.updateTexture();
 
 		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-		glClearColor(0.9f, 0.5f, 0.2f, 1.0f);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
+		GL::setClearColour(0.9f, 0.5f, 0.2f);
+		GL::enableDepthTest();
+		GL::setDepthTestMode(DepthTestMode::DEPTH_LESS);
 		normalmapPanel.getTransform()->update();
 		normalmapShader.use();
 		//---- Applying Normal Map Shader Uniforms---//
@@ -391,7 +392,8 @@ int main(void)
 		for (int layerIndex = 0; layerIndex < layerManager.getLayerCount(); layerIndex++)
 		{
 			layerManager.bindFrameBuffer(layerIndex);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			GL::clear(FrameBufferAttachment::COLOUR_AND_DEPTH_BUFFER);
+
 			normalmapShader.applyShaderFloat(strengthValueUniform, (layerIndex == 0) ? normalViewStateUtility.normalMapStrength : layerManager.getLayerStrength(layerIndex));
 			normalmapShader.applyShaderInt(normalMapModeOnUniform, (layerManager.getLayerType(layerIndex) == LayerType::HEIGHT_MAP) ? 1 : 3);
 			if (layerIndex == 0 && !isUsingLayerOutput)
@@ -403,9 +405,9 @@ int main(void)
 		if (shouldSaveNormalMap)
 			SetStatesForSavingNormalMap();
 		//---- Bind main frame buffer and set output to cumulative blending ----//
-		glDisable(GL_DEPTH_TEST);
+		GL::disableDepthTest();
 		fbs.bindFrameBuffer();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		GL::clear(FrameBufferAttachment::COLOUR_AND_DEPTH_BUFFER);
 
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
 		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
@@ -429,6 +431,7 @@ int main(void)
 				}
 			}
 
+			//Copy contant from one frame buffer to another
 			FrameBufferSystem::blit(fbs, layersNormalOutputFbs, windowSys.getMaxWindowRes());
 
 			normalmapShader.applyShaderInt(useNormalInputUniform, 2);
@@ -436,11 +439,9 @@ int main(void)
 			normalmapPanel.draw();
 		}
 
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		FrameBufferSystem::bindDefaultFrameBuffer();
+		GL::setClearColour(0.1f, 0.1f, 0.1f);
+		GL::clear(FrameBufferAttachment::COLOUR_AND_DEPTH_BUFFER);
 
 		static char saveLocation[500] = { '\0' };
 		if (saveLocation[0] == '\0')
@@ -493,9 +494,9 @@ int main(void)
 		// Set up the preview frame buffer and then render the 3d model
 		previewFbs.bindFrameBuffer();
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
+		GL::clear(FrameBufferAttachment::COLOUR_AND_DEPTH_BUFFER);
+		GL::enableDepthTest();
+		GL::setDepthTestMode(DepthTestMode::DEPTH_LESS);
 
 		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
@@ -562,7 +563,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-
+		
 		modelAttribViewShader.use();
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
@@ -582,7 +583,7 @@ int main(void)
 		previewGrid->draw();
 #pragma endregion
 		// Set up the default framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		FrameBufferSystem::bindDefaultFrameBuffer();
 #pragma region  SETUP & RENDER BRUSH DATA
 		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{

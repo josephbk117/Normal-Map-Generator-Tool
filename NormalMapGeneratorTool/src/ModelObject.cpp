@@ -71,7 +71,7 @@ void ModelObject::updateMeshData(float vertexData[], int vertexDataCount, unsign
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void ModelObject::draw()
+void ModelObject::draw() const
 {
 	glBindVertexArray(VAO);
 	if (usesElementBuffer)

@@ -98,7 +98,10 @@ void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferS
 {
 	blit(source, destination, glm::vec2(0, 0), screenRes, glm::vec2(0, 0), screenRes);
 }
-
+void FrameBufferSystem::bindDefaultFrameBuffer()noexcept
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 FrameBufferSystem::~FrameBufferSystem()
 {
 }
