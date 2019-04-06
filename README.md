@@ -15,7 +15,7 @@ Takes height map information which is usually gray scale ( Height map data ) and
 
 *Disclaimer : Can be used in production but look out for the rare bug here and there*
 
-### Software as of version 1.2 Beta
+### Image of Nora as of version 1.2 Beta [Current version 1.3 Beta]
 ![Image of Nora normal map editor](https://i.imgur.com/JujvJES.png)
 #### Different view modes are available while editing the normal map :
 1. Height( Gray scale )
@@ -35,15 +35,15 @@ This is a real-time preview of how the texture will look once applied on the mod
 2. Look at existing theme files to make your own
 <div><img src="https://i.imgur.com/7ItkGf0.png" alt="alt text" width="300"/> <img src="https://i.imgur.com/mkSqdWF.png" alt="alt text" width="300"/><img src="https://i.imgur.com/h2Hlrym.png" alt="alt text" width="300"/><img src="https://i.imgur.com/OZPJzUA.png" alt="alt text" width="300"/></div>
 
-## Planned / Completed features :
+## Planned / Completed features as of version 1.3 Beta :
 - Editor Functionality:
   - Better brush drawing performance and functionality
   - Blur improvements
   - Adding more brushes in brush library
   - Display brush outline better
-  - Adding layers:
-    - Creation of layers and layers groups
-    - Adding blend options to interpolate normals between layers    
+  - [X] Adding layers (completed as of v1.3):
+    - [X] Creation of layers and layers groups
+    - [X] Adding blend options to interpolate normals between layers    
 - Preview Display:
   - Adding support for parallax map using the input height map
   - [X] Adding PBR support along with Metalness map, Roughness map & Occlusion map ( completed as of v1.2 )
