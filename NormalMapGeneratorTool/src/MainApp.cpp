@@ -1012,6 +1012,9 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		NoraFileHeader fileHeader;
 		auto layerInfoVector = NoraFileHandler::readFromDisk("Test.pic", fileHeader);
 
+		layerManager.initWithLayerInfoData(layerInfoVector);
+
+
 		heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
 
 		heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));

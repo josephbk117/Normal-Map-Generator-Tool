@@ -1,6 +1,7 @@
 #include <set>
 #include <iostream>
 #include "GL\glew.h"
+#include "NoraFileHandler.h"
 #include "LayerManager.h"
 #include "FileExplorer.h"
 #include "TextureLoader.h"
@@ -14,6 +15,18 @@ void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferR
 {
 	this->windowRes = windowRes;
 	this->maxBufferResolution = maxBufferResolution;
+}
+
+void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoData, unsigned char*>>& layerInfoData)
+{
+	unsigned int size = glm::min(layers.size(), layerInfoData.size());
+	for (unsigned int i = 0; i < size; i++)
+	{
+		std::memcpy(&layers.at(i).layerName[i], layerInfoData[i].first.layerName, 100);
+		layers.at(i).strength = layerInfoData[i].first.layerStrength;
+		layers.at(i).layerType = layerInfoData[i].first.layerType;
+		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
+	}
 }
 
 void LayerManager::updateLayerTexture(int index, unsigned int textureId)

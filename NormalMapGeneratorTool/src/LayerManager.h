@@ -6,6 +6,7 @@
 #include "TextureLoader.h"
 #include "ImGui\imgui.h"
 
+struct LayerInfoData;
 enum class LayerType { HEIGHT_MAP = 0, NORMAL_MAP };
 enum class NormalBlendMethod { REORIENTED_NORMAL_BLENDING = 0, UNREAL_NORMAL_BLENDING, PARTIAL_DERIVATIVE_NORMAL_BLENDING };
 
@@ -34,6 +35,7 @@ public:
 	~LayerManager();
 	int getLayerCount()const;
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
+	void initWithLayerInfoData(const std::vector<std::pair<LayerInfoData, unsigned char*>>& layerInfoData);
 	void updateLayerTexture(int index, unsigned int textureId);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
 	void setLayerActiveState(int index, bool isActive);
