@@ -41,7 +41,7 @@ void FrameBufferSystem::bindColourTexture() noexcept
 	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
 }
 
-unsigned int FrameBufferSystem::getColourTexture() noexcept
+unsigned int FrameBufferSystem::getColourTexture()const noexcept
 {
 	return textureColorbuffer;
 }
@@ -51,7 +51,7 @@ void FrameBufferSystem::bindDepthTexture() noexcept
 	glBindTexture(GL_TEXTURE_2D, textureDepthBuffer);
 }
 
-unsigned int FrameBufferSystem::getDepthTexture() noexcept
+unsigned int FrameBufferSystem::getDepthTexture()const noexcept
 {
 	return textureDepthBuffer;
 }

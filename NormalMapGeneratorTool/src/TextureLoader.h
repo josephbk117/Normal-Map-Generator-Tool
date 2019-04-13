@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <GLM\common.hpp>
-enum class ImageFormat { PNG = 100, JPEG, BMP, TGA };
+enum class ImageFormat { PNG = 100, JPEG, BMP, TGA, UNCOMPRESSED_RAW };
 
 class TextureManager
 {

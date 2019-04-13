@@ -23,17 +23,17 @@ void TextureData::setTextureData(unsigned char * data, int width, int height, in
 	std::memcpy(this->data, data, width * height * componentCount);
 }
 
-unsigned char * TextureData::getTextureData()
+unsigned char * TextureData::getTextureData()const
 {
 	return data;
 }
 
-glm::vec2 TextureData::getRes() noexcept
+glm::vec2 TextureData::getRes()const noexcept
 {
 	return glm::vec2(width, height);
 }
 
-int TextureData::getComponentCount() noexcept
+int TextureData::getComponentCount()const noexcept
 {
 	return componentCount;
 }
@@ -45,7 +45,7 @@ void TextureData::SetTexId(unsigned int texId)
 	this->texId = texId;
 }
 
-unsigned int TextureData::GetTexId()
+unsigned int TextureData::GetTexId()const
 {
 	return texId;
 }

@@ -5,7 +5,7 @@
 #include "FileExplorer.h"
 #include "TextureLoader.h"
 
-int LayerManager::getLayerCount()
+int LayerManager::getLayerCount() const
 {
 	return layers.size();
 }
@@ -48,11 +48,11 @@ void LayerManager::setLayerActiveState(int index, bool isActive)
 	layers.at(index).isActive = isActive;
 }
 
-NormalBlendMethod LayerManager::getNormalBlendMethod(int index)
+NormalBlendMethod LayerManager::getNormalBlendMethod(int index)const
 {
 	return layers.at(index).normalBlendMethod;
 }
-bool LayerManager::isLayerActive(int index)
+bool LayerManager::isLayerActive(int index)const
 {
 	return layers.at(index).isActive;
 }
@@ -61,11 +61,11 @@ void LayerManager::updateFramebufferTextureDimensions(const glm::vec2 resolution
 	for (int layerIndex = 0; layerIndex < layers.size(); layerIndex++)
 		layers.at(layerIndex).fbs.updateTextureDimensions(resolution);
 }
-float LayerManager::getLayerStrength(int index)
+float LayerManager::getLayerStrength(int index)const
 {
 	return layers.at(index).strength;
 }
-LayerType LayerManager::getLayerType(int index)
+LayerType LayerManager::getLayerType(int index)const
 {
 	return layers.at(index).layerType;
 }
@@ -138,14 +138,19 @@ void LayerManager::bindFrameBuffer(int index)
 	layers.at(index).fbs.bindFrameBuffer();
 }
 
-unsigned int LayerManager::getColourTexture(int index)
+unsigned int LayerManager::getColourTexture(int index) const
 {
 	return layers.at(index).fbs.getColourTexture();
 }
 
-int LayerManager::getInputTexId(int index)
+unsigned int LayerManager::getInputTexId(int index) const
 {
 	return layers.at(index).inputTextureId;
+}
+
+char * LayerManager::getLayerName(int index) const
+{
+	return layers.at(index).layerName;
 }
 
 LayerManager::~LayerManager()

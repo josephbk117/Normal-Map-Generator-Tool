@@ -188,6 +188,9 @@
     <ClInclude Include="src\GLutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\NoraFileHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\3dmodel.vs">

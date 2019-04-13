@@ -33,6 +33,7 @@
 #include "MeshLoadingSystem.h"
 #include "PreferencesHandler.h"
 #include "LayerManager.h"
+#include "NoraFileHandler.h"
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //Possible cause : Input take over by IMGUI
 //TODO : Add Uniform Buffers
@@ -53,7 +54,7 @@ enum class LoadingOption
 };
 
 #pragma region STRING_CONSTANTS
-const std::string VERSION_NAME = "v1.3 Beta";
+const std::string VERSION_NAME = "v1.4 Beta";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -563,7 +564,7 @@ int main(void)
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-		
+
 		modelAttribViewShader.use();
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewModelUniform, glm::mat4());
 		modelAttribViewShader.applyShaderUniformMatrix(modelPreviewViewUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
@@ -999,6 +1000,13 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	{
 		windowSys.setWindowRes(1600, 800);
 		isMaximized = false;
+	}
+
+	//Save .nora to file and read
+	if (windowSys.isKeyPressed(GLFW_KEY_2) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
+	{
+		NoraFileHandler::writeToDisk("Test.pic", heightMapTexData, layerManager);
+		NoraFileHandler::readFromDisk("Test.pic");
 	}
 }
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)

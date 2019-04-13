@@ -17,11 +17,11 @@ private:
 public:
 	TextureData();
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
-	unsigned char* getTextureData();
-	glm::vec2 getRes()noexcept;
-	int getComponentCount()noexcept;
+	unsigned char* getTextureData()const;
+	glm::vec2 getRes()const noexcept;
+	int getComponentCount()const noexcept;
 	void SetTexId(unsigned int texId);
-	unsigned int GetTexId();
+	unsigned int GetTexId()const;
 	void setTexelColor(int r, int g, int b, int a, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
 	void setTexelRangeWithColour(int beginIndex, int endIndex, ColourData& colourData);

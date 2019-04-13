@@ -3,6 +3,7 @@
 #include <vector>
 #include <GLM\glm.hpp>
 #include "FrameBufferSystem.h"
+#include "TextureLoader.h"
 #include "ImGui\imgui.h"
 
 enum class LayerType { HEIGHT_MAP = 0, NORMAL_MAP };
@@ -18,6 +19,8 @@ struct LayerInfo
 	LayerType layerType = LayerType::HEIGHT_MAP;
 	NormalBlendMethod normalBlendMethod = NormalBlendMethod::REORIENTED_NORMAL_BLENDING;
 	FrameBufferSystem fbs;
+	glm::vec2 resolution;
+	ImageFormat imageFormat = ImageFormat::UNCOMPRESSED_RAW;
 };
 
 class LayerManager
@@ -29,19 +32,20 @@ private:
 public:
 	LayerManager() {}
 	~LayerManager();
-	int getLayerCount();
+	int getLayerCount()const;
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
 	void updateLayerTexture(int index, unsigned int textureId);
 	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
 	void setLayerActiveState(int index, bool isActive);
-	NormalBlendMethod getNormalBlendMethod(int index);
-	bool isLayerActive(int index);
+	NormalBlendMethod getNormalBlendMethod(int index)const;
+	bool isLayerActive(int index)const;
 	void updateFramebufferTextureDimensions(const glm::vec2 resolution);
-	float getLayerStrength(int index);
-	LayerType getLayerType(int index);
+	float getLayerStrength(int index)const;
+	LayerType getLayerType(int index)const;
 	void bindFrameBuffer(int index);
-	unsigned int getColourTexture(int index);
-	int getInputTexId(int index);
+	unsigned int getColourTexture(int index)const;
+	unsigned int getInputTexId(int index)const;
+	char* getLayerName(int index)const;
 	void draw();
 };
 
