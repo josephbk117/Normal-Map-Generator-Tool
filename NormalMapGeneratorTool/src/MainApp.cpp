@@ -1006,7 +1006,21 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	if (windowSys.isKeyPressed(GLFW_KEY_2) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 	{
 		NoraFileHandler::writeToDisk("Test.pic", heightMapTexData, layerManager);
-		NoraFileHandler::readFromDisk("Test.pic");
+	}
+	if (windowSys.isKeyPressed(GLFW_KEY_3) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
+	{
+		NoraFileHeader fileHeader;
+		auto layerInfoVector = NoraFileHandler::readFromDisk("Test.pic", fileHeader);
+
+		heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
+
+		heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
+		heightMapTexData.setTextureDirty();
+		layerManager.updateLayerTexture(0, heightMapTexData.GetTexId());
+
+		undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+		undoRedoSystem.record(heightMapTexData.getTextureData());
+
 	}
 }
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)

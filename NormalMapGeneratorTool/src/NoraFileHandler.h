@@ -40,6 +40,8 @@ struct NoraFileHeader
 	unsigned short majorVersion;
 	unsigned short minorVersion;
 	unsigned int numberOfLayers;
+	unsigned int width;
+	unsigned int height;
 };
 
 class NoraFileHandler
@@ -57,6 +59,8 @@ public:
 		noraFileHeader.majorVersion = 1;
 		noraFileHeader.minorVersion = 4;
 		noraFileHeader.numberOfLayers = layerManager.getLayerCount();
+		noraFileHeader.width = (unsigned int)texData.getRes().x;
+		noraFileHeader.height = (unsigned int)texData.getRes().y;
 
 		std::vector<std::pair<LayerInfoData, unsigned char*>> layerInfos;
 
@@ -104,9 +108,8 @@ public:
 			delete[] layerInfos[i].second;
 	}
 
-	static void readFromDisk(const std::string& path)
+	static std::vector<std::pair<LayerInfoData, unsigned char*>> readFromDisk(const std::string& path, NoraFileHeader& noraFile)
 	{
-		NoraFileHeader noraFile;
 		LayerInfoData info;
 
 		std::vector<std::pair<LayerInfoData, unsigned char*>> layerInfos;
@@ -118,6 +121,8 @@ public:
 		std::cout << "\n Major version " << noraFile.majorVersion;
 		std::cout << "\n Minor version " << noraFile.minorVersion;
 		std::cout << "\n Number of layers " << noraFile.numberOfLayers;
+		std::cout << "\n Width " << noraFile.width;
+		std::cout << "\n Height " << noraFile.height;
 
 		for (unsigned int i = 0; i < noraFile.numberOfLayers; i++)
 		{
@@ -136,24 +141,7 @@ public:
 			layerInfos.push_back(std::pair<LayerInfoData, unsigned char*>(info, data));
 			std::cout << "\nLayer" << i << " data " << data;
 		}
-
-		/*	myfile.read((char*)&info, sizeof(LayerInfoData));
-
-			std::cout << "\n-Layer 2 name " << info.layerName;
-			std::cout << "\n-Layer 2 layer type " << (int)info.layerType;
-			std::cout << "\n-Layer 2 blend mode " << (int)info.blendMode;
-			std::cout << "\n-Layer 2 strength " << info.layerStrength;
-			std::cout << "\n-Layer 2 format " << (int)info.format;
-			std::cout << "\n-Layer 2 data size " << info.dataSize;
-
-			data = new unsigned char[info.dataSize];
-			std::memset(data, '\0', info.dataSize);
-
-			myfile.read((char*)data, info.dataSize);
-			std::cout << "\nLayer 2 data " << data;
-
-			delete[] data;*/
 		myfile.close();
-
+		return layerInfos;
 	}
 };
