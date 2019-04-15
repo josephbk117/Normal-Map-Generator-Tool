@@ -269,6 +269,11 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string 
 	return paths;
 }
 
+unsigned long FileExplorer::getFileSize(const std::string path)const
+{
+	return std::experimental::filesystem::file_size(std::experimental::filesystem::path(path));
+}
+
 FileExplorer::~FileExplorer()
 {}
 

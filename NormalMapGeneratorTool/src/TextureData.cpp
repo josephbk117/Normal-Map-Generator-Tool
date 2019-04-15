@@ -9,6 +9,19 @@ TextureData::TextureData()
 	componentCount = 0;
 }
 
+void TextureData::setTextureDataNonAlloc(unsigned char * data, int width, int height, int componentCount)
+{
+	this->width = width;
+	this->height = height;
+	this->componentCount = componentCount;
+	if (this->data != nullptr)
+	{
+		delete[] this->data;
+		this->data = nullptr;
+	}
+	this->data = data;
+}
+
 void TextureData::setTextureData(unsigned char * data, int width, int height, int componentCount)
 {
 	this->width = width;

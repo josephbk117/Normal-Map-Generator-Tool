@@ -5,6 +5,7 @@
 #include "LayerManager.h"
 #include "FileExplorer.h"
 #include "TextureLoader.h"
+#include "Stb\stb_image.h"
 
 int LayerManager::getLayerCount() const
 {
@@ -26,6 +27,12 @@ void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoDa
 		layers.at(i).strength = layerInfoData[i].first.layerStrength;
 		layers.at(i).layerType = layerInfoData[i].first.layerType;
 		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
+		int x, y, n;
+		unsigned char* data = stbi_load_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n, 4);
+		TextureData texData;
+		texData.setTextureDataNonAlloc(data, x, y, 4);
+		layers.at(i).inputTextureId = TextureManager::createTextureFromData(texData);
+		delete[] data;
 	}
 }
 
@@ -34,7 +41,7 @@ void LayerManager::updateLayerTexture(int index, unsigned int textureId)
 	layers.at(index).inputTextureId = textureId;
 }
 
-void LayerManager::addLayer(int texId, LayerType layerType, const std::string& layerName)
+void LayerManager::addLayer(int texId, LayerType layerType, const std::string& layerName, const std::string& imagePath)
 {
 	LayerInfo layerInfo;
 	layerInfo.layerType = layerType;
@@ -53,6 +60,7 @@ void LayerManager::addLayer(int texId, LayerType layerType, const std::string& l
 		std::memcpy(layerInfo.layerName, &layerName[0], layerName.size());
 		layerInfo.layerName[layerName.size()] = '\0';
 	}
+	layerInfo.imagePath = imagePath;
 	layerInfo.fbs.init(windowRes, maxBufferResolution);
 	layers.push_back(layerInfo);
 }
@@ -134,7 +142,7 @@ void LayerManager::draw()
 	{
 		FileExplorer::instance->displayDialog(FileType::IMAGE, [&](std::string str)
 		{
-			addLayer(TextureManager::createTextureFromFile(str, true), LayerType::HEIGHT_MAP);
+			addLayer(TextureManager::createTextureFromFile(str, true), LayerType::HEIGHT_MAP, "", str);
 		});
 	}
 	std::set<unsigned int>::iterator it;
@@ -149,6 +157,11 @@ void LayerManager::draw()
 void LayerManager::bindFrameBuffer(int index)
 {
 	layers.at(index).fbs.bindFrameBuffer();
+}
+
+std::string LayerManager::getImagePath(int index) const
+{
+	return layers.at(index).imagePath;
 }
 
 unsigned int LayerManager::getColourTexture(int index) const

@@ -14,7 +14,7 @@ struct LayerInfo
 {
 	unsigned int inputTextureId = 0;
 	unsigned int outputTextureId = 0;
-	char* layerName;
+	char* layerName = nullptr;
 	bool isActive;
 	float strength;
 	LayerType layerType = LayerType::HEIGHT_MAP;
@@ -22,6 +22,7 @@ struct LayerInfo
 	FrameBufferSystem fbs;
 	glm::vec2 resolution;
 	ImageFormat imageFormat = ImageFormat::UNCOMPRESSED_RAW;
+	std::string imagePath;
 };
 
 class LayerManager
@@ -37,7 +38,7 @@ public:
 	void init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution);
 	void initWithLayerInfoData(const std::vector<std::pair<LayerInfoData, unsigned char*>>& layerInfoData);
 	void updateLayerTexture(int index, unsigned int textureId);
-	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "");
+	void addLayer(int texId, LayerType layerType = LayerType::HEIGHT_MAP, const std::string& layerName = "", const std::string& imagePath = "");
 	void setLayerActiveState(int index, bool isActive);
 	NormalBlendMethod getNormalBlendMethod(int index)const;
 	bool isLayerActive(int index)const;
@@ -45,6 +46,7 @@ public:
 	float getLayerStrength(int index)const;
 	LayerType getLayerType(int index)const;
 	void bindFrameBuffer(int index);
+	std::string getImagePath(int index)const;
 	unsigned int getColourTexture(int index)const;
 	unsigned int getInputTexId(int index)const;
 	char* getLayerName(int index)const;

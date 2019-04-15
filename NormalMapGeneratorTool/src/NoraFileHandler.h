@@ -4,6 +4,7 @@
 #include "LayerManager.h"
 #include "TextureLoader.h"
 #include "TextureData.h"
+#include "FileExplorer.h"
 
 /*
 Nora save file : .nora
@@ -75,12 +76,13 @@ public:
 
 			if (i > 0)
 			{
-				layerInfoPair.first.dataSize = 3;
+				layerInfoPair.first.dataSize = FileExplorer::instance->getFileSize(layerManager.getImagePath(i));
 				layerInfoPair.second = new unsigned char[layerInfoPair.first.dataSize];
 				std::memset(layerInfoPair.second, '\0', layerInfoPair.first.dataSize);
-				layerInfoPair.second[0] = 'g';
-				layerInfoPair.second[1] = 'k';
-				layerInfoPair.second[2] = '\0';
+				
+				std::ifstream myfile(path.c_str(), std::ios::binary);
+				myfile.read((char*)&layerInfoPair.second, layerInfoPair.first.dataSize);
+				myfile.close();
 			}
 			else
 			{
@@ -92,7 +94,6 @@ public:
 
 			layerInfos.push_back(layerInfoPair);
 		}
-
 		std::ofstream myfile(path.c_str(), std::ios::binary);
 		myfile.write((char*)&noraFileHeader, sizeof(NoraFileHeader));
 
