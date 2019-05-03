@@ -207,6 +207,7 @@
     <ClInclude Include="src\UndoRedoSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assimp.dll" />
     <None Include="glew32.dll" />
     <None Include="Resources\3D Models\Complex\Suzanne.fbx" />
     <None Include="Resources\3D Models\Complex\Utah Teapot.fbx" />

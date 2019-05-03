@@ -21,12 +21,13 @@ void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferR
 void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoData, unsigned char*>>& layerInfoData)
 {
 	unsigned int size = glm::min(layers.size(), layerInfoData.size());
-	for (unsigned int i = 0; i < size; i++)
+	for (unsigned int i = 1; i < size; i++)
 	{
 		std::memcpy(&layers.at(i).layerName[i], layerInfoData[i].first.layerName, 100);
 		layers.at(i).strength = layerInfoData[i].first.layerStrength;
 		layers.at(i).layerType = layerInfoData[i].first.layerType;
 		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
+		unsigned char* sample = layerInfoData.at(i).second;
 		int x, y, n;
 		unsigned char* data = stbi_load_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n, 4);
 		TextureData texData;

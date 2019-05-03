@@ -274,6 +274,7 @@
     <None Include="Resources\Shaders\modelAttribsDisplay.gs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="assimp.dll" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">
