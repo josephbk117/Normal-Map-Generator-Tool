@@ -199,16 +199,16 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
 	unsigned int cubeMapTextureId = TextureManager::createCubemapFromFile(cubeMapImagePaths);
-	albedoTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
-	roughnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall specular.png"));
-	metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId);
-	matcapTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
+	albedoTexDataForPreview.setTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
+	roughnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall specular.png"));
+	metalnessTexDataForPreview.setTexId(defaultWhiteTextureId);
+	matcapTexDataForPreview.setTexId(TextureManager::createTextureFromFile(MATCAP_TEXTURES_PATH + "chrome.png"));
 
 	heightImageLoadLocation = TEXTURES_PATH + "wall height.png";
 	TextureManager::getTextureDataFromFile(heightImageLoadLocation, heightMapTexData);
-	heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
+	heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
 	undoRedoSystem.record(heightMapTexData.getTextureData());
-	normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+	normalmapPanel.setTextureID(heightMapTexData.getTexId());
 
 	Camera camera;
 	camera.init(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
@@ -307,7 +307,7 @@ int main(void)
 	bool isBlurOn = false;
 
 	layerManager.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
-	layerManager.addLayer(heightMapTexData.GetTexId(), LayerType::HEIGHT_MAP);
+	layerManager.addLayer(heightMapTexData.getTexId(), LayerType::HEIGHT_MAP);
 
 	fbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 	previewFbs.init(windowSys.getWindowRes(), glm::vec2(1920, 1920));
@@ -552,15 +552,15 @@ int main(void)
 		modelViewShader.applyShaderBool(modelUseMatcapUniform, previewStateUtility.useMatcap);
 
 		GL::setActiveTextureIndex(0);
-		glBindTexture(TextureType::TEXTURE_2D, (isUsingLayerOutput) ? layersNormalOutputFbs.getColourTexture() : heightMapTexData.GetTexId());
+		glBindTexture(TextureType::TEXTURE_2D, (isUsingLayerOutput) ? layersNormalOutputFbs.getColourTexture() : heightMapTexData.getTexId());
 		GL::setActiveTextureIndex(1);
-		glBindTexture(TextureType::TEXTURE_2D, albedoTexDataForPreview.GetTexId());
+		glBindTexture(TextureType::TEXTURE_2D, albedoTexDataForPreview.getTexId());
 		GL::setActiveTextureIndex(2);
-		glBindTexture(TextureType::TEXTURE_2D, metalnessTexDataForPreview.GetTexId());
+		glBindTexture(TextureType::TEXTURE_2D, metalnessTexDataForPreview.getTexId());
 		GL::setActiveTextureIndex(3);
-		glBindTexture(TextureType::TEXTURE_2D, roughnessTexDataForPreview.GetTexId());
+		glBindTexture(TextureType::TEXTURE_2D, roughnessTexDataForPreview.getTexId());
 		GL::setActiveTextureIndex(4);
-		glBindTexture(TextureType::TEXTURE_2D, matcapTexDataForPreview.GetTexId());
+		glBindTexture(TextureType::TEXTURE_2D, matcapTexDataForPreview.getTexId());
 		GL::setActiveTextureIndex(5);
 		glBindTexture(TextureType::TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
@@ -620,7 +620,7 @@ int main(void)
 		brushPreviewShader.applyShaderBool(brushPreviewUseTextureUniform, !brushData.hasBrushTexture());
 		brushPreviewShader.applyShaderUniformMatrix(brushPreviewModelUniform, brushPanel.getTransform()->getMatrix());
 
-		brushPanel.setTextureID(brushData.textureData.GetTexId());
+		brushPanel.setTextureID(brushData.textureData.getTexId());
 		brushPanel.draw();
 #pragma endregion
 		ImGui_ImplOpenGL2_NewFrame();
@@ -938,9 +938,9 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 			if (currentLoadingOption == LoadingOption::TEXTURE)
 			{
 				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
+				heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
 				heightMapTexData.setTextureDirty();
-				normalmapPanel.setTextureID(heightMapTexData.GetTexId());
+				normalmapPanel.setTextureID(heightMapTexData.getTexId());
 
 				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 				undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -1018,9 +1018,9 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 
 		heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
 
-		heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
+		heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
 		heightMapTexData.setTextureDirty();
-		layerManager.updateLayerTexture(0, heightMapTexData.GetTexId());
+		layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
 
 		undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 		undoRedoSystem.record(heightMapTexData.getTextureData());
@@ -1056,7 +1056,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 				{
 					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths[i], brushData.textureData);
-					brushData.textureData.SetTexId(TextureManager::createTextureFromData(brushData.textureData));
+					brushData.textureData.setTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -1069,7 +1069,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 				{
 					currentBrush = grungeBrushPaths[i];
 					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths[i], brushData.textureData);
-					brushData.textureData.SetTexId(TextureManager::createTextureFromData(brushData.textureData));
+					brushData.textureData.setTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
 			ImGui::EndMenu();
@@ -1366,7 +1366,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 					{
 						previewStateUtility.useMatcap = true;
 						std::string matcapPath = MATCAP_TEXTURES_PATH + current_matcap_item + ".png";
-						matcapTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(matcapPath));
+						matcapTexDataForPreview.setTexId(TextureManager::createTextureFromFile(matcapPath));
 					}
 				}
 				if (is_selected)
@@ -1403,53 +1403,53 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("Albedo");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.getTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					albedoTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
+					albedoTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load albedo map for preview model");
 		ImGui::SameLine();
-		if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+		if (ImGui::Button("X", ImVec2(20, 40))) { albedoTexDataForPreview.setTexId(defaultWhiteTextureId); }
 
 		ImGui::Text("Metalness");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.getTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					metalnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
+					metalnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load metalness map for preview model");
 		ImGui::SameLine();
-		if (ImGui::Button("X##2", ImVec2(20, 40))) { metalnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+		if (ImGui::Button("X##2", ImVec2(20, 40))) { metalnessTexDataForPreview.setTexId(defaultWhiteTextureId); }
 
 		ImGui::Text("Roughness");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.GetTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.getTexId(), ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileExplorer->displayDialog(FileType::IMAGE, [&](std::string str)
 			{
 				if (currentLoadingOption == LoadingOption::TEXTURE)
-					roughnessTexDataForPreview.SetTexId(TextureManager::createTextureFromFile(str));
+					roughnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
 			});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load roughness map for preview model");
 		ImGui::SameLine();
-		if (ImGui::Button("X##3", ImVec2(20, 40))) { roughnessTexDataForPreview.SetTexId(defaultWhiteTextureId); }
+		if (ImGui::Button("X##3", ImVec2(20, 40))) { roughnessTexDataForPreview.setTexId(defaultWhiteTextureId); }
 
 		ImGui::PopStyleVar();
 	}
@@ -1498,9 +1498,9 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 					{
 						TextureManager::getTextureDataFromFile(str, heightMapTexData);
 						heightImageLoadLocation = str;
-						heightMapTexData.SetTexId(TextureManager::createTextureFromData(heightMapTexData));
+						heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
 						heightMapTexData.setTextureDirty();
-						layerManager.updateLayerTexture(0, heightMapTexData.GetTexId());
+						layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
 
 						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 						undoRedoSystem.record(heightMapTexData.getTextureData());

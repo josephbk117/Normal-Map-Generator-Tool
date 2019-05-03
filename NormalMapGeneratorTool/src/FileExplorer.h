@@ -18,9 +18,9 @@ public:
 	void display();
 	void displayDialog( FileType filter = FileType::NONE) noexcept;
 	void displayDialog( FileType filter, std::function<void(std::string)> func) noexcept;
-	bool doesPathExist(const std::string& path)noexcept;
-	std::string getFileExtension(const std::string & path);
-	std::vector<std::string> getAllFilesInDirectory(const std::string& path, bool withEntirePath, const std::string& fileExt = "");
+	bool doesPathExist(const std::string& path)const noexcept;
+	std::string getFileExtension(const std::string & path)const;
+	std::vector<std::string> getAllFilesInDirectory(const std::string& path, bool withEntirePath, const std::string& fileExt = "")const;
 	unsigned long getFileSize(const std::string path)const;
 private:
 	std::vector<std::string> paths;

@@ -14,7 +14,7 @@ public:
 	//Get the texture linked to this drawing panel
 	unsigned int getTextureID()const noexcept;
 	bool isPointInPanel(float xpos, float ypos)noexcept;
-	glm::vec4 getPanelWorldDimension()noexcept;
+	glm::vec4 getPanelWorldDimension()const noexcept;
 	void draw(int additionalTextureId = -1)noexcept;
 private:
 	Transform transform;

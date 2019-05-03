@@ -215,12 +215,12 @@ void FileExplorer::displayDialog(FileType filter, std::function<void(std::string
 	functionToCall = func;
 }
 
-bool FileExplorer::doesPathExist(const std::string & path) noexcept
+bool FileExplorer::doesPathExist(const std::string & path)const noexcept
 {
 	return std::experimental::filesystem::exists(path);
 }
 
-std::string FileExplorer::getFileExtension(const std::string & path)
+std::string FileExplorer::getFileExtension(const std::string & path)const
 {
 	// Create a Path object from given string
 	std::experimental::filesystem::path pathObj(path);
@@ -231,7 +231,7 @@ std::string FileExplorer::getFileExtension(const std::string & path)
 	return "";
 }
 
-std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string & path, bool withEntirePath, const std::string& fileExt)
+std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string & path, bool withEntirePath, const std::string& fileExt)const
 {
 	std::vector<std::string> paths;
 	if (withEntirePath)

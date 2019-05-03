@@ -23,7 +23,7 @@ struct BrushData
 		return false;
 	}
 
-	bool hasBrushTexture() noexcept
+	bool hasBrushTexture()const noexcept
 	{
 		return textureData.getTextureData() != nullptr;
 	}

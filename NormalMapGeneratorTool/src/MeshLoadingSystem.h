@@ -72,7 +72,7 @@ namespace MeshLoadingSystem
 		}
 	private:
 		//The maximum distance a vertex is from origin, Useful for Bounding spheres
-		float maxVertexDistance(aiMesh* mesh)
+		float maxVertexDistance(aiMesh* mesh)const
 		{
 			unsigned int numVertices = mesh->mNumVertices;
 

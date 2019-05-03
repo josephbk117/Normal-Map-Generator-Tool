@@ -21,8 +21,8 @@ public:
 	unsigned char* getTextureData()const;
 	glm::vec2 getRes()const noexcept;
 	int getComponentCount()const noexcept;
-	void SetTexId(unsigned int texId);
-	unsigned int GetTexId()const;
+	void setTexId(unsigned int texId);
+	unsigned int getTexId()const;
 	void setTexelColor(int r, int g, int b, int a, int x, int y);
 	void setTexelColor(ColourData& colourData, int x, int y);
 	void setTexelRangeWithColour(int beginIndex, int endIndex, ColourData& colourData);

@@ -106,7 +106,7 @@ bool DrawingPanel::isPointInPanel(float xpos, float ypos)noexcept
 	return false;
 }
 
-glm::vec4 DrawingPanel::getPanelWorldDimension()noexcept
+glm::vec4 DrawingPanel::getPanelWorldDimension()const noexcept
 {
 	const float left = (-transform.getScale().x * 0.5f) + 0.5f;
 	const float right = (transform.getScale().x * 0.5f) + 0.5f;

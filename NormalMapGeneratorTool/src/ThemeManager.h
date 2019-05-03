@@ -202,7 +202,7 @@ public:
 		if (instance != nullptr)
 			delete instance;
 	}
-	std::vector<std::string> getAllLoadedThemes()
+	std::vector<std::string> getAllLoadedThemes() const
 	{
 		std::vector<std::string> cleaned;
 		for (int i = 0; i < themesInDir.size(); i++)
@@ -211,11 +211,11 @@ public:
 		}
 		return cleaned;
 	}
-	int getNumberOfThemes()
+	int getNumberOfThemes() const
 	{
 		return themesInDir.size() + 3;
 	}
-	int getIndexOfTheme(const std::string themeName)
+	int getIndexOfTheme(const std::string themeName) const
 	{
 		if (themeName == "Default")
 			return 0;
