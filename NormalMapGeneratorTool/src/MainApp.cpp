@@ -70,6 +70,7 @@ const std::string CYLINDER_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Cylinder.fbx";
 const std::string SPHERE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Sphere.fbx";
 const std::string TORUS_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Torus.fbx";
 const std::string PLANE_MODEL_PATH = PRIMITIVE_MODELS_PATH + "Plane.fbx";
+const std::string PREFERENCES_PATH = "Resources\\Preference\\preference.npref";
 #pragma endregion
 
 #pragma region FUNCTION_DECLARATIONS
@@ -142,7 +143,7 @@ int main(void)
 		std::cout << "Open GL init error" << std::endl;
 		return EXIT_FAILURE;
 	}
-	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	GL::enableCapability(Capability::SEAMLES_CUBE_MAP);
 	GL::enableBlending();
 	GL::enableFaceCulling();
 	GL::setFaceCullingMode(FaceCullingMode::BACK_FACE_CULLING);
@@ -152,7 +153,7 @@ int main(void)
 	FileExplorer::init();
 	fileExplorer = FileExplorer::instance;
 	//Load user preferences
-	PreferencesHandler::init("Resources\\Preference\\preference.npref");
+	PreferencesHandler::init(PREFERENCES_PATH);
 	preferencesInfo = PreferencesHandler::readPreferences();
 	//Allocate undo/redo memory based on user preferences
 	undoRedoSystem.updateAllocation(glm::vec2(512, 512), 4, preferencesInfo.maxUndoCount);
@@ -550,18 +551,18 @@ int main(void)
 
 		modelViewShader.applyShaderBool(modelUseMatcapUniform, previewStateUtility.useMatcap);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, (isUsingLayerOutput) ? layersNormalOutputFbs.getColourTexture() : heightMapTexData.GetTexId());
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, albedoTexDataForPreview.GetTexId());
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, metalnessTexDataForPreview.GetTexId());
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, roughnessTexDataForPreview.GetTexId());
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, matcapTexDataForPreview.GetTexId());
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTextureId);
+		GL::setActiveTextureIndex(0);
+		glBindTexture(TextureType::TEXTURE_2D, (isUsingLayerOutput) ? layersNormalOutputFbs.getColourTexture() : heightMapTexData.GetTexId());
+		GL::setActiveTextureIndex(1);
+		glBindTexture(TextureType::TEXTURE_2D, albedoTexDataForPreview.GetTexId());
+		GL::setActiveTextureIndex(2);
+		glBindTexture(TextureType::TEXTURE_2D, metalnessTexDataForPreview.GetTexId());
+		GL::setActiveTextureIndex(3);
+		glBindTexture(TextureType::TEXTURE_2D, roughnessTexDataForPreview.GetTexId());
+		GL::setActiveTextureIndex(4);
+		glBindTexture(TextureType::TEXTURE_2D, matcapTexDataForPreview.GetTexId());
+		GL::setActiveTextureIndex(5);
+		glBindTexture(TextureType::TEXTURE_CUBE_MAP, cubeMapTextureId);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
 
@@ -573,7 +574,7 @@ int main(void)
 		modelAttribViewShader.applyShaderFloat(modelAttributesNormalLengthUniform, previewStateUtility.normDisplayLineLength);
 		if (modelPreviewObj != nullptr)
 			modelPreviewObj->draw();
-		glActiveTexture(GL_TEXTURE0);
+		GL::setActiveTextureIndex(0);
 
 #pragma region GRID SETUP & RENDER
 		// Set up preview shader uniforms
@@ -676,7 +677,7 @@ int main(void)
 
 		ImGui::Render();
 
-		glBindVertexArray(0);
+		GL::bindVertexArray(NULL);
 		glUseProgram(0);
 		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 		windowSys.updateWindow();

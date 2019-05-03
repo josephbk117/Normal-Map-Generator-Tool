@@ -2,6 +2,34 @@
 #include <GL\glew.h>
 #include <GLM\common.hpp>
 
+enum TextureType
+{
+	TEXTURE_1D = GL_TEXTURE_1D, //Images in this texture all are 1 - dimensional.They have width, but no height or depth.
+	TEXTURE_2D = GL_TEXTURE_2D, //Images in this texture all are 2 - dimensional.They have width and height, but no depth.
+	TEXTURE_3D = GL_TEXTURE_3D, //Images in this texture all are 3 - dimensional.They have width, height, and depth.
+	TEXTURE_RECTANGLE = GL_TEXTURE_RECTANGLE, //The image in this texture(only one image.No mipmapping) is 2 - dimensional.Texture coordinates used for these textures are not normalized.
+	TEXTURE_BUFFER = GL_TEXTURE_BUFFER, //The image in this texture(only one image.No mipmapping) is 1 - dimensional.The storage for this data comes from a Buffer Object.
+	TEXTURE_CUBE_MAP = GL_TEXTURE_CUBE_MAP, //There are exactly 6 distinct sets of 2D images, all of the same size.They act as 6 faces of a cube.
+	TEXTURE_1D_ARRAY = GL_TEXTURE_1D_ARRAY, //Images in this texture all are 1 - dimensional.However, it contains multiple sets of 1 - dimensional images, all within one texture.The array length is part of the texture's size.
+	TEXTURE_2D_ARRAY = GL_TEXTURE_2D_ARRAY, //Images in this texture all are 2 - dimensional.However, it contains multiple sets of 2 - dimensional images, all within one texture.The array length is part of the texture's size.
+	TEXTURE_CUBE_MAP_ARRAY = GL_TEXTURE_CUBE_MAP_ARRAY, //Images in this texture are all cube maps.It contains multiple sets of cube maps, all within one texture.The array length * 6 (number of cube faces) is part of the texture size.
+	TEXTURE_2D_MULTISAMPLE = GL_TEXTURE_2D_MULTISAMPLE, //The image in this texture(only one image.No mipmapping) is 2 - dimensional.Each pixel in these images contains multiple samples instead of just one value.
+	TEXTURE_2D_MULTISAMPLE_ARRAY = GL_TEXTURE_2D_MULTISAMPLE_ARRAY //Combines 2D array and 2D multisample types.No mipmapping.
+};
+
+enum Capability
+{
+	ALPHA_TEST = GL_ALPHA_TEST,
+	AUTO_NORMAL = GL_AUTO_NORMAL,
+	BLEND = GL_BLEND,
+	LOGIC_OP = GL_COLOR_LOGIC_OP,
+	CULL_FACE = GL_CULL_FACE,
+	DEPTH_TEST = GL_DEPTH_TEST,
+	SCISSOR_TEST = GL_SCISSOR_TEST,
+	STENCIL_TEST = GL_STENCIL_TEST,
+	SEAMLES_CUBE_MAP = GL_TEXTURE_CUBE_MAP_SEAMLESS
+};
+
 enum FrameBufferAttachment
 {
 	COLOUR_BUFFER = GL_COLOR_BUFFER_BIT,
@@ -31,59 +59,79 @@ enum DepthTestMode
 class GL
 {
 public:
-	static void clear(FrameBufferAttachment frameBufferAttachement)
+	static inline void clear(FrameBufferAttachment frameBufferAttachement)
 	{
 		glClear(frameBufferAttachement);
 	}
 
-	static void setClearColour(glm::vec3 colour)
+	static inline void setClearColour(glm::vec3 colour)
 	{
 		glClearColor(colour.r, colour.g, colour.b, 1.0);
 	}
 
-	static void setClearColour(float r, float g, float b)
+	static inline void setClearColour(float r, float g, float b)
 	{
 		glClearColor(r, g, b, 1.0);
 	}
 
-	static void enableFaceCulling()
+	static inline void enableCapability(Capability capability)
 	{
-		glEnable(GL_CULL_FACE);
+		glEnable(capability);
 	}
 
-	static void disableFaceCulling()
+	static inline void disableCapability(Capability capability)
 	{
-		glDisable(GL_CULL_FACE);
+		glDisable(capability);
 	}
 
-	static void setFaceCullingMode(FaceCullingMode faceCullingMode)
+	static inline void enableFaceCulling()
+	{
+		enableCapability(Capability::CULL_FACE);
+	}
+
+	static inline void disableFaceCulling()
+	{
+		disableCapability(Capability::CULL_FACE);
+	}
+
+	static inline void setFaceCullingMode(FaceCullingMode faceCullingMode)
 	{
 		glCullFace(faceCullingMode);
 	}
 
-	static void enableBlending()
+	static inline void enableBlending()
 	{
 		glEnable(GL_BLEND);
 	}
 
-	static void disableBlending()
+	static inline void disableBlending()
 	{
 		glDisable(GL_BLEND);
 	}
 
-	static void enableDepthTest()
+	static inline void enableDepthTest()
 	{
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	static void disableDepthTest()
+	static inline void disableDepthTest()
 	{
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	static void setDepthTestMode(DepthTestMode depthTestMode)
+	static inline void setDepthTestMode(DepthTestMode depthTestMode)
 	{
 		glDepthFunc(depthTestMode);
+	}
+
+	static inline void setActiveTextureIndex(unsigned char textureIndex)
+	{
+		glActiveTexture(GL_TEXTURE0 + textureIndex);
+	}
+
+	static inline void bindVertexArray(unsigned int vaoId)
+	{
+		glBindVertexArray(vaoId);
 	}
 
 };
