@@ -4,7 +4,7 @@
 WindowSystem::WindowSystem()
 {}
 
-void WindowSystem::init(const std::string windowTitle, int windowWidth, int windowHeight)
+void WindowSystem::init(const std::string& windowTitle, int windowWidth, int windowHeight)
 {
 	this->windowTitle = windowTitle;
 	windowRes.x = windowWidth;
@@ -40,12 +40,12 @@ void WindowSystem::setScrollCallback(void(*func)(GLFWwindow *, double, double))
 	glfwSetScrollCallback(window, func);
 }
 
-const int WindowSystem::getMinWindowSize()
+const int WindowSystem::getMinWindowSize() const
 {
 	return WINDOW_SIZE_MIN;
 }
 
-bool WindowSystem::isKeyPressed(int key)
+bool WindowSystem::isKeyPressed(int key)const
 {
 	int state = glfwGetKey(window, key);
 	if (state == GLFW_PRESS)
@@ -53,7 +53,7 @@ bool WindowSystem::isKeyPressed(int key)
 	return false;
 }
 
-bool WindowSystem::isKeyReleased(int key)
+bool WindowSystem::isKeyReleased(int key)const
 {
 	int state = glfwGetKey(window, key);
 	if (state == GLFW_RELEASE)
@@ -61,7 +61,7 @@ bool WindowSystem::isKeyReleased(int key)
 	return false;
 }
 
-bool WindowSystem::isKeyPressedDown(int key)
+bool WindowSystem::isKeyPressedDown(int key)const
 {
 	static int prevKey = GLFW_KEY_0;
 	int state = glfwGetKey(window, key);
@@ -115,7 +115,7 @@ const GLFWwindow * WindowSystem::getWindow()
 	return window;
 }
 
-void WindowSystem::setWindowRes(const glm::vec2 & res)
+void WindowSystem::setWindowRes(const glm::ivec2 & res)
 {
 	setWindowRes(res.x, res.y);
 }
@@ -135,29 +135,29 @@ void WindowSystem::setFullscreen(bool isFullscreen)
 	this->isFullscreen = isFullscreen;
 }
 
-bool WindowSystem::getIfFullscreen()
+bool WindowSystem::getIfFullscreen() const
 {
 	return isFullscreen;
 }
 
-const glm::vec2 WindowSystem::getMaxWindowRes()
+const glm::ivec2 WindowSystem::getMaxWindowRes() const
 {
 	return maxWindowRes;
 }
 
-const glm::vec2 WindowSystem::getWindowRes()
+const glm::ivec2 WindowSystem::getWindowRes() const
 {
 	return windowRes;
 }
 
-glm::vec2 WindowSystem::getWindowPos()
+glm::ivec2 WindowSystem::getWindowPos() const
 {
 	int winPosX, winPosY;
 	glfwGetWindowPos(window, &winPosX, &winPosY);
 	return glm::vec2(winPosX, winPosY);
 }
 
-glm::vec2 WindowSystem::getCursorPos()
+glm::ivec2 WindowSystem::getCursorPos() const
 {
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
@@ -169,12 +169,12 @@ void WindowSystem::setWindowPos(int x, int y)
 	glfwSetWindowPos(window, x, y);
 }
 
-float WindowSystem::getAspectRatio()
+float WindowSystem::getAspectRatio() const
 {
 	return (float)windowRes.x / (float)windowRes.y;
 }
 
-bool WindowSystem::isWindowClosing()
+bool WindowSystem::isWindowClosing() const
 {
 	return glfwWindowShouldClose(window);
 }

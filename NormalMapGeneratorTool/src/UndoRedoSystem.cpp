@@ -13,7 +13,7 @@ UndoRedoSystem::UndoRedoSystem(unsigned int maxMemoryToAllocate, unsigned int by
 	data = new unsigned char[this->maxAllocatedMemoryInBytes];
 }
 
-UndoRedoSystem::UndoRedoSystem(const glm::vec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
+UndoRedoSystem::UndoRedoSystem(const glm::ivec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
 {
 	this->bytesPerSection = sampleImageRes.x * sampleImageRes.y * componentCount;
 	this->maxAllocatedMemoryInBytes = this->bytesPerSection * numberOfUndoSteps;
@@ -29,7 +29,7 @@ UndoRedoSystem::UndoRedoSystem(const UndoRedoSystem & undoRedo)
 	maxSectionsFilled = undoRedo.maxSectionsFilled;
 }
 
-void UndoRedoSystem::updateAllocation(const glm::vec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
+void UndoRedoSystem::updateAllocation(const glm::ivec2 & sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps)
 {
 	if (data != nullptr)
 		delete[] data;

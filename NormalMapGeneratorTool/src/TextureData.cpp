@@ -41,9 +41,9 @@ unsigned char * const TextureData::getTextureData()const
 	return data;
 }
 
-glm::vec2 TextureData::getRes()const noexcept
+glm::ivec2 TextureData::getRes()const noexcept
 {
-	return glm::vec2(width, height);
+	return glm::ivec2(width, height);
 }
 
 int TextureData::getComponentCount()const noexcept

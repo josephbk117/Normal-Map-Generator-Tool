@@ -11,9 +11,9 @@ private:
 public:
 	UndoRedoSystem();
 	UndoRedoSystem(unsigned int maxMemoryToAllocate, unsigned int bytesPerSection);
-	UndoRedoSystem(const glm::vec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
+	UndoRedoSystem(const glm::ivec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
 	UndoRedoSystem(const UndoRedoSystem& undoRedo);
-	void updateAllocation(const glm::vec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
+	void updateAllocation(const glm::ivec2& sampleImageRes, unsigned int componentCount, unsigned int numberOfUndoSteps);
 	const unsigned int getMaxUndoSteps();
 	const unsigned int getCurrentSectionPosition();
 	unsigned int getMaxSectionsFilled();

@@ -173,8 +173,8 @@ void FileExplorer::display()
 		ImGui::Spacing();
 		if (ImGui::Button("BACK"))
 		{
-			const int locationOfLastSlash = path.find_last_of('//');
-			const int locationOfFirstSlash = path.find_first_of('//');
+			const unsigned int locationOfLastSlash = path.find_last_of('//');
+			const unsigned int locationOfFirstSlash = path.find_first_of('//');
 
 			if (locationOfFirstSlash <= locationOfLastSlash && path.length() > 3)
 			{

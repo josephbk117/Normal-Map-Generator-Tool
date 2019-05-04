@@ -19,7 +19,7 @@ public:
 	void setTextureDataNonAlloc(unsigned char* data, int width, int height, int componentCount);
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
 	unsigned char* const getTextureData()const;
-	glm::vec2 getRes()const noexcept;
+	glm::ivec2 getRes()const noexcept;
 	int getComponentCount()const noexcept;
 	void setTexId(unsigned int texId);
 	unsigned int getTexId()const;

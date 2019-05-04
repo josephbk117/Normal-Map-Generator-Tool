@@ -59,77 +59,87 @@ enum DepthTestMode
 class GL
 {
 public:
-	static inline void clear(FrameBufferAttachment frameBufferAttachement)
+	static inline void clear(FrameBufferAttachment frameBufferAttachement) noexcept
 	{
 		glClear(frameBufferAttachement);
 	}
 
-	static inline void setClearColour(glm::vec3 colour)
+	static inline void setClearColour(const glm::vec3& colour) noexcept
 	{
 		glClearColor(colour.r, colour.g, colour.b, 1.0);
 	}
 
-	static inline void setClearColour(float r, float g, float b)
+	static inline void setClearColour(float r, float g, float b) noexcept
 	{
 		glClearColor(r, g, b, 1.0);
 	}
 
-	static inline void enableCapability(Capability capability)
+	static inline void setViewport(int x, int y, int width, int height) noexcept
+	{
+		glViewport(x, y, width, height);
+	}
+
+	static inline void setViewport(const glm::ivec2& position, const glm::ivec2& dimension) noexcept
+	{
+		glViewport(position.x, position.y, dimension.x, dimension.y);
+	}
+
+	static inline void enableCapability(Capability capability) noexcept
 	{
 		glEnable(capability);
 	}
 
-	static inline void disableCapability(Capability capability)
+	static inline void disableCapability(Capability capability) noexcept
 	{
 		glDisable(capability);
 	}
 
-	static inline void enableFaceCulling()
+	static inline void enableFaceCulling() noexcept
 	{
 		enableCapability(Capability::CULL_FACE);
 	}
 
-	static inline void disableFaceCulling()
+	static inline void disableFaceCulling() noexcept
 	{
 		disableCapability(Capability::CULL_FACE);
 	}
 
-	static inline void setFaceCullingMode(FaceCullingMode faceCullingMode)
+	static inline void setFaceCullingMode(FaceCullingMode faceCullingMode) noexcept
 	{
 		glCullFace(faceCullingMode);
 	}
 
-	static inline void enableBlending()
+	static inline void enableBlending() noexcept
 	{
 		glEnable(GL_BLEND);
 	}
 
-	static inline void disableBlending()
+	static inline void disableBlending() noexcept
 	{
 		glDisable(GL_BLEND);
 	}
 
-	static inline void enableDepthTest()
+	static inline void enableDepthTest() noexcept
 	{
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	static inline void disableDepthTest()
+	static inline void disableDepthTest() noexcept
 	{
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	static inline void setDepthTestMode(DepthTestMode depthTestMode)
+	static inline void setDepthTestMode(DepthTestMode depthTestMode) noexcept
 	{
 		glDepthFunc(depthTestMode);
 	}
 
-	static inline void setActiveTextureIndex(unsigned char textureIndex)
+	static inline void setActiveTextureIndex(unsigned char textureIndex)noexcept
 	{
 		glActiveTexture(GL_TEXTURE0 + textureIndex);
 	}
 
-	static inline void bindVertexArray(unsigned int vaoId)
+	static inline void bindVertexArray(unsigned int vaoId) noexcept
 	{
 		glBindVertexArray(vaoId);
 	}

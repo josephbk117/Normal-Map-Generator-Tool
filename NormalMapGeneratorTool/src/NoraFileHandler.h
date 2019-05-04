@@ -79,14 +79,14 @@ public:
 				layerInfoPair.first.dataSize = FileExplorer::instance->getFileSize(layerManager.getImagePath(i));
 				layerInfoPair.second = new unsigned char[layerInfoPair.first.dataSize];
 				std::memset(layerInfoPair.second, '\0', layerInfoPair.first.dataSize);
-				
+
 				std::ifstream myfile(path.c_str(), std::ios::binary);
 				myfile.read((char*)&layerInfoPair.second, layerInfoPair.first.dataSize);
 				myfile.close();
 			}
 			else
 			{
-				layerInfoPair.first.dataSize = texData.getRes().x * texData.getRes().y * texData.getComponentCount();
+				layerInfoPair.first.dataSize = static_cast<unsigned long>(texData.getRes().x * texData.getRes().y * texData.getComponentCount());
 				layerInfoPair.second = new unsigned char[layerInfoPair.first.dataSize];
 				std::memset(layerInfoPair.second, '\0', layerInfoPair.first.dataSize);
 				std::memcpy(layerInfoPair.second, texData.getTextureData(), layerInfoPair.first.dataSize);

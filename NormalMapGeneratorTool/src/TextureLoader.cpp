@@ -28,14 +28,14 @@ void TextureManager::getTextureDataFromFile(const std::string & path, TextureDat
 	stbi_image_free(data);
 }
 
-glm::vec2 TextureManager::getImageDimensions(const std::string & path)
+glm::ivec2 TextureManager::getImageDimensions(const std::string & path)
 {
 	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 4);
 	nrComponents = 4;
 	stbi_image_free(data);
-	return glm::vec2(width, height);
+	return glm::ivec2(width, height);
 }
 
 unsigned int TextureManager::createTextureFromFile(const std::string & path, bool linearColourSpace)
@@ -170,7 +170,7 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	return format;
 }
 
-void TextureManager::SaveImage(const std::string& path, const glm::vec2 & imageRes, ImageFormat imageFormat, char * data)
+void TextureManager::SaveImage(const std::string& path, const glm::ivec2 & imageRes, ImageFormat imageFormat, char * data)
 {
 	switch (imageFormat)
 	{

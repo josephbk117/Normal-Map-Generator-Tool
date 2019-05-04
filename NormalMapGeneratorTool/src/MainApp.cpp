@@ -34,6 +34,7 @@
 #include "PreferencesHandler.h"
 #include "LayerManager.h"
 #include "NoraFileHandler.h"
+
 //TODO : * Done but not good enough *Implement mouse position record and draw to prevent cursor skipping ( probably need separate thread for drawing |completly async| )
 //Possible cause : Input take over by IMGUI
 //TODO : Add Uniform Buffers
@@ -43,7 +44,6 @@
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Reset view should make non 1:1 images fit in screen
 //TODO : Convert text to icon for most buttons
-//TODO : Fix memory error while using custom brush texture and exit the application
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
@@ -166,9 +166,9 @@ int main(void)
 #pragma endregion
 
 	modelPreviewObj = modelLoader.createModelFromFile(CUBE_MODEL_PATH); // Default loaded model in preview window
-	const ModelObject* cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
-	const ModelObject* previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
-	const ModelObject* previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
+	const ModelObject* const cubeForSkybox = modelLoader.createModelFromFile(CUBE_MODEL_PATH);
+	const ModelObject* const previewGrid = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
+	const ModelObject* const previewPlane = modelLoader.createModelFromFile(PLANE_MODEL_PATH);
 
 	normalmapPanel.init(1.0f, 1.0f);
 	DrawingPanel frameDrawingPanel;
@@ -367,7 +367,7 @@ int main(void)
 
 		heightMapTexData.updateTexture();
 
-		glViewport(0, 0, windowSys.getWindowRes().x, windowSys.getWindowRes().y);
+		GL::setViewport(glm::vec2(0), windowSys.getWindowRes());
 		GL::setClearColour(0.9f, 0.5f, 0.2f);
 		GL::enableDepthTest();
 		GL::setDepthTestMode(DepthTestMode::DEPTH_LESS);
@@ -503,7 +503,7 @@ int main(void)
 		static float circleAround = 2.5f;
 		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;
-		static glm::vec2 prevMcord;
+		static glm::ivec2 prevMcord;
 		glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
 
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && canPerformPreviewWindowMouseOperations)
@@ -756,7 +756,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::RadioButton("RAW DATA", &item_type, 0); ImGui::SameLine();
 	ImGui::RadioButton("LAYER OUTPUT", &item_type, 1);
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
+	int modeButtonWidth = static_cast<int>(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
@@ -804,7 +804,7 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	imageDataText += std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y);
 	ImGui::Text(imageDataText.c_str()); ImGui::SameLine();
 
-	float diffWidth = totalWidth - ImGui::GetContentRegionAvailWidth();
+	const float diffWidth = totalWidth - ImGui::GetContentRegionAvailWidth();
 
 	ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f - diffWidth * 0.5f, 0)); ImGui::SameLine();
 	ImGui::Text(VERSION_NAME.c_str());
@@ -821,7 +821,7 @@ void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
 	ImGui::PushItemWidth(250);
 	if (ImGui::SliderInt("##Undo/Redo", &currentSection, 0, undoRedoSystem.getMaxSectionsFilled() - 1, "%d Steps"))
 	{
-		bool isForward = (currentSection - prevSection) >= 0 ? false : true;
+		const bool isForward = (currentSection - prevSection) >= 0 ? false : true;
 		const int count = glm::abs(currentSection - prevSection);
 		for (int i = 0; i < count; i++)
 			heightMapTexData.updateTextureData(undoRedoSystem.retrieve(isForward));
@@ -851,7 +851,7 @@ void SetupImGui()
 	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.getWindow(), true);
 	ImGui_ImplOpenGL2_Init();
 
-	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
+	ImFont* const font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
 	menuBarLargerText = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 18.0f);
 
 	modalWindow.setTitleFont(menuBarLargerText);

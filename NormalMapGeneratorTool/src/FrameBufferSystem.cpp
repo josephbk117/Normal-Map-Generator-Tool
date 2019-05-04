@@ -4,7 +4,7 @@
 unsigned int FrameBufferSystem::currentlyBoundFBO;
 FrameBufferSystem::FrameBufferSystem() {}
 
-void FrameBufferSystem::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferResolution)
+void FrameBufferSystem::init(const glm::ivec2 & windowRes, const glm::ivec2& maxBufferResolution)
 {
 	init(windowRes.x, windowRes.y, maxBufferResolution.x, maxBufferResolution.y);
 }
@@ -63,7 +63,7 @@ void FrameBufferSystem::updateTextureDimensions(int windowWidth, int windowHeigh
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void FrameBufferSystem::updateTextureDimensions(const glm::vec2 & windowRes) noexcept
+void FrameBufferSystem::updateTextureDimensions(const glm::ivec2 & windowRes) noexcept
 {
 	updateTextureDimensions(windowRes.x, windowRes.y);
 }
@@ -79,8 +79,8 @@ unsigned int FrameBufferSystem::getCurrentlyBoundFBO() noexcept
 }
 
 void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferSystem& destination,
-	const glm::vec2& srcStartCoord, const glm::vec2& srcEndCoord, const glm::vec2& destStartCoord,
-	const glm::vec2& destEndCoord) noexcept
+	const glm::ivec2& srcStartCoord, const glm::ivec2& srcEndCoord, const glm::ivec2& destStartCoord,
+	const glm::ivec2& destEndCoord) noexcept
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, destination.getFrameBufferId());
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, source.getFrameBufferId());
@@ -94,9 +94,9 @@ void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferS
 	glBindFramebuffer(GL_FRAMEBUFFER, currentlyBoundFBO);
 }
 
-void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::vec2 screenRes)noexcept
+void FrameBufferSystem::blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::ivec2 screenRes)noexcept
 {
-	blit(source, destination, glm::vec2(0, 0), screenRes, glm::vec2(0, 0), screenRes);
+	blit(source, destination, glm::ivec2(0, 0), screenRes, glm::ivec2(0, 0), screenRes);
 }
 void FrameBufferSystem::bindDefaultFrameBuffer()noexcept
 {
