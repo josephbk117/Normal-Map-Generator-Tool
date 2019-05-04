@@ -77,7 +77,7 @@ const std::string PREFERENCES_PATH = "Resources\\Preference\\preference.npref";
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
-void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
+void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
@@ -1103,9 +1103,6 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		if (ImGui::SliderFloat(" Brush Max Height", &brushData.brushMaxHeight, 0.0f, 1.0f, "%0.2f", 1.0f)) {}
 	}
 	if (ImGui::SliderFloat(" Brush Draw Rate", &brushData.brushRate, 0.0f, heightMapTexData.getRes().y / 2, "%0.2f", 1.0f)) {}
-	static BrushData bCopy = BrushData();
-	if (bCopy != brushData)
-		bCopy = brushData;
 
 	if (brushData.brushMinHeight > brushData.brushMaxHeight)
 		brushData.brushMinHeight = brushData.brushMaxHeight;
@@ -1801,7 +1798,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 		}
 	}
 }
-inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
+inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos)
 {
 	const float xMag = static_cast<float>(endX - startX);
 	const float yMag = static_cast<float>(endY - startY);

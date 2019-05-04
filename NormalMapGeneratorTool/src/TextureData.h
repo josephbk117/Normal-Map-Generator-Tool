@@ -18,7 +18,7 @@ public:
 	TextureData();
 	void setTextureDataNonAlloc(unsigned char* data, int width, int height, int componentCount);
 	void setTextureData(unsigned char* data, int width, int height, int componentCount);
-	unsigned char* getTextureData()const;
+	unsigned char* const getTextureData()const;
 	glm::vec2 getRes()const noexcept;
 	int getComponentCount()const noexcept;
 	void setTexId(unsigned int texId);
@@ -28,8 +28,8 @@ public:
 	void setTexelRangeWithColour(int beginIndex, int endIndex, ColourData& colourData);
 	void updateTexture();
 	void updateTextureData(unsigned char* data);
-	ColourData getTexelColor(int x, int y)noexcept;
-	ColourData getTexColorAsUV(float x, float y)noexcept;
+	ColourData getTexelColor(int x, int y)const noexcept;
+	ColourData getTexColorAsUV(float x, float y)const noexcept;
 	//Set the texture as dirty so that it can be updated
 	void setTextureDirty()noexcept;
 	void clearRawData();

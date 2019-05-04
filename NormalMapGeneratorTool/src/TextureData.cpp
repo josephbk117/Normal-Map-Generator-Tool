@@ -36,7 +36,7 @@ void TextureData::setTextureData(unsigned char * data, int width, int height, in
 	std::memcpy(this->data, data, width * height * componentCount);
 }
 
-unsigned char * TextureData::getTextureData()const
+unsigned char * const TextureData::getTextureData()const
 {
 	return data;
 }
@@ -122,7 +122,7 @@ void TextureData::updateTextureData(unsigned char * data)
 	std::memcpy(this->data, data, width * height * componentCount);
 }
 
-ColourData TextureData::getTexelColor(int x, int y)noexcept
+ColourData TextureData::getTexelColor(int x, int y)const noexcept
 {
 	int i = ((float)width * (float)y + (float)x) * componentCount;
 	ColourData colData;
@@ -130,7 +130,7 @@ ColourData TextureData::getTexelColor(int x, int y)noexcept
 	return colData;
 }
 
-ColourData TextureData::getTexColorAsUV(float x, float y) noexcept
+ColourData TextureData::getTexColorAsUV(float x, float y)const noexcept
 {
 	x *= width;
 	y *= height;
@@ -157,5 +157,8 @@ TextureData::~TextureData()
 	if (texId != 0)
 		glDeleteTextures(1, &texId);
 	if (data != nullptr)
+	{
 		delete[] data;
+		data = nullptr;
+	}
 }

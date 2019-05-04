@@ -114,11 +114,12 @@ unsigned int TextureManager::createCubemapFromFile(const std::vector<std::string
 	return textureID;
 }
 
-unsigned int TextureManager::createTextureFromData(TextureData & textureData)
+unsigned int TextureManager::createTextureFromData(const TextureData & textureData)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	unsigned char* data = textureData.getTextureData();
+
 	if (data)
 	{
 		GLenum format = GL_RED;
@@ -145,7 +146,7 @@ unsigned int TextureManager::createTextureFromData(TextureData & textureData)
 	return textureID;
 }
 
-GLenum TextureManager::getTextureFormatFromData(TextureData & textureData)
+GLenum TextureManager::getTextureFormatFromData(const TextureData & textureData)
 {
 	GLenum format = GL_RED;
 	if (textureData.getComponentCount() == 1)
@@ -169,7 +170,7 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	return format;
 }
 
-void TextureManager::SaveImage(std::string path, const glm::vec2 & imageRes, ImageFormat imageFormat, char * data)
+void TextureManager::SaveImage(const std::string& path, const glm::vec2 & imageRes, ImageFormat imageFormat, char * data)
 {
 	switch (imageFormat)
 	{
