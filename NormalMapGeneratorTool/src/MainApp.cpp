@@ -1015,7 +1015,6 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 
 		layerManager.initWithLayerInfoData(layerInfoVector);
 
-
 		heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
 
 		heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
@@ -1024,7 +1023,6 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 
 		undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
 		undoRedoSystem.record(heightMapTexData.getTextureData());
-
 	}
 }
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)

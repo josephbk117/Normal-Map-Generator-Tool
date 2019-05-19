@@ -27,13 +27,14 @@ void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoDa
 		layers.at(i).strength = layerInfoData[i].first.layerStrength;
 		layers.at(i).layerType = layerInfoData[i].first.layerType;
 		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
-		unsigned char* sample = layerInfoData.at(i).second;
 		int x, y, n;
+
+		stbi_info_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n);
+		std::cout << "\n!!!Failure reason " << stbi_failure_reason();
 		unsigned char* data = stbi_load_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n, 4);
 		TextureData texData;
 		texData.setTextureDataNonAlloc(data, x, y, 4);
 		layers.at(i).inputTextureId = TextureManager::createTextureFromData(texData);
-		delete[] data;
 	}
 }
 

@@ -5,7 +5,7 @@
 #include "TextureLoader.h"
 #include "TextureData.h"
 #include "FileExplorer.h"
-
+#include "Stb\stb_image.h"
 /*
 Nora save file : .nora
 Header Defenition:
@@ -60,8 +60,8 @@ public:
 		noraFileHeader.majorVersion = 1;
 		noraFileHeader.minorVersion = 4;
 		noraFileHeader.numberOfLayers = layerManager.getLayerCount();
-		noraFileHeader.width = (unsigned int)texData.getRes().x;
-		noraFileHeader.height = (unsigned int)texData.getRes().y;
+		noraFileHeader.width = static_cast<unsigned int>(texData.getRes().x);
+		noraFileHeader.height = static_cast<unsigned int>(texData.getRes().y);
 
 		std::vector<std::pair<LayerInfoData, unsigned char*>> layerInfos;
 
@@ -76,13 +76,16 @@ public:
 
 			if (i > 0)
 			{
-				layerInfoPair.first.dataSize = FileExplorer::instance->getFileSize(layerManager.getImagePath(i));
-				layerInfoPair.second = new unsigned char[layerInfoPair.first.dataSize];
-				std::memset(layerInfoPair.second, '\0', layerInfoPair.first.dataSize);
+				std::ifstream ifs(layerManager.getImagePath(i), std::ios::binary | std::ios::ate);
+				std::ifstream::pos_type pos = ifs.tellg();
 
-				std::ifstream myfile(path.c_str(), std::ios::binary);
-				myfile.read((char*)&layerInfoPair.second, layerInfoPair.first.dataSize);
-				myfile.close();
+				layerInfoPair.first.dataSize = pos;
+				layerInfoPair.second = new unsigned char[pos];
+
+				ifs.seekg(0, std::ios::beg);
+				ifs.read((char*)(&layerInfoPair.second[0]), pos);
+
+				ifs.close();
 			}
 			else
 			{
@@ -100,7 +103,13 @@ public:
 		for (unsigned int i = 0; i < noraFileHeader.numberOfLayers; i++)
 		{
 			myfile.write((char*)&layerInfos[i].first, sizeof(LayerInfoData));
-			myfile.write((char*)layerInfos[i].second, layerInfos[i].first.dataSize);
+			myfile.write((char*)(&layerInfos[i].second[0]), layerInfos[i].first.dataSize);
+
+			int x, y, n;
+			stbi_info_from_memory(layerInfos[i].second, layerInfos[i].first.dataSize, &x, &y, &n);
+			int k = x;
+			int k1 = y;
+			int k2 = n;
 		}
 
 		myfile.close();
@@ -137,10 +146,12 @@ public:
 			std::cout << "\n-Layer " << i << "data size " << info.dataSize;
 
 			unsigned char* data = new unsigned char[info.dataSize];
-			std::memset(data, '\0', info.dataSize);
-			myfile.read((char*)data, info.dataSize);
+			myfile.read((char*)(&data[0]), info.dataSize);
+
+			int x, y, n;
+			stbi_info_from_memory(data, info.dataSize, &x, &y, &n);
+
 			layerInfos.push_back(std::pair<LayerInfoData, unsigned char*>(info, data));
-			std::cout << "\nLayer" << i << " data " << data;
 		}
 		myfile.close();
 		return layerInfos;
