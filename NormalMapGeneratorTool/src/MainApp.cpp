@@ -1006,12 +1006,12 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 	//Save .nora to file and read
 	if (windowSys.isKeyPressed(GLFW_KEY_2) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 	{
-		NoraFileHandler::writeToDisk("Test.pic", heightMapTexData, layerManager);
+		NoraFileHandler::writeToDisk("Test.nora", heightMapTexData, layerManager);
 	}
 	if (windowSys.isKeyPressed(GLFW_KEY_3) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
 	{
 		NoraFileHeader fileHeader;
-		auto layerInfoVector = NoraFileHandler::readFromDisk("Test.pic", fileHeader);
+		auto layerInfoVector = NoraFileHandler::readFromDisk("Test.nora", fileHeader);
 
 		layerManager.initWithLayerInfoData(layerInfoVector);
 

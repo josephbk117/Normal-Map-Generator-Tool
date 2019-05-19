@@ -78,13 +78,10 @@ public:
 			{
 				std::ifstream ifs(layerManager.getImagePath(i), std::ios::binary | std::ios::ate);
 				std::ifstream::pos_type pos = ifs.tellg();
-
 				layerInfoPair.first.dataSize = pos;
 				layerInfoPair.second = new unsigned char[pos];
-
 				ifs.seekg(0, std::ios::beg);
 				ifs.read((char*)(&layerInfoPair.second[0]), pos);
-
 				ifs.close();
 			}
 			else
@@ -94,7 +91,6 @@ public:
 				std::memset(layerInfoPair.second, '\0', layerInfoPair.first.dataSize);
 				std::memcpy(layerInfoPair.second, texData.getTextureData(), layerInfoPair.first.dataSize);
 			}
-
 			layerInfos.push_back(layerInfoPair);
 		}
 		std::ofstream myfile(path.c_str(), std::ios::binary);
@@ -104,16 +100,8 @@ public:
 		{
 			myfile.write((char*)&layerInfos[i].first, sizeof(LayerInfoData));
 			myfile.write((char*)(&layerInfos[i].second[0]), layerInfos[i].first.dataSize);
-
-			int x, y, n;
-			stbi_info_from_memory(layerInfos[i].second, layerInfos[i].first.dataSize, &x, &y, &n);
-			int k = x;
-			int k1 = y;
-			int k2 = n;
 		}
-
 		myfile.close();
-
 		for (unsigned int i = 0; i < noraFileHeader.numberOfLayers; i++)
 			delete[] layerInfos[i].second;
 	}
@@ -121,36 +109,17 @@ public:
 	static std::vector<std::pair<LayerInfoData, unsigned char*>> readFromDisk(const std::string& path, NoraFileHeader& noraFile)
 	{
 		LayerInfoData info;
-
 		std::vector<std::pair<LayerInfoData, unsigned char*>> layerInfos;
-
 		std::ifstream myfile(path.c_str(), std::ios::binary);
 		myfile.read((char*)&noraFile, sizeof(NoraFileHeader));
-
-		std::cout << "\n Nora header" << noraFile.nora;
-		std::cout << "\n Major version " << noraFile.majorVersion;
-		std::cout << "\n Minor version " << noraFile.minorVersion;
-		std::cout << "\n Number of layers " << noraFile.numberOfLayers;
-		std::cout << "\n Width " << noraFile.width;
-		std::cout << "\n Height " << noraFile.height;
-
 		for (unsigned int i = 0; i < noraFile.numberOfLayers; i++)
 		{
 			myfile.read((char*)&info, sizeof(LayerInfoData));
-
-			std::cout << "\n-Layer " << i << "name " << info.layerName;
-			std::cout << "\n-Layer " << i << "layer type " << (int)info.layerType;
-			std::cout << "\n-Layer " << i << "blend mode " << (int)info.blendMode;
-			std::cout << "\n-Layer " << i << "strength " << info.layerStrength;
-			std::cout << "\n-Layer " << i << "format " << (int)info.format;
-			std::cout << "\n-Layer " << i << "data size " << info.dataSize;
-
 			unsigned char* data = new unsigned char[info.dataSize];
 			myfile.read((char*)(&data[0]), info.dataSize);
 
 			int x, y, n;
 			stbi_info_from_memory(data, info.dataSize, &x, &y, &n);
-
 			layerInfos.push_back(std::pair<LayerInfoData, unsigned char*>(info, data));
 		}
 		myfile.close();

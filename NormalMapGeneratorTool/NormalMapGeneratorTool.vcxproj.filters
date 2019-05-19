@@ -275,6 +275,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="assimp.dll" />
+    <None Include="Resource.aps" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Nora.ico">

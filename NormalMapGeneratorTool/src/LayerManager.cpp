@@ -23,14 +23,13 @@ void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoDa
 	unsigned int size = glm::min(layers.size(), layerInfoData.size());
 	for (unsigned int i = 1; i < size; i++)
 	{
-		std::memcpy(&layers.at(i).layerName[i], layerInfoData[i].first.layerName, 100);
+		std::memcpy(&layers.at(i).layerName[0], layerInfoData[i].first.layerName, 100);
 		layers.at(i).strength = layerInfoData[i].first.layerStrength;
 		layers.at(i).layerType = layerInfoData[i].first.layerType;
 		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
 		int x, y, n;
 
 		stbi_info_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n);
-		std::cout << "\n!!!Failure reason " << stbi_failure_reason();
 		unsigned char* data = stbi_load_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n, 4);
 		TextureData texData;
 		texData.setTextureDataNonAlloc(data, x, y, 4);

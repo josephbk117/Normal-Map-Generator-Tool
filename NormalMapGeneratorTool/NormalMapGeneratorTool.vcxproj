@@ -209,6 +209,7 @@
   <ItemGroup>
     <None Include="assimp.dll" />
     <None Include="glew32.dll" />
+    <None Include="Resource.aps" />
     <None Include="Resources\3D Models\Complex\Suzanne.fbx" />
     <None Include="Resources\3D Models\Complex\Utah Teapot.fbx" />
     <None Include="Resources\3D Models\Primitives\Cube.fbx" />
