@@ -20,16 +20,18 @@ void LayerManager::init(const glm::vec2 & windowRes, const glm::vec2& maxBufferR
 
 void LayerManager::initWithLayerInfoData(const std::vector<std::pair<LayerInfoData, unsigned char*>>& layerInfoData)
 {
-	unsigned int size = glm::min(layers.size(), layerInfoData.size());
+	unsigned int size = glm::max(layers.size(), layerInfoData.size());
 	for (unsigned int i = 1; i < size; i++)
 	{
+		if (layers.size() < size)
+			addLayer(-1, LayerType::HEIGHT_MAP, "x0000<NULL>", "x0000<NULL>");
+
 		std::memcpy(&layers.at(i).layerName[0], layerInfoData[i].first.layerName, 100);
 		layers.at(i).strength = layerInfoData[i].first.layerStrength;
 		layers.at(i).layerType = layerInfoData[i].first.layerType;
 		layers.at(i).normalBlendMethod = layerInfoData[i].first.blendMode;
 		int x, y, n;
 
-		stbi_info_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n);
 		unsigned char* data = stbi_load_from_memory(layerInfoData.at(i).second, layerInfoData.at(i).first.dataSize, &x, &y, &n, 4);
 		TextureData texData;
 		texData.setTextureDataNonAlloc(data, x, y, 4);
