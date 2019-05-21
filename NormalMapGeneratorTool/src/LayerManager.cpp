@@ -143,7 +143,7 @@ void LayerManager::draw()
 	}
 	if (ImGui::Button("Add Layer", ImVec2(availableItemWidth, 40)))
 	{
-		FileExplorer::instance->displayDialog(FileType::IMAGE, [&](std::string str)
+		FileOpenDialog::instance->displayDialog(FileType::IMAGE, [&](std::string str)
 		{
 			addLayer(TextureManager::createTextureFromFile(str, true), LayerType::HEIGHT_MAP, "", str);
 		});

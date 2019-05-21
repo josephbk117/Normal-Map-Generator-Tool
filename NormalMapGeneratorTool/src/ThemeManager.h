@@ -177,7 +177,7 @@ public:
 
 	static void init()
 	{
-		FileExplorer* fileExplorer = FileExplorer::instance;
+		FileOpenDialog* fileExplorer = FileOpenDialog::instance;
 		if (instance == nullptr)
 			instance = new ThemeManager();
 
