@@ -47,6 +47,7 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
+//TODO : Add open options : Height map, Normal map, Nora File
 
 enum class LoadingOption
 {
@@ -1007,28 +1008,6 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		windowSys.setWindowRes(1600, 800);
 		isMaximized = false;
 	}
-
-	//Save .nora to file and read
-	if (windowSys.isKeyPressed(GLFW_KEY_2) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
-	{
-		NoraFileHandler::writeToDisk("Test.nora", heightMapTexData, layerManager);
-	}
-	if (windowSys.isKeyPressed(GLFW_KEY_3) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT))
-	{
-		NoraFileHeader fileHeader;
-		auto layerInfoVector = NoraFileHandler::readFromDisk("Test.nora", fileHeader);
-
-		layerManager.initWithLayerInfoData(layerInfoVector);
-
-		heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
-
-		heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-		heightMapTexData.setTextureDirty();
-		layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
-
-		undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-		undoRedoSystem.record(heightMapTexData.getTextureData());
-	}
 }
 inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 {
@@ -1489,21 +1468,59 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		ImGui::PushFont(menuBarLargerText);
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("Open Image", "CTRL+O"))
+			if (ImGui::BeginMenu("Open Image"))
+			{
+				if (ImGui::MenuItem("Open Height map"))
+				{
+					currentLoadingOption = LoadingOption::TEXTURE;
+					fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
+					{
+						if (currentLoadingOption == LoadingOption::TEXTURE)
+						{
+							TextureManager::getTextureDataFromFile(str, heightMapTexData);
+							heightImageLoadLocation = str;
+							heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+							heightMapTexData.setTextureDirty();
+							layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+
+							undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+							undoRedoSystem.record(heightMapTexData.getTextureData());
+						}
+					});
+				}
+				if (ImGui::MenuItem("Open Nora file"))
+				{
+					currentLoadingOption = LoadingOption::TEXTURE;
+					fileOpenDialog->displayDialog(FileType::NORA, [&](std::string str)
+					{
+						if (currentLoadingOption == LoadingOption::TEXTURE)
+						{
+							NoraFileHeader fileHeader;
+							auto layerInfoVector = NoraFileHandler::readFromDisk(str, fileHeader);
+
+							layerManager.initWithLayerInfoData(layerInfoVector);
+
+							heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
+
+							heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+							heightMapTexData.setTextureDirty();
+							layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+
+							undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+							undoRedoSystem.record(heightMapTexData.getTextureData());
+						}
+					});
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
 				currentLoadingOption = LoadingOption::TEXTURE;
-				fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
+				fileSaveDialog->displayDialog(FileType::NORA, [&](std::string str)
 				{
 					if (currentLoadingOption == LoadingOption::TEXTURE)
 					{
-						TextureManager::getTextureDataFromFile(str, heightMapTexData);
-						heightImageLoadLocation = str;
-						heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-						heightMapTexData.setTextureDirty();
-						layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
-
-						undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-						undoRedoSystem.record(heightMapTexData.getTextureData());
+						NoraFileHandler::writeToDisk(str, heightMapTexData, layerManager);
 					}
 				});
 			}

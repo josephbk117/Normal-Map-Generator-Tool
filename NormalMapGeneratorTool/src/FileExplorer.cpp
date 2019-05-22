@@ -401,6 +401,11 @@ void FileSaveDialog::display()
 		{
 			path = std::string(pathInput);
 			isDirty = true;
+
+			if (functionToCall != nullptr)
+				functionToCall(path);
+			shouldDisplay = false;
+			ImGui::CloseCurrentPopup();
 		}
 		ImGui::Spacing();
 		static ImGuiTextFilter filter;
@@ -469,14 +474,6 @@ void FileSaveDialog::display()
 				isDirty = true;
 			}
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("SELECT"))
-		{
-			if (functionToCall != nullptr)
-				functionToCall(path);
-			shouldDisplay = false;
-			ImGui::CloseCurrentPopup();
-		}
 		ImGui::PopStyleVar();
 		ImGui::SameLine();
 		ImGui::Text(path.c_str());
@@ -486,7 +483,8 @@ void FileSaveDialog::display()
 
 void FileSaveDialog::displayDialog(FileType filter, std::function<void(std::string)> func) noexcept
 {
-	fileFilter = filter;
-	if (func != nullptr)
-		functionToCall(path);
+	shouldDisplay = true;
+	isDirty = true;
+	this->fileFilter = filter;
+	functionToCall = func;
 }
