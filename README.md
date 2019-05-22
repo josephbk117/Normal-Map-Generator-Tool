@@ -89,4 +89,41 @@ This is a real-time preview of how the texture will look once applied on the mod
       - Metalness in Red channel, Roughness in Blue and AO in Green channel
       - etc...
 
+# Controls
+
+| View Controls |  |
+| :---: | :--- |
+| **Up/Down/Left/Right** |	View panel movement |
+| **Mouse Scroll** | Zoom |
+| **Ctrl+V** | Reset view panel position and zoom |
+| **Ctrl+Alt+V** | Clear all height map data |
+
+| View Modes |  |
+| :---: | :--- |
+| **Ctrl+H** | Height mode |
+| **Ctrl+J** |	Normal mode |
+| **Ctrl+K** | Lighting mode |
+
+| Model Preview View Modes |  |
+| :---: | :--- |
+| **Alt+H** | Height mode |
+| **Alt+J** |	Normal mode |
+| **Alt+K** | Lighting mode |
+
+| Brush Controls |  |
+| :---: | :--- |
+| **Shift+Up/Down** | Brush scale |
+| **Shift+Left/Right** |	Brush offset |
+| **Shift+Ctrl+Up/Down** | Brush strength |
+
+| Misc |  |
+| :---: | :--- |
+| **Ctrl+O** | Open height map image |
+| **Ctrl+N** | Open Nora file |
+| **F10** | Export image |
+| **Ctrl+T** |	Toggle fullscreen |
+| **Shift+Ctrl+Up/Down** | Brush strength |
+| **Ctrl+Z** | Undo |
+| **Ctrl+Y** | Redo |
+
 *If you like the work being done please do support in terms of feature suggestions and bug reporting*
