@@ -15,7 +15,7 @@ Takes height map information which is usually gray scale ( Height map data ) and
 
 *Disclaimer : Can be used in production but look out for the rare bug here and there*
 
-### Image of Nora as of version 1.2 Beta [Current version 1.3 Beta]
+### Image of Nora as of version 1.2 Beta [Current version 1.4]
 ![Image of Nora normal map editor](https://i.imgur.com/JujvJES.png)
 #### Different view modes are available while editing the normal map :
 1. Height( Gray scale )
@@ -28,14 +28,18 @@ This is a real-time preview of how the texture will look once applied on the mod
 1. Height
 2. Normal, Visualize the normals in various ways with the help of Matcaps
    ![Image of Nora Matcap Previewa](https://i.imgur.com/wI0svNZ.png)
-3. Lighting, which shows PBR output with the help of Albedo, Metalness & Roughness textures.
+3. Lighting, which shows PBR output with the help of Albedo, Metalness & Roughness textures
 
 #### Custom theme support:
 1. Create a .nort file with a certain format and add it under the Resources\Themes
 2. Look at existing theme files to make your own
 <div><img src="https://i.imgur.com/7ItkGf0.png" alt="alt text" width="300"/> <img src="https://i.imgur.com/mkSqdWF.png" alt="alt text" width="300"/><img src="https://i.imgur.com/h2Hlrym.png" alt="alt text" width="300"/><img src="https://i.imgur.com/OZPJzUA.png" alt="alt text" width="300"/></div>
 
-## Planned / Completed features as of version 1.3 Beta :
+#### Save editing progress
+1. You can now save your intermediate work with .nora file
+2. Saves all the layer data as well the main height map information
+
+## Planned / Completed features as of version 1.4 :
 - Editor Functionality:
   - Better brush drawing performance and functionality
   - Blur improvements
