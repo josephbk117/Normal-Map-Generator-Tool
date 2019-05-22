@@ -75,12 +75,15 @@ const std::string PREFERENCES_PATH = "Resources\\Preference\\preference.npref";
 #pragma endregion
 
 #pragma region FUNCTION_DECLARATIONS
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept;
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
+void DisplayNoraFileSave();
+void DisplayNoraFileOpen();
+void DisplayHeightmapOpen();
 inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
 inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
@@ -165,7 +168,7 @@ int main(void)
 	ThemeManager::init();
 	themeManager = ThemeManager::instance;
 
-	windowSys.setFrameBufferResizeCallback(framebuffer_size_callback);
+	windowSys.setFrameBufferResizeCallback(FramebufferSizeCallback);
 	windowSys.setScrollCallback(scroll_callback);
 #pragma endregion
 
@@ -935,23 +938,18 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		if (undoRedoSystem.getCurrentSectionPosition() == 0)
 			undoRedoSystem.record(heightMapTexData.getTextureData());
 	}
-	//Open new image
+	//Open new heightmap image
 	if (windowSys.isKeyPressedDown(GLFW_KEY_O) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 	{
-		currentLoadingOption = LoadingOption::TEXTURE;
-		fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-		{
-			if (currentLoadingOption == LoadingOption::TEXTURE)
-			{
-				TextureManager::getTextureDataFromFile(str, heightMapTexData);
-				heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-				heightMapTexData.setTextureDirty();
-				normalmapPanel.setTextureID(heightMapTexData.getTexId());
-
-				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-				undoRedoSystem.record(heightMapTexData.getTextureData());
-			}
-		});
+		DisplayHeightmapOpen();
+	}
+	if (windowSys.isKeyPressedDown(GLFW_KEY_N) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	{
+		DisplayNoraFileOpen();
+	}
+	if (windowSys.isKeyPressedDown(GLFW_KEY_S) && windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
+	{
+		DisplayNoraFileSave();
 	}
 
 	//Brush data
@@ -1470,59 +1468,19 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		{
 			if (ImGui::BeginMenu("Open Image"))
 			{
-				if (ImGui::MenuItem("Open Height map"))
+				if (ImGui::MenuItem("Open Height map", "CTRL+O"))
 				{
-					currentLoadingOption = LoadingOption::TEXTURE;
-					fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-					{
-						if (currentLoadingOption == LoadingOption::TEXTURE)
-						{
-							TextureManager::getTextureDataFromFile(str, heightMapTexData);
-							heightImageLoadLocation = str;
-							heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-							heightMapTexData.setTextureDirty();
-							layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
-
-							undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-							undoRedoSystem.record(heightMapTexData.getTextureData());
-						}
-					});
+					DisplayHeightmapOpen();
 				}
-				if (ImGui::MenuItem("Open Nora file"))
+				if (ImGui::MenuItem("Open Nora file", "CTRL+N"))
 				{
-					currentLoadingOption = LoadingOption::TEXTURE;
-					fileOpenDialog->displayDialog(FileType::NORA, [&](std::string str)
-					{
-						if (currentLoadingOption == LoadingOption::TEXTURE)
-						{
-							NoraFileHeader fileHeader;
-							auto layerInfoVector = NoraFileHandler::readFromDisk(str, fileHeader);
-
-							layerManager.initWithLayerInfoData(layerInfoVector);
-
-							heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
-
-							heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-							heightMapTexData.setTextureDirty();
-							layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
-
-							undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-							undoRedoSystem.record(heightMapTexData.getTextureData());
-						}
-					});
+					DisplayNoraFileOpen();
 				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				currentLoadingOption = LoadingOption::TEXTURE;
-				fileSaveDialog->displayDialog(FileType::NORA, [&](std::string str)
-				{
-					if (currentLoadingOption == LoadingOption::TEXTURE)
-					{
-						NoraFileHandler::writeToDisk(str, heightMapTexData, layerManager);
-					}
-				});
+				DisplayNoraFileSave();
 			}
 			if (ImGui::MenuItem("Preferences"))
 			{
@@ -1653,6 +1611,58 @@ void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat
 		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete[] dataBuffer;
 	}
+}
+void DisplayNoraFileSave()
+{
+	currentLoadingOption = LoadingOption::TEXTURE;
+	fileSaveDialog->displayDialog(FileType::NORA, [&](std::string str)
+	{
+		if (currentLoadingOption == LoadingOption::TEXTURE)
+		{
+			NoraFileHandler::writeToDisk(str, heightMapTexData, layerManager);
+		}
+	});
+}
+void DisplayNoraFileOpen()
+{
+	currentLoadingOption = LoadingOption::TEXTURE;
+	fileOpenDialog->displayDialog(FileType::NORA, [&](std::string str)
+	{
+		if (currentLoadingOption == LoadingOption::TEXTURE)
+		{
+			NoraFileHeader fileHeader;
+			auto layerInfoVector = NoraFileHandler::readFromDisk(str, fileHeader);
+
+			layerManager.initWithLayerInfoData(layerInfoVector);
+
+			heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
+
+			heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+			heightMapTexData.setTextureDirty();
+			layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+
+			undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+		}
+	});
+}
+void DisplayHeightmapOpen()
+{
+	currentLoadingOption = LoadingOption::TEXTURE;
+	fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
+	{
+		if (currentLoadingOption == LoadingOption::TEXTURE)
+		{
+			TextureManager::getTextureDataFromFile(str, heightMapTexData);
+			heightImageLoadLocation = str;
+			heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+			heightMapTexData.setTextureDirty();
+			layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+
+			undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+			undoRedoSystem.record(heightMapTexData.getTextureData());
+		}
+	});
 }
 inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
 {
@@ -1925,7 +1935,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	delete[] tempPixelData;
 	tempPixelData = nullptr;
 }
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	width = glm::clamp(width, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().x);
 	height = glm::clamp(height, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().y);
