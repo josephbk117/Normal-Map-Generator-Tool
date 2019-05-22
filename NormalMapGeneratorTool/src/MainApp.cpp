@@ -47,7 +47,6 @@
 //TODO : Custom shader support for preview
 //TODO : Better lighting options
 //TODO : Moving the panel anywhere in the window and not zoom level effcted
-//TODO : Add open options : Height map, Normal map, Nora File
 
 enum class LoadingOption
 {
@@ -55,7 +54,7 @@ enum class LoadingOption
 };
 
 #pragma region STRING_CONSTANTS
-const std::string VERSION_NAME = "v1.4 Beta";
+const std::string VERSION_NAME = "v1.4";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -117,8 +116,8 @@ TextureData matcapTexDataForPreview;
 
 ModelObject *modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
-FileOpenDialog* fileOpenDialog;
-FileSaveDialog* fileSaveDialog;
+FileOpenDialog* fileOpenDialog = nullptr;
+FileSaveDialog* fileSaveDialog = nullptr;
 ThemeManager* themeManager;
 ModalWindow modalWindow;
 DrawingPanel normalmapPanel;
@@ -362,8 +361,8 @@ int main(void)
 
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 		frameDrawingPanel.getTransform()->update();
-		const int leftMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_LEFT);
-		const int middleMouseButtonState = glfwGetMouseButton((GLFWwindow*)windowSys.getWindow(), GLFW_MOUSE_BUTTON_MIDDLE);
+		const int leftMouseButtonState = glfwGetMouseButton(const_cast<GLFWwindow*>(windowSys.getWindow()), GLFW_MOUSE_BUTTON_LEFT);
+		const int middleMouseButtonState = glfwGetMouseButton(const_cast<GLFWwindow*>(windowSys.getWindow()), GLFW_MOUSE_BUTTON_MIDDLE);
 
 		//Check if the preview modal window is open and only then perform drawing operations
 		if (!isPreviewWindowMaximized)
@@ -748,13 +747,24 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 
 	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() / 1.45f);
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() * 0.7f);
 	ImGui::InputText("## Save location", saveLocation, 500);
 	ImGui::PopItemWidth();
-	ImGui::SameLine(0, 5);
-	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth(), 27))) { shouldSaveNormalMap = true; changeSize = true; }
+	ImGui::SameLine();
+	const char* extensions[] = { ".tga", ".png", ".bmp", ".jpg" };
+	static int currentExtensionIndex = 0;
+	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 4);
+	if (ImGui::Combo("##extCombo", &currentExtensionIndex, extensions, IM_ARRAYSIZE(extensions)))
+	{
+		std::string str(saveLocation);
+		char* dotLoc = &saveLocation[str.find_last_of('.')];
+		char* charEnd = std::find(&saveLocation[0], &saveLocation[499], '\0');
+		std::memcpy(dotLoc, extensions[currentExtensionIndex], 4);
+	}
+	ImGui::PopItemWidth();
+	if (ImGui::Button("EXPORT", ImVec2(ImGui::GetContentRegionAvailWidth() + 4, 27))) { shouldSaveNormalMap = true; changeSize = true; }
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("[.png | .tga | .bmp | .jpg] Save current view-mode image to file (F10)");
+		ImGui::SetTooltip("[.tga | .png | .bmp | .jpg] Save current view-mode image to file (F10)");
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 	ImGui::Spacing();
