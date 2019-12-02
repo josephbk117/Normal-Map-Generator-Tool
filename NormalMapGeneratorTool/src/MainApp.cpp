@@ -247,66 +247,66 @@ int main(void)
 
 #pragma region SHADER UNIFORM IDS
 	//Normal map uniforms
-	int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
-	int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
-	int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
-	int normalMapModeOnUniform = normalmapShader.getUniformLocation("_normalMapModeOn");
-	int widthUniform = normalmapShader.getUniformLocation("_HeightmapDimX");
-	int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
-	int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
-	int specularityStrengthUniform = normalmapShader.getUniformLocation("_SpecularStrength");
-	int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
-	int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
-	int RedChannelUniform = normalmapShader.getUniformLocation("_Channel_R");
-	int GreenChannelUniform = normalmapShader.getUniformLocation("_Channel_G");
-	int BlueChannelUniform = normalmapShader.getUniformLocation("_Channel_B");
-	int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
-	int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
-	int textureOneIndexUniform = normalmapShader.getUniformLocation("textureOne");
-	int textureTwoIndexUniform = normalmapShader.getUniformLocation("textureTwo");
-	int useNormalInputUniform = normalmapShader.getUniformLocation("_UseNormalInput");
-	int normalBlendingMethod = normalmapShader.getUniformLocation("_NormalBlendingMethod");
+	const int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
+	const int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
+	const int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
+	const int normalMapModeOnUniform = normalmapShader.getUniformLocation("_normalMapModeOn");
+	const int widthUniform = normalmapShader.getUniformLocation("_HeightmapDimX");
+	const int heightUniform = normalmapShader.getUniformLocation("_HeightmapDimY");
+	const int specularityUniform = normalmapShader.getUniformLocation("_Specularity");
+	const int specularityStrengthUniform = normalmapShader.getUniformLocation("_SpecularStrength");
+	const int lightIntensityUniform = normalmapShader.getUniformLocation("_LightIntensity");
+	const int flipXYdirUniform = normalmapShader.getUniformLocation("_flipX_Ydir");
+	const int RedChannelUniform = normalmapShader.getUniformLocation("_Channel_R");
+	const int GreenChannelUniform = normalmapShader.getUniformLocation("_Channel_G");
+	const int BlueChannelUniform = normalmapShader.getUniformLocation("_Channel_B");
+	const int lightDirectionUniform = normalmapShader.getUniformLocation("lightDir");
+	const int methodIndexUniform = normalmapShader.getUniformLocation("_MethodIndex");
+	const int textureOneIndexUniform = normalmapShader.getUniformLocation("textureOne");
+	const int textureTwoIndexUniform = normalmapShader.getUniformLocation("textureTwo");
+	const int useNormalInputUniform = normalmapShader.getUniformLocation("_UseNormalInput");
+	const int normalBlendingMethod = normalmapShader.getUniformLocation("_NormalBlendingMethod");
 
 	//Brush uniforms
-	int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
-	int brushPreviewTextureUniform = brushPreviewShader.getUniformLocation("_BrushTexture");
-	int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
-	int brushPreviewStrengthUniform = brushPreviewShader.getUniformLocation("_BrushStrength");
-	int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
-	int brushPreviewUseTextureUniform = brushPreviewShader.getUniformLocation("_UseTexture");
+	const int brushPreviewModelUniform = brushPreviewShader.getUniformLocation("model");
+	const int brushPreviewTextureUniform = brushPreviewShader.getUniformLocation("_BrushTexture");
+	const int brushPreviewOffsetUniform = brushPreviewShader.getUniformLocation("_BrushOffset");
+	const int brushPreviewStrengthUniform = brushPreviewShader.getUniformLocation("_BrushStrength");
+	const int brushPreviewColourUniform = brushPreviewShader.getUniformLocation("_BrushColour");
+	const int brushPreviewUseTextureUniform = brushPreviewShader.getUniformLocation("_UseTexture");
 
 	//Model preview uniforms
-	int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
-	int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
-	int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
-	int modelCameraPos = modelViewShader.getUniformLocation("_CameraPosition");
-	int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
-	int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
-	int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
-	int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
-	int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
-	int modelRoughnessUniform = modelViewShader.getUniformLocation("_Roughness");
-	int modelMetalnessUniform = modelViewShader.getUniformLocation("_Metalness");
-	int modelLightPositionUniform = modelViewShader.getUniformLocation("lightPos");
-	int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
-	int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
-	int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("heightmapTexture");
-	int modelAlbedoMapTextureUniform = modelViewShader.getUniformLocation("albedomapTexture");
-	int modelMetalnessMapTextureUniform = modelViewShader.getUniformLocation("metalnessmapTexture");
-	int modelRoughnessMapTextureUniform = modelViewShader.getUniformLocation("roughnessmapTexture");
-	int modelMatcapTextureUniform = modelViewShader.getUniformLocation("mapcapTexture");
-	int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
-	int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
-	int modelUseMatcapUniform = modelViewShader.getUniformLocation("_Use_Matcap");
+	const int modelPreviewModelUniform = modelViewShader.getUniformLocation("model");
+	const int modelPreviewViewUniform = modelViewShader.getUniformLocation("view");
+	const int modelPreviewProjectionUniform = modelViewShader.getUniformLocation("projection");
+	const int modelCameraPos = modelViewShader.getUniformLocation("_CameraPosition");
+	const int modelWidthUniform = modelViewShader.getUniformLocation("_HeightmapDimX");
+	const int modelHeightUniform = modelViewShader.getUniformLocation("_HeightmapDimY");
+	const int modelNormalMapModeUniform = modelViewShader.getUniformLocation("_normalMapModeOn");
+	const int modelNormalMapStrengthUniform = modelViewShader.getUniformLocation("_HeightmapStrength");
+	const int modelLightIntensityUniform = modelViewShader.getUniformLocation("_LightIntensity");
+	const int modelRoughnessUniform = modelViewShader.getUniformLocation("_Roughness");
+	const int modelMetalnessUniform = modelViewShader.getUniformLocation("_Metalness");
+	const int modelLightPositionUniform = modelViewShader.getUniformLocation("lightPos");
+	const int modelLightColourUniform = modelViewShader.getUniformLocation("lightColour");
+	const int modelDiffuseColourUniform = modelViewShader.getUniformLocation("diffuseColour");
+	const int modelHeightMapTextureUniform = modelViewShader.getUniformLocation("heightmapTexture");
+	const int modelAlbedoMapTextureUniform = modelViewShader.getUniformLocation("albedomapTexture");
+	const int modelMetalnessMapTextureUniform = modelViewShader.getUniformLocation("metalnessmapTexture");
+	const int modelRoughnessMapTextureUniform = modelViewShader.getUniformLocation("roughnessmapTexture");
+	const int modelMatcapTextureUniform = modelViewShader.getUniformLocation("mapcapTexture");
+	const int modelCubeMapTextureUniform = modelViewShader.getUniformLocation("skybox");
+	const int modelMethodIndexUniform = modelViewShader.getUniformLocation("_MethodIndex");
+	const int modelUseMatcapUniform = modelViewShader.getUniformLocation("_Use_Matcap");
 
 	//Model attributes uniforms
-	int modelAttributesShowNormalsUniform = modelAttribViewShader.getUniformLocation("_ShowNormals");
-	int modelAttributesNormalLengthUniform = modelAttribViewShader.getUniformLocation("_NormalsLength");
+	const int modelAttributesShowNormalsUniform = modelAttribViewShader.getUniformLocation("_ShowNormals");
+	const int modelAttributesNormalLengthUniform = modelAttribViewShader.getUniformLocation("_NormalsLength");
 
 	//Gridlines uniforms
-	int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
-	int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
-	int gridLineProjectionMatrixUniform = gridLineShader.getUniformLocation("projection");
+	const int gridLineModelMatrixUniform = gridLineShader.getUniformLocation("model");
+	const int gridLineViewMatrixUniform = gridLineShader.getUniformLocation("view");
+	const int gridLineProjectionMatrixUniform = gridLineShader.getUniformLocation("projection");
 #pragma endregion
 
 	bool isMaximized = false;
@@ -584,11 +584,14 @@ int main(void)
 
 #pragma region GRID SETUP & RENDER
 		// Set up preview shader uniforms
-		gridLineShader.use();
-		gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
-		gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
-		gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
-		previewGrid->draw();
+		if (previewStateUtility.showGrid)
+		{
+			gridLineShader.use();
+			gridLineShader.applyShaderUniformMatrix(gridLineModelMatrixUniform, glm::scale(glm::mat4(), glm::vec3(100, 0, 100)));
+			gridLineShader.applyShaderUniformMatrix(gridLineViewMatrixUniform, glm::lookAt(cameraPosition, glm::vec3(0), glm::vec3(0, 1, 0)));
+			gridLineShader.applyShaderUniformMatrix(gridLineProjectionMatrixUniform, glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f));
+			previewGrid->draw();
+		}
 #pragma endregion
 		// Set up the default framebuffer
 		FrameBufferSystem::bindDefaultFrameBuffer();
@@ -1272,13 +1275,14 @@ inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 	ImGui::PopStyleVar();
 	ImGui::Spacing();
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
+	ImGui::Checkbox("Grid", &previewStateUtility.showGrid); ImGui::SameLine();
 	ImGui::Checkbox("Normals", &previewStateUtility.showNormals); ImGui::SameLine();
 	const float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
 	ImGui::PushItemWidth(availWidth);
 	if (ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f"))
 		glLineWidth(previewStateUtility.normDisplayThickness);
 	ImGui::SameLine();
-	ImGui::SliderFloat("##Normal Length", &previewStateUtility.normDisplayLineLength, 0.1f, 10.0f, "Length:%.2f");
+	ImGui::SliderFloat("##Normal Length", &previewStateUtility.normDisplayLineLength, 0.1f, 10.0f, "Len:%.2f");
 	ImGui::PopItemWidth();
 
 	ImGui::Image((ImTextureID)previewFbs.getColourTexture(), ImVec2(300, 300));
@@ -1720,8 +1724,8 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 					float density = 0.01f; //*Think density should axis dependant
 					if (distOfPrevAndCurrentMouseCoord > density && prevMouseCoord != INVALID)
 					{
-						float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-						float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+						const float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+						const float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
 						const glm::vec2 prevPoint(prevX, prevY);
 						const glm::vec2 toPoint(curX, curY);
@@ -1913,7 +1917,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				if (i - 1 < startX || i + 1 > endX || j - 1 < startY || j + 1 > endY)
 					continue;
 
-				float pixelCol = tempPixelData[i - startX][j - startY].getColour_32_Bit().r;
+				const float pixelCol = tempPixelData[i - startX][j - startY].getColour_32_Bit().r;
 				float validEntries = 0;
 				float neighbourAvg = 0;
 

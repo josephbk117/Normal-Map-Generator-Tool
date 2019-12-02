@@ -10,6 +10,7 @@ public:
 	bool useMatcap = false;
 	float lightIntensity = 2.5f;
 	bool showNormals = false;
+	bool showGrid = true;
 	float normDisplayThickness = 4.0f;
 	float normDisplayLineLength = 0.25f;
 	glm::vec2 lightLocation = glm::vec2(0.0f, 0.0f);
