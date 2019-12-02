@@ -79,21 +79,21 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 void SetPixelValues(TextureData& texData, int startX, int width, int startY, int height, double xpos, double ypos);
 void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const TextureData& brushTexture, int startX, int endX, int startY, int endY, double xpos, double ypos);
 void SetBluredPixelValues(TextureData& inputTexData, int startX, int width, int startY, int height, double xpos, double ypos);
-void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat);
+void SaveNormalMapToFile(const std::string& locationStr, ImageFormat imageFormat);
 void DisplayNoraFileSave();
 void DisplayNoraFileOpen();
 void DisplayHeightmapOpen();
-inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &normalmapPanel);
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &normalmapPanel, bool isBlurOn);
-inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture);
-inline void DisplayBottomBar(const ImGuiWindowFlags &window_flags);
-inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize);
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags);
-inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags);
+inline void HandleMiddleMouseButtonInput(int state, glm::vec2& prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel& normalmapPanel);
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel& normalmapPanel, bool isBlurOn);
+inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool& isMaximized, unsigned int closeTexture);
+inline void DisplayBottomBar(const ImGuiWindowFlags& window_flags);
+inline void DisplaySideBar(const ImGuiWindowFlags& window_flags, DrawingPanel& frameDrawingPanel, char saveLocation[500], bool& shouldSaveNormalMap, bool& changeSize);
+inline void DisplayPreview(const ImGuiWindowFlags& window_flags);
+inline void DisplayLayerPanel(const ImGuiWindowFlags& window_flags);
 inline void DisplayLightSettingsUserInterface();
 inline void DisplayNormalSettingsUserInterface();
-inline void DisplayBrushSettingsUserInterface(bool &isBlurOn);
-inline void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized);
+inline void DisplayBrushSettingsUserInterface(bool& isBlurOn);
+inline void HandleKeyboardInput(double deltaTime, DrawingPanel& frameDrawingPanel, bool& isMaximized);
 void SetStatesForSavingNormalMap()noexcept;
 void SetupImGui();
 #pragma endregion
@@ -114,7 +114,7 @@ TextureData metalnessTexDataForPreview;
 TextureData roughnessTexDataForPreview;
 TextureData matcapTexDataForPreview;
 
-ModelObject *modelPreviewObj = nullptr;
+ModelObject* modelPreviewObj = nullptr;
 LoadingOption currentLoadingOption = LoadingOption::NONE;
 FileOpenDialog* fileOpenDialog = nullptr;
 FileSaveDialog* fileSaveDialog = nullptr;
@@ -204,7 +204,7 @@ int main(void)
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_ft.tga");
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_bk.tga");
 
-	unsigned int cubeMapTextureId = TextureManager::createCubemapFromFile(cubeMapImagePaths);
+	const unsigned int cubeMapTextureId = TextureManager::createCubemapFromFile(cubeMapImagePaths);
 	albedoTexDataForPreview.setTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall diffuse.png"));
 	roughnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(TEXTURES_PATH + "wall specular.png"));
 	metalnessTexDataForPreview.setTexId(defaultWhiteTextureId);
@@ -321,7 +321,7 @@ int main(void)
 	FrameBufferSystem layersNormalOutputFbs;
 	layersNormalOutputFbs.init(windowSys.getWindowRes(), glm::vec2(preferencesInfo.maxWidthRes, preferencesInfo.maxHeightRes));
 
-	glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
+	const glm::vec2 prevMouseCoord = glm::vec2(-10, -10);
 	glm::vec2 prevMiddleMouseButtonCoord = glm::vec2(-10, -10);
 
 	bool shouldSaveNormalMap = false;
@@ -419,7 +419,7 @@ int main(void)
 
 		normalmapPanel.setTextureID(layerManager.getColourTexture(0), false);
 		normalmapShader.applyShaderInt(useNormalInputUniform, 2);
-		normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(0));
+		normalmapShader.applyShaderInt(normalBlendingMethod, static_cast<int>(layerManager.getNormalBlendMethod(0)));
 		normalmapShader.applyShaderInt(normalMapModeOnUniform, 0);
 		normalmapPanel.draw();
 
@@ -433,7 +433,7 @@ int main(void)
 				{
 					if (!layerManager.isLayerActive(i))
 						continue;
-					normalmapShader.applyShaderInt(normalBlendingMethod, (int)layerManager.getNormalBlendMethod(i));
+					normalmapShader.applyShaderInt(normalBlendingMethod, static_cast<int>(layerManager.getNormalBlendMethod(i)));
 					normalmapPanel.setTextureID(fbs.getColourTexture(), false);
 					normalmapPanel.draw(layerManager.getColourTexture(i));
 				}
@@ -483,7 +483,7 @@ int main(void)
 			SaveNormalMapToFile(saveLocation, imageFormat);
 			shouldSaveNormalMap = false;
 			modalWindow.setModalDialog("INFO", "Image exported to : " + path + "\nResolution : " +
-				std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y));
+				std::to_string(heightMapTexData.getRes().x) + "x" + std::to_string(heightMapTexData.getRes().y));
 			continue;
 		}
 
@@ -510,7 +510,7 @@ int main(void)
 		static float yAxis = -2.0f;
 		glm::vec3 cameraPosition;
 		static glm::ivec2 prevMcord;
-		glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
+		const glm::vec2 offset = (prevMcord - windowSys.getCursorPos());
 
 		if (leftMouseButtonState == GLFW_PRESS && glm::length(offset) > 0.0f && canPerformPreviewWindowMouseOperations)
 		{
@@ -595,9 +595,9 @@ int main(void)
 #pragma region  SETUP & RENDER BRUSH DATA
 		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
-			glm::vec2 heightRes = heightMapTexData.getRes();
+			const glm::vec2 heightRes = heightMapTexData.getRes();
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x),
-				(brushData.brushScale / heightRes.y)*aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
+				(brushData.brushScale / heightRes.y) * aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
 
 			if (heightRes.x > heightRes.y)
 				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightRes.x / heightRes.y, 1));
@@ -606,7 +606,7 @@ int main(void)
 		}
 		else
 		{
-			glm::vec2 heightRes = heightMapTexData.getRes();
+			const glm::vec2 heightRes = heightMapTexData.getRes();
 			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x) / aspectRatio,
 				(brushData.brushScale / heightRes.y)) * normalViewStateUtility.zoomLevel * 2.0f);
 
@@ -617,8 +617,8 @@ int main(void)
 		}
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
-		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x)*2.0f) - 1.0f,
-			-(((curMouseCoord.y / windowSys.getWindowRes().y)*2.0f) - 1.0f));
+		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x) * 2.0f) - 1.0f,
+			-(((curMouseCoord.y / windowSys.getWindowRes().y) * 2.0f) - 1.0f));
 		brushPanel.getTransform()->update();
 		brushPreviewShader.applyShaderFloat(brushPreviewStrengthUniform, brushData.brushStrength);
 		brushPreviewShader.applyShaderFloat(brushPreviewOffsetUniform, glm::pow(brushData.brushOffset, 2) * 10.0f);
@@ -706,7 +706,7 @@ int main(void)
 	windowSys.destroy();
 	return 0;
 }
-inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &frameDrawingPanel, char saveLocation[500], bool &shouldSaveNormalMap, bool &changeSize)
+inline void DisplaySideBar(const ImGuiWindowFlags& window_flags, DrawingPanel& frameDrawingPanel, char saveLocation[500], bool& shouldSaveNormalMap, bool& changeSize)
 {
 	bool open = true;
 	ImGui::SetNextWindowPos(ImVec2(windowSys.getWindowRes().x - 5, 42), ImGuiSetCond_Always);
@@ -716,7 +716,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::SetNextWindowSize(ImVec2(glm::clamp(windowSys.getWindowRes().x * 0.15f, 280.0f, 600.0f), windowSys.getWindowRes().y - 77), ImGuiSetCond_Always);
 	ImGui::Begin("Settings", &open, window_flags);
 	ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
-	float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
+	const float buttonWidth = ImGui::GetContentRegionAvailWidth() / 3.5f;
 	if (ImGui::ImageButton((ImTextureID)toggleFullscreenTexId, ImVec2(buttonWidth, 40), ImVec2(-0.4f, 1.0f), ImVec2(1.4f, 0.0f), -1, ImVec4(0, 0, 0, 0), themeManager->AccentColour2))
 	{
 		if (!windowSys.getIfFullscreen())
@@ -751,7 +751,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::InputText("## Save location", saveLocation, 500);
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
-	const char* extensions[] = { ".tga", ".png", ".bmp", ".jpg" };
+	const char* const extensions[] = { ".tga", ".png", ".bmp", ".jpg" };
 	static int currentExtensionIndex = 0;
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 4);
 	if (ImGui::Combo("##extCombo", &currentExtensionIndex, extensions, IM_ARRAYSIZE(extensions)))
@@ -775,7 +775,7 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::RadioButton("RAW DATA", &item_type, 0); ImGui::SameLine();
 	ImGui::RadioButton("LAYER OUTPUT", &item_type, 1);
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-	int modeButtonWidth = static_cast<int>(ImGui::GetContentRegionAvailWidth() / 3.0f);
+	const int modeButtonWidth = static_cast<int>(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 	if (normalViewStateUtility.mapDrawViewMode == 3) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
 	else ImGui::PushStyleColor(ImGuiCol_Button, themeManager->SecondaryColour);
@@ -810,17 +810,17 @@ inline void DisplaySideBar(const ImGuiWindowFlags &window_flags, DrawingPanel &f
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar();
 }
-void DisplayBottomBar(const ImGuiWindowFlags &window_flags)
+void DisplayBottomBar(const ImGuiWindowFlags& window_flags)
 {
 	ImGui::SetNextWindowPos(ImVec2(0, windowSys.getWindowRes().y - 35), ImGuiSetCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(windowSys.getWindowRes().x, 50), ImGuiSetCond_Always);
 	bool open = true;
 	ImGui::Begin("Bottom_Bar", &open, window_flags);
 
-	float totalWidth = ImGui::GetContentRegionAvailWidth();
+	const float totalWidth = ImGui::GetContentRegionAvailWidth();
 
 	std::string imageDataText(heightImageLoadLocation + " : ");
-	imageDataText += std::to_string((int)heightMapTexData.getRes().x) + "x" + std::to_string((int)heightMapTexData.getRes().y);
+	imageDataText += std::to_string(heightMapTexData.getRes().x) + "x" + std::to_string(heightMapTexData.getRes().y);
 	ImGui::Text(imageDataText.c_str()); ImGui::SameLine();
 
 	const float diffWidth = totalWidth - ImGui::GetContentRegionAvailWidth();
@@ -870,7 +870,7 @@ void SetupImGui()
 	ImGui_ImplGlfw_InitForOpenGL((GLFWwindow*)windowSys.getWindow(), true);
 	ImGui_ImplOpenGL2_Init();
 
-	ImFont* const font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
+	const ImFont* const font = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 16.0f);
 	menuBarLargerText = io.Fonts->AddFontFromFileTTF("Resources\\Fonts\\Roboto-Medium.ttf", 18.0f);
 
 	modalWindow.setTitleFont(menuBarLargerText);
@@ -883,7 +883,7 @@ void SetStatesForSavingNormalMap() noexcept
 	glViewport(0, 0, heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 	fbs.updateTextureDimensions(heightMapTexData.getRes().x, heightMapTexData.getRes().y);
 }
-void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool &isMaximized)
+void HandleKeyboardInput(double deltaTime, DrawingPanel& frameDrawingPanel, bool& isMaximized)
 {
 	//Normal map strength and zoom controls for normal map
 	if (windowSys.isKeyPressed(GLFW_KEY_LEFT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
@@ -1017,7 +1017,7 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel &frameDrawingPanel, bool
 		isMaximized = false;
 	}
 }
-inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
+inline void DisplayBrushSettingsUserInterface(bool& isBlurOn)
 {
 	ImGui::Text("BRUSH SETTINGS");
 	ImGui::Separator();
@@ -1042,10 +1042,10 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		{
 			for (int i = 0; i < grungeBrushPaths.size(); i++)
 			{
-				if (ImGui::MenuItem(grungeBrushPaths[i].c_str()))
+				if (ImGui::MenuItem(grungeBrushPaths.at(i).c_str()))
 				{
-					currentBrush = grungeBrushPaths[i];
-					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths[i], brushData.textureData);
+					currentBrush = grungeBrushPaths.at(i);
+					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Grunge\\" + grungeBrushPaths.at(i), brushData.textureData);
 					brushData.textureData.setTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
@@ -1055,10 +1055,10 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 		{
 			for (int i = 0; i < patternBrushPaths.size(); i++)
 			{
-				if (ImGui::MenuItem(patternBrushPaths[i].c_str()))
+				if (ImGui::MenuItem(patternBrushPaths.at(i).c_str()))
 				{
-					currentBrush = grungeBrushPaths[i];
-					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths[i], brushData.textureData);
+					currentBrush = grungeBrushPaths.at(i);
+					TextureManager::getTextureDataFromFile(BRUSH_TEXTURES_PATH + "Patterns\\" + patternBrushPaths.at(i), brushData.textureData);
 					brushData.textureData.setTexId(TextureManager::createTextureFromData(brushData.textureData));
 				}
 			}
@@ -1078,7 +1078,7 @@ inline void DisplayBrushSettingsUserInterface(bool &isBlurOn)
 	if (isBlurOn)
 		ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
-	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getRes().y*0.5f, "%.2f", 1.0f)) {}
+	if (ImGui::SliderFloat(" Brush Scale", &brushData.brushScale, 1.0f, heightMapTexData.getRes().y * 0.5f, "%.2f", 1.0f)) {}
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("(Shift + |UP / DOWN|)");
 	if (ImGui::SliderFloat(" Brush Offset", &brushData.brushOffset, 0.01f, 1.0f, "%.2f", 1.0f)) {}
@@ -1104,7 +1104,7 @@ inline void DisplayNormalSettingsUserInterface()
 	ImGui::Text("NORMAL SETTINGS");
 	ImGui::Separator();
 
-	const char* items[] = { "Tri-Sample", "Sobel" };
+	const char* const items[] = { "Tri-Sample", "Sobel" };
 	static int item_current = 0;
 	ImGui::Combo("##combo", &item_current, items, IM_ARRAYSIZE(items));
 	switch (item_current)
@@ -1166,7 +1166,7 @@ inline void DisplayLightSettingsUserInterface()
 	if (ImGui::SliderFloat("## Z Angle", &normalViewStateUtility.lightDirection.z, 0.01f, 359.99f, "Z:%.2f")) {}
 	ImGui::PopItemWidth();
 }
-inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
+inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 {
 	bool open = true;
 
@@ -1218,14 +1218,14 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::EndPopup();
 	}
 	ImGui::SameLine();
-	const char* items[] = { "    CUBE", "    CYLINDER", "    SPHERE", "    TORUS","    SUZANNE","    UTAH TEAPOT", "    CUSTOM MODEL" };
+	const char* const items[] = { "    CUBE", "    CYLINDER", "    SPHERE", "    TORUS","    SUZANNE","    UTAH TEAPOT", "    CUSTOM MODEL" };
 	static const char* current_item = items[0];
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 15));
 	if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
 	{
 		for (int n = 0; n < IM_ARRAYSIZE(items); n++)
 		{
-			bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+			const bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
 			if (ImGui::Selectable(items[n], is_selected))
 			{
 				current_item = items[n];
@@ -1254,9 +1254,9 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 				case 6:
 					currentLoadingOption = LoadingOption::MODEL;
 					fileOpenDialog->displayDialog(FileType::MODEL, [&](std::string str)
-					{
-						modelPreviewObj = modelLoader.createModelFromFile(str);
-					});
+						{
+							modelPreviewObj = modelLoader.createModelFromFile(str);
+						});
 					break;
 				default:
 					break;
@@ -1273,7 +1273,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Spacing();
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 5);
 	ImGui::Checkbox("Normals", &previewStateUtility.showNormals); ImGui::SameLine();
-	float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
+	const float availWidth = ImGui::GetContentRegionAvailWidth() * 0.5f;
 	ImGui::PushItemWidth(availWidth);
 	if (ImGui::SliderFloat("##Normal Thickness", &previewStateUtility.normDisplayThickness, 1.0f, 10.0f, "Size:%.2f"))
 		glLineWidth(previewStateUtility.normDisplayThickness);
@@ -1297,7 +1297,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::Text("VIEW MODE");
 	ImGui::Separator();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 10));
-	int modeButtonWidth = (int)(ImGui::GetContentRegionAvailWidth() / 3.0f);
+	const int modeButtonWidth = static_cast<int>(ImGui::GetContentRegionAvailWidth() / 3.0f);
 	ImGui::Spacing();
 
 	if (previewStateUtility.modelViewMode == 1) ImGui::PushStyleColor(ImGuiCol_Button, themeManager->AccentColour1);
@@ -1335,7 +1335,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		ImGui::Text("MATCAP SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
-		const char* matcapItems[] = { "none", "view space normal", "orange flame", "chrome", "copper", "organic1", "organic3", "organic4",
+		const char* const matcapItems[] = { "none", "view space normal", "orange flame", "chrome", "copper", "organic1", "organic3", "organic4",
 			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2" };
 		static const char* current_matcap_item = matcapItems[0];
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
@@ -1343,7 +1343,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		{
 			for (int n = 0; n < IM_ARRAYSIZE(matcapItems); n++)
 			{
-				bool is_selected = (current_matcap_item == matcapItems[n]);
+				const bool is_selected = (current_matcap_item == matcapItems[n]);
 				if (ImGui::Selectable(matcapItems[n], is_selected))
 				{
 					current_matcap_item = matcapItems[n];
@@ -1394,10 +1394,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-			{
-				if (currentLoadingOption == LoadingOption::TEXTURE)
-					albedoTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
-			});
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						albedoTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
+				});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load albedo map for preview model");
@@ -1411,10 +1411,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-			{
-				if (currentLoadingOption == LoadingOption::TEXTURE)
-					metalnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
-			});
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						metalnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
+				});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load metalness map for preview model");
@@ -1428,10 +1428,10 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-			{
-				if (currentLoadingOption == LoadingOption::TEXTURE)
-					roughnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
-			});
+				{
+					if (currentLoadingOption == LoadingOption::TEXTURE)
+						roughnessTexDataForPreview.setTexId(TextureManager::createTextureFromFile(str));
+				});
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Load roughness map for preview model");
@@ -1444,7 +1444,7 @@ inline void DisplayPreview(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
+inline void DisplayLayerPanel(const ImGuiWindowFlags& window_flags)
 {
 	bool open = true;
 
@@ -1465,7 +1465,7 @@ inline void DisplayLayerPanel(const ImGuiWindowFlags &window_flags)
 	ImGui::PopStyleColor();
 	ImGui::PopStyleVar(3);
 }
-inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool &isMaximized, unsigned int closeTexture)
+inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int restoreTexture, bool& isMaximized, unsigned int closeTexture)
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 13));
 	if (ImGui::BeginMainMenuBar())
@@ -1501,8 +1501,8 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 
 		if (ImGui::BeginMenu("Edit"))
 		{
-			bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
-			bool isRedoDisabled = undoRedoSystem.getCurrentSectionPosition() >= 1 && undoRedoSystem.getCurrentSectionPosition() <= undoRedoSystem.getMaxSectionsFilled() - 1 ? false : true;
+			const bool isUndoDisabled = undoRedoSystem.getCurrentSectionPosition() == 1 ? true : false;
+			const bool isRedoDisabled = undoRedoSystem.getCurrentSectionPosition() >= 1 && undoRedoSystem.getCurrentSectionPosition() <= undoRedoSystem.getMaxSectionsFilled() - 1 ? false : true;
 
 			if (isUndoDisabled)
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
@@ -1586,7 +1586,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 			static int preference_item_current = item_current;
 			ImGui::Combo("##combo", &preference_item_current, themeManager->getRawData(), themeManager->getNumberOfThemes());
 			ImGui::Text("These changes take effect on next application start up");
-			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth()*0.5f, 40)))
+			if (ImGui::Button("Save Perferences", ImVec2(ImGui::GetContentRegionAvailWidth() * 0.5f, 40)))
 			{
 				PreferencesHandler::savePreferences(res[0], res[1], stepNum, defaultPath, std::string(themeManager->getRawData()[preference_item_current]));
 			}
@@ -1605,7 +1605,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 	ImGui::EndMainMenuBar();
 	ImGui::PopStyleVar();
 }
-void SaveNormalMapToFile(const std::string &locationStr, ImageFormat imageFormat)
+void SaveNormalMapToFile(const std::string& locationStr, ImageFormat imageFormat)
 {
 	if (locationStr.length() > 4)
 	{
@@ -1626,55 +1626,55 @@ void DisplayNoraFileSave()
 {
 	currentLoadingOption = LoadingOption::TEXTURE;
 	fileSaveDialog->displayDialog(FileType::NORA, [&](std::string str)
-	{
-		if (currentLoadingOption == LoadingOption::TEXTURE)
 		{
-			NoraFileHandler::writeToDisk(str, heightMapTexData, layerManager);
-		}
-	});
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				NoraFileHandler::writeToDisk(str, heightMapTexData, layerManager);
+			}
+		});
 }
 void DisplayNoraFileOpen()
 {
 	currentLoadingOption = LoadingOption::TEXTURE;
 	fileOpenDialog->displayDialog(FileType::NORA, [&](std::string str)
-	{
-		if (currentLoadingOption == LoadingOption::TEXTURE)
 		{
-			NoraFileHeader fileHeader;
-			auto layerInfoVector = NoraFileHandler::readFromDisk(str, fileHeader);
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				NoraFileHeader fileHeader;
+				auto layerInfoVector = NoraFileHandler::readFromDisk(str, fileHeader);
 
-			layerManager.initWithLayerInfoData(layerInfoVector);
+				layerManager.initWithLayerInfoData(layerInfoVector);
 
-			heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
+				heightMapTexData.setTextureData(layerInfoVector.at(0).second, fileHeader.width, fileHeader.height, 4);
 
-			heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-			heightMapTexData.setTextureDirty();
-			layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+				heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+				heightMapTexData.setTextureDirty();
+				layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
 
-			undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-			undoRedoSystem.record(heightMapTexData.getTextureData());
-		}
-	});
+				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+				undoRedoSystem.record(heightMapTexData.getTextureData());
+			}
+		});
 }
 void DisplayHeightmapOpen()
 {
 	currentLoadingOption = LoadingOption::TEXTURE;
 	fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
-	{
-		if (currentLoadingOption == LoadingOption::TEXTURE)
 		{
-			TextureManager::getTextureDataFromFile(str, heightMapTexData);
-			heightImageLoadLocation = str;
-			heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
-			heightMapTexData.setTextureDirty();
-			layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
+			if (currentLoadingOption == LoadingOption::TEXTURE)
+			{
+				TextureManager::getTextureDataFromFile(str, heightMapTexData);
+				heightImageLoadLocation = str;
+				heightMapTexData.setTexId(TextureManager::createTextureFromData(heightMapTexData));
+				heightMapTexData.setTextureDirty();
+				layerManager.updateLayerTexture(0, heightMapTexData.getTexId());
 
-			undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
-			undoRedoSystem.record(heightMapTexData.getTextureData());
-		}
-	});
+				undoRedoSystem.updateAllocation(heightMapTexData.getRes(), heightMapTexData.getComponentCount(), preferencesInfo.maxUndoCount);
+				undoRedoSystem.record(heightMapTexData.getTextureData());
+			}
+		});
 }
-inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel &frameDrawingPanel, bool isBlurOn)
+inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPanel& frameDrawingPanel, bool isBlurOn)
 {
 	const glm::vec2 INVALID = glm::vec2(-100000000, -10000000);
 	static glm::vec2 prevMouseCoord = INVALID;
@@ -1691,12 +1691,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 		//viewport previous mouse coords
 		const glm::vec2 vpPrevMouse(wnPrevMouse.x * 2.0f - 1.0f, wnPrevMouse.y * 2.0f - 1.0f);
 
-		float minDistThresholdForDraw = brushData.brushRate;
-		float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
+		const float minDistThresholdForDraw = brushData.brushRate;
+		const float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
 
 		if (currentMouseCoord != prevMouseCoord)
 		{
-			glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
+			const glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
 			glm::vec2 topRightCorner;
 			glm::vec2 bottomLeftCorner;
 			topRightCorner.x = midPointWorldPos.x + frameDrawingPanel.getTransform()->getScale().x;
@@ -1713,7 +1713,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 
 				const float maxWidth = heightMapTexData.getRes().x;
 				const float maxHeight = heightMapTexData.getRes().y;
-				glm::vec2 convertedBrushScale(brushData.brushScale / maxWidth, brushData.brushScale / maxHeight);
+				const glm::vec2 convertedBrushScale(brushData.brushScale / maxWidth, brushData.brushScale / maxHeight);
 
 				if (!isBlurOn)
 				{
@@ -1723,13 +1723,13 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 						float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
 						float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
-						glm::vec2 prevPoint(prevX, prevY);
-						glm::vec2 toPoint(curX, curY);
+						const glm::vec2 prevPoint(prevX, prevY);
+						const glm::vec2 toPoint(curX, curY);
 						glm::vec2 iterCurPoint = prevPoint;
 
-						glm::vec2 diff = (prevPoint - toPoint);
-						glm::vec2 incValue = glm::normalize(diff) * density;
-						int numberOfPoints = static_cast<int>(glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f)));
+						const glm::vec2 diff = (prevPoint - toPoint);
+						const glm::vec2 incValue = glm::normalize(diff) * density;
+						const int numberOfPoints = static_cast<int>(glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f)));
 
 						for (int i = 0; i < numberOfPoints; i++)
 						{
@@ -1786,12 +1786,12 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 	}
 	prevState = state;
 }
-inline void HandleMiddleMouseButtonInput(int state, glm::vec2 &prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel &frameBufferPanel)
+inline void HandleMiddleMouseButtonInput(int state, glm::vec2& prevMiddleMouseButtonCoord, double deltaTime, DrawingPanel& frameBufferPanel)
 {
 	if (state == GLFW_PRESS)
 	{
 		glm::vec2 currentPos = windowSys.getCursorPos();
-		glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.getWindowRes().x, 1.0f / windowSys.getWindowRes().y) * 2.0f;
+		const glm::vec2 diff = (currentPos - prevMiddleMouseButtonCoord) * glm::vec2(1.0f / windowSys.getWindowRes().x, 1.0f / windowSys.getWindowRes().y) * 2.0f;
 		frameBufferPanel.getTransform()->translate(diff.x, -diff.y);
 		prevMiddleMouseButtonCoord = currentPos;
 	}
@@ -1812,19 +1812,19 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const float yMag = static_cast<float>(endY - startY);
 
 	const int clampedStartX = glm::max(startX, 0);
-	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndX = glm::min(endX, static_cast<int>(inputTexData.getRes().x));
+	const int clampedStartY = glm::clamp(startY, 0, static_cast<int>(inputTexData.getRes().y));
+	const int clampedEndY = glm::clamp(endY, 0, static_cast<int>(inputTexData.getRes().y));
 
 	for (int i = clampedStartX; i < clampedEndX; i++)
 	{
 		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
-			ColourData colData = inputTexData.getTexelColor(i, j);
+			const ColourData colData = inputTexData.getTexelColor(i, j);
 			float rVal = colData.getColour_32_Bit().r;
 
-			float x = (i - startX) / xMag;
-			float y = (j - startY) / yMag;
+			const float x = (i - startX) / xMag;
+			const float y = (j - startY) / yMag;
 
 			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f)) * (1.0 / brushData.brushScale);
 			if (distance < distanceRemap)
@@ -1852,14 +1852,14 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const Text
 	{
 		for (int j = clampedStartY; j < clampedEndY; j++)
 		{
-			ColourData colData = inputTexData.getTexelColor(i, j);
-			float defVal = colData.getColour_32_Bit().r;
+			const ColourData colData = inputTexData.getTexelColor(i, j);
+			const float defVal = colData.getColour_32_Bit().r;
 			float finalOutput = defVal;
 
-			float x = (i - startX) / xMag;
-			float y = (j - startY) / yMag;
+			const float x = (i - startX) / xMag;
+			const float y = (j - startY) / yMag;
 
-			float brushTexVal = glm::pow(brushTexture.getTexelColor((int)(x * brushTexture.getRes().x), (int)(y * brushTexture.getRes().y)).getColour_32_Bit().r, brushData.brushOffset);
+			const float brushTexVal = glm::pow(brushTexture.getTexelColor((int)(x * brushTexture.getRes().x), (int)(y * brushTexture.getRes().y)).getColour_32_Bit().r, brushData.brushOffset);
 			finalOutput += (brushTexVal * ((brushData.heightMapPositiveDir ? brushData.brushMaxHeight : brushData.brushMinHeight) - finalOutput));
 			finalOutput = glm::clamp(finalOutput, 0.0f, 1.0f);
 			finalOutput = glm::mix(defVal, finalOutput, brushData.brushStrength);
@@ -1884,7 +1884,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	const int _width = endX - startX;
 	const int _height = endY - startY;
 	const int totalPixelCount = _width * _height;
-	ColourData **tempPixelData = new ColourData*[_width];
+	ColourData** tempPixelData = new ColourData * [_width];
 	//std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
 
 	for (int i = startX; i < endX; i++)
@@ -1921,8 +1921,8 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				{
 					for (int yoffset = -1; yoffset <= 1; yoffset++)
 					{
-						int xIndex = (i + xoffset) - startX;
-						int yIndex = (j + yoffset) - startY;
+						const int xIndex = (i + xoffset) - startX;
+						const int yIndex = (j + yoffset) - startY;
 						if (xIndex >= 0 && xIndex < _width && yIndex >= 0 && yIndex < _height)
 						{
 							validEntries++;
@@ -1930,7 +1930,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 						}
 					}
 				}
-				float avg = (neighbourAvg / validEntries);
+				const float avg = (neighbourAvg / validEntries);
 				float finalColor = avg;
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
 				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
