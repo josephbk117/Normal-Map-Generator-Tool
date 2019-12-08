@@ -17,4 +17,3 @@ public:
 	void updateMeshData(float vertexData[], int vertexDataCount, unsigned int indices[], int indicesCount);
 	void draw() const;
 };
-

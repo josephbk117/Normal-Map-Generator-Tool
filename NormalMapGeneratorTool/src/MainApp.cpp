@@ -39,7 +39,6 @@
 //Possible cause : Input take over by IMGUI
 //TODO : Add Uniform Buffers
 //TODO : Add shadows and an optional plane
-//TODO : Mouse control when preview maximize panel opens
 //TODO : Look into converting normal map to heightmap for editing purposes
 //TODO : Control directional light direction through 3D hemisphere sun object in preview screen
 //TODO : Reset view should make non 1:1 images fit in screen
@@ -1339,18 +1338,24 @@ inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 		ImGui::Text("MATCAP SETTINGS");
 		ImGui::Separator();
 		ImGui::Spacing();
-		const char* const matcapItems[] = { "none", "view space normal", "orange flame", "chrome", "copper", "organic1", "organic3", "organic4",
-			"outline1", "outline2", "plastic1", "plastic2", "plastic3" , "platinum", "red metal", "skin1", "skin2" };
-		static const char* current_matcap_item = matcapItems[0];
+
+		static std::vector<std::string> matCapFilePaths;
+		if (matCapFilePaths.size() <= 0)
+		{
+			matCapFilePaths = fileOpenDialog->getAllFilesInDirectory(MATCAP_TEXTURES_PATH, false, "", false);
+			matCapFilePaths.insert(matCapFilePaths.begin(), "none");
+		}
+
+		static const char* current_matcap_item = matCapFilePaths[0].c_str();
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth());
 		if (ImGui::BeginCombo("##matcapcombo", current_matcap_item)) // The second parameter is the label previewed before opening the combo.
 		{
-			for (int n = 0; n < IM_ARRAYSIZE(matcapItems); n++)
+			for (int n = 0; n < matCapFilePaths.size(); n++)
 			{
-				const bool is_selected = (current_matcap_item == matcapItems[n]);
-				if (ImGui::Selectable(matcapItems[n], is_selected))
+				const bool is_selected = (current_matcap_item == matCapFilePaths[n]);
+				if (ImGui::Selectable(matCapFilePaths[n].c_str(), is_selected))
 				{
-					current_matcap_item = matcapItems[n];
+					current_matcap_item = matCapFilePaths[n].c_str();
 					if (current_matcap_item == "none")
 						previewStateUtility.useMatcap = false;
 					else

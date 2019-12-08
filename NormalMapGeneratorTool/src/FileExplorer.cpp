@@ -59,7 +59,7 @@ void FileOpenDialog::display()
 			break;
 		}
 
-		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::experimental::filesystem::directory_iterator(path))
 		{
 			if (std::experimental::filesystem::is_regular_file(p))
 			{
@@ -213,7 +213,7 @@ void FileOpenDialog::displayDialog(FileType filter, std::function<void(std::stri
 	functionToCall = func;
 }
 
-bool FileOpenDialog::pathTypeCheck(std::vector<std::string> endTypes, std::string & _path)
+bool FileOpenDialog::pathTypeCheck(std::vector<std::string> endTypes, std::string& _path)
 {
 	for (unsigned int endTypeIndex = 0; endTypeIndex < endTypes.size(); endTypeIndex++)
 	{
@@ -235,12 +235,12 @@ bool FileOpenDialog::pathTypeCheck(std::vector<std::string> endTypes, std::strin
 	return false;
 }
 
-bool FileExplorer::doesPathExist(const std::string & path) const noexcept
+bool FileExplorer::doesPathExist(const std::string& path) const noexcept
 {
 	return std::experimental::filesystem::exists(path);
 }
 
-std::string FileExplorer::getFileExtension(const std::string & path) const
+std::string FileExplorer::getFileExtension(const std::string& path) const
 {
 	// Create a Path object from given string
 	std::experimental::filesystem::path pathObj(path);
@@ -251,37 +251,81 @@ std::string FileExplorer::getFileExtension(const std::string & path) const
 	return "";
 }
 
-std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string & path, bool withEntirePath, const std::string & fileExt) const
+std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string& path, bool withEntirePath, const std::string& fileExt, bool includeExtensionInOutput) const
 {
 	std::vector<std::string> paths;
 	if (withEntirePath)
 	{
-		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::experimental::filesystem::directory_iterator(path))
 		{
 			if (std::experimental::filesystem::is_regular_file(p))
 			{
 				if (fileExt == "")
-					paths.push_back(p.path().generic_string());
+				{
+					if (includeExtensionInOutput)
+						paths.push_back(p.path().generic_string());
+					else
+					{
+						std::string extStr = p.path().extension().string();
+						std::string pathStr = p.path().string();
+						pathStr.replace(pathStr.end() - extStr.size(), pathStr.end(), "");
+						paths.push_back(pathStr);
+					}
+				}
 				else
 				{
 					if (getFileExtension(p.path().filename().string()) == fileExt)
-						paths.push_back(p.path().string());
+					{
+						if (includeExtensionInOutput)
+						{
+							paths.push_back(p.path().string());
+						}
+						else
+						{
+							std::string extStr = p.path().extension().string();
+							std::string pathStr = p.path().string();
+							pathStr.replace(pathStr.end() - extStr.size(), pathStr.end(), "");
+							paths.push_back(pathStr);
+						}
+					}
 				}
 			}
 		}
 	}
 	else
 	{
-		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::experimental::filesystem::directory_iterator(path))
 		{
 			if (std::experimental::filesystem::is_regular_file(p))
 			{
 				if (fileExt == "")
-					paths.push_back(p.path().filename().string());
+				{
+					if (includeExtensionInOutput)
+						paths.push_back(p.path().filename().string());
+					else
+					{
+						std::string extStr = p.path().extension().string();
+						std::string pathStr = p.path().filename().string();
+						pathStr.replace(pathStr.end() - extStr.size(), pathStr.end(), "");
+						paths.push_back(pathStr);
+					}
+				}
 				else
 				{
 					if (getFileExtension(p.path().filename().string()) == fileExt)
-						paths.push_back(p.path().filename().string());
+					{
+						if (includeExtensionInOutput)
+						{
+							paths.push_back(p.path().filename().string());
+						}
+						else
+						{
+							std::string extStr = p.path().extension().string();
+							std::string pathStr = p.path().filename().string();
+							pathStr.replace(pathStr.end() - extStr.size(), pathStr.end(), "");
+							paths.push_back(pathStr);
+						}
+					}
 				}
 			}
 		}
@@ -346,7 +390,7 @@ void FileSaveDialog::display()
 			break;
 		}
 
-		for (auto & p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::experimental::filesystem::directory_iterator(path))
 		{
 			if (std::experimental::filesystem::is_regular_file(p))
 			{

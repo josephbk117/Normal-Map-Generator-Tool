@@ -13,7 +13,7 @@ public:
 	virtual void display() = 0;
 	bool doesPathExist(const std::string& path)const noexcept;
 	std::string getFileExtension(const std::string & path)const;
-	std::vector<std::string> getAllFilesInDirectory(const std::string& path, bool withEntirePath, const std::string& fileExt = "")const;
+	std::vector<std::string> getAllFilesInDirectory(const std::string& path, bool withEntirePath, const std::string& fileExt = "", bool includeExtensionInOutput = true)const;
 	unsigned long getFileSize(const std::string path)const;
 };
 
