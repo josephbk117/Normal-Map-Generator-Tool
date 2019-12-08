@@ -194,7 +194,7 @@ int main(void)
 	clearViewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "clearView.png");
 	resetViewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "resetLocation.png");
 	maximizePreviewTexId = TextureManager::createTextureFromFile(UI_TEXTURES_PATH + "maximizePreview.png");
-	defaultWhiteTextureId = TextureManager::createTextureFromColour(ColourData(1, 1, 1, 1));
+	defaultWhiteTextureId = TextureManager::createTextureFromColour(ColourData(1, 1, 1, 1), TextureFilterType::NEAREST);
 
 	std::vector<std::string> cubeMapImagePaths;
 	cubeMapImagePaths.push_back(CUBEMAP_TEXTURES_PATH + "Sahara Desert Cubemap\\sahara_lf.tga");
@@ -894,9 +894,9 @@ void HandleKeyboardInput(double deltaTime, DrawingPanel& frameDrawingPanel, bool
 	if (windowSys.isKeyPressed(GLFW_KEY_RIGHT) && windowSys.isKeyPressed(GLFW_KEY_LEFT_ALT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_SHIFT) && !windowSys.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 		normalViewStateUtility.normalMapStrength += 0.05f;
 	if (windowSys.isKeyPressed(GLFW_KEY_W))
-		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
+		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 1.5f * static_cast<float>(deltaTime);
 	if (windowSys.isKeyPressed(GLFW_KEY_S))
-		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * deltaTime;
+		normalViewStateUtility.zoomLevel -= normalViewStateUtility.zoomLevel * 1.5f * static_cast<float>(deltaTime);
 	normalViewStateUtility.zoomLevel = glm::clamp(normalViewStateUtility.zoomLevel, 0.1f, 5.0f);
 
 	//Normal map channel toggles
@@ -1622,7 +1622,7 @@ void SaveNormalMapToFile(const std::string& locationStr, ImageFormat imageFormat
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		fbs.updateTextureDimensions(windowSys.getWindowRes().x, windowSys.getWindowRes().y);
-		TextureManager::SaveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
+		TextureManager::saveImage(locationStr, heightMapTexData.getRes(), imageFormat, dataBuffer);
 		delete[] dataBuffer;
 	}
 }
@@ -1946,6 +1946,7 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	}
 	for (int i = 0; i < _width; i++)
 		delete[] tempPixelData[i];
+
 	delete[] tempPixelData;
 	tempPixelData = nullptr;
 }
@@ -1962,7 +1963,7 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
 	if (!canPerformPreviewWindowMouseOperations)
-		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * yoffset;
+		normalViewStateUtility.zoomLevel += normalViewStateUtility.zoomLevel * 0.1f * static_cast<float>(yoffset);
 	else if (canPerformPreviewWindowMouseOperations)
 		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }

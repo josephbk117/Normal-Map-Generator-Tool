@@ -30,7 +30,7 @@ void FrameBufferSystem::init(int windowWidth, int windowHeight, int maxBufferWid
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBufferSystem::bindFrameBuffer() noexcept
+void FrameBufferSystem::bindFrameBuffer() const noexcept
 {
 	currentlyBoundFBO = framebuffer;
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);

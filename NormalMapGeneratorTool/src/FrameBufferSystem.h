@@ -14,7 +14,7 @@ public:
 	//Initialize frame buffer with certain resolution
 	void init(int windowWidth, int windowHeight, int maxBufferWidth, int maxBufferHeight);
 	//Make the this the new bound frame buffer
-	void bindFrameBuffer() noexcept;
+	void bindFrameBuffer() const noexcept;
 	//Bind the colour buffer texture which is linked with the framebuffer
 	void bindColourTexture() noexcept;
 	//Get colour buffer texture
@@ -35,7 +35,7 @@ public:
 		const glm::ivec2& srcStartCoord, const glm::ivec2& srcEndCoord, const glm::ivec2& destStartCoord,
 		const glm::ivec2& destEndCoord)noexcept;
 	static void blit(const FrameBufferSystem& source, const FrameBufferSystem& destination, const glm::ivec2 screenRes)noexcept;
-	static void bindDefaultFrameBuffer()noexcept;
+	static void bindDefaultFrameBuffer() noexcept;
 	~FrameBufferSystem();
 };
 

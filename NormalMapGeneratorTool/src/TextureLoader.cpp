@@ -5,7 +5,7 @@
 #include <GL\glew.h>
 #include <iostream>
 
-void TextureManager::getRawImageDataFromFile(const std::string & path, std::vector<unsigned char>& data, int &width, int &height, bool flipImage)
+void TextureManager::getRawImageDataFromFile(const std::string& path, std::vector<unsigned char>& data, int& width, int& height, bool flipImage)
 {
 	int nrComponents;
 	stbi_set_flip_vertically_on_load(flipImage);
@@ -17,7 +17,7 @@ void TextureManager::getRawImageDataFromFile(const std::string & path, std::vect
 	stbi_image_free(ldata);
 }
 
-void TextureManager::getTextureDataFromFile(const std::string & path, TextureData & textureData)
+void TextureManager::getTextureDataFromFile(const std::string& path, TextureData& textureData)
 {
 	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
@@ -28,7 +28,7 @@ void TextureManager::getTextureDataFromFile(const std::string & path, TextureDat
 	stbi_image_free(data);
 }
 
-glm::ivec2 TextureManager::getImageDimensions(const std::string & path)
+glm::ivec2 TextureManager::getImageDimensions(const std::string& path)
 {
 	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
@@ -38,7 +38,7 @@ glm::ivec2 TextureManager::getImageDimensions(const std::string & path)
 	return glm::ivec2(width, height);
 }
 
-unsigned int TextureManager::createTextureFromFile(const std::string & path, bool linearColourSpace)
+unsigned int TextureManager::createTextureFromFile(const std::string& path, bool linearColourSpace, TextureFilterType textureFilterType)noexcept
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -69,8 +69,8 @@ unsigned int TextureManager::createTextureFromFile(const std::string & path, boo
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilterType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilterType);
 
 	}
 #if _DEBUG
@@ -87,10 +87,10 @@ unsigned int TextureManager::createCubemapFromFile(const std::vector<std::string
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
-	int width, height, nrChannels;
+	int width = 0, height = 0, nrChannels = 0;
 	for (unsigned int i = 0; i < paths.size(); i++)
 	{
-		unsigned char *data = stbi_load(paths[i].c_str(), &width, &height, &nrChannels, 0);
+		unsigned char* data = stbi_load(paths[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
@@ -114,11 +114,11 @@ unsigned int TextureManager::createCubemapFromFile(const std::vector<std::string
 	return textureID;
 }
 
-unsigned int TextureManager::createTextureFromData(const TextureData & textureData)
+unsigned int TextureManager::createTextureFromData(const TextureData& textureData, TextureFilterType textureFilterType)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
-	unsigned char* data = textureData.getTextureData();
+	const unsigned char* const data = textureData.getTextureData();
 
 	if (data)
 	{
@@ -135,8 +135,8 @@ unsigned int TextureManager::createTextureFromData(const TextureData & textureDa
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureFilterType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureFilterType);
 
 	}
 #if _DEBUG
@@ -146,7 +146,7 @@ unsigned int TextureManager::createTextureFromData(const TextureData & textureDa
 	return textureID;
 }
 
-GLenum TextureManager::getTextureFormatFromData(const TextureData & textureData)
+GLenum TextureManager::getTextureFormatFromData(const TextureData& textureData)noexcept
 {
 	GLenum format = GL_RED;
 	if (textureData.getComponentCount() == 1)
@@ -158,7 +158,7 @@ GLenum TextureManager::getTextureFormatFromData(const TextureData & textureData)
 	return format;
 }
 
-GLenum TextureManager::getTextureFormatFromData(int componentCount)
+GLenum TextureManager::getTextureFormatFromData(int componentCount)noexcept
 {
 	GLenum format = GL_RED;
 	if (componentCount == 1)
@@ -170,7 +170,7 @@ GLenum TextureManager::getTextureFormatFromData(int componentCount)
 	return format;
 }
 
-void TextureManager::SaveImage(const std::string& path, const glm::ivec2 & imageRes, ImageFormat imageFormat, char * data)
+void TextureManager::saveImage(const std::string& path, const glm::ivec2& imageRes, ImageFormat imageFormat, char* data)
 {
 	switch (imageFormat)
 	{
@@ -191,11 +191,11 @@ void TextureManager::SaveImage(const std::string& path, const glm::ivec2 & image
 	}
 }
 
-unsigned int TextureManager::createTextureFromColour(const ColourData & colour)
+unsigned int TextureManager::createTextureFromColour(const ColourData& colour, TextureFilterType textureFilterType)
 {
 	TextureData texData;
 	glm::vec4 col = colour.getColour_8_Bit();
 	unsigned char data[4] = { col[0], col[1], col[2], col[3] };
 	texData.setTextureData(data, 1, 1, 4);
-	return TextureManager::createTextureFromData(texData);
+	return TextureManager::createTextureFromData(texData, textureFilterType);
 }

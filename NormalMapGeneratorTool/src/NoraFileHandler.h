@@ -77,7 +77,7 @@ public:
 			if (i > 0)
 			{
 				std::ifstream ifs(layerManager.getImagePath(i), std::ios::binary | std::ios::ate);
-				std::ifstream::pos_type pos = ifs.tellg();
+				const std::ifstream::pos_type pos = ifs.tellg();
 				layerInfoPair.first.dataSize = pos;
 				layerInfoPair.second = new unsigned char[pos];
 				ifs.seekg(0, std::ios::beg);
