@@ -1394,7 +1394,7 @@ inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 		ImGui::Text("Albedo");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.getTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)albedoTexDataForPreview.getTexId(), 1, ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
@@ -1411,7 +1411,7 @@ inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 		ImGui::Text("Metalness");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.getTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)metalnessTexDataForPreview.getTexId(), 2, ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
@@ -1428,7 +1428,7 @@ inline void DisplayPreview(const ImGuiWindowFlags& window_flags)
 		ImGui::Text("Roughness");
 		ImGui::SameLine(0, 5);
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 80, 10)); ImGui::SameLine();
-		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.getTexId(), ImVec2(40, 40)))
+		if (ImGui::ImageButton((ImTextureID)roughnessTexDataForPreview.getTexId(), 3, ImVec2(40, 40)))
 		{
 			currentLoadingOption = LoadingOption::TEXTURE;
 			fileOpenDialog->displayDialog(FileType::IMAGE, [&](std::string str)
