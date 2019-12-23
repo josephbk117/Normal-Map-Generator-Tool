@@ -346,17 +346,19 @@ int main(void)
 		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
 			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
-				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1);
+				aspectRatioHolder = glm::vec2(1.0f, aspectRatio) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1.0f);
 			else
-				aspectRatioHolder = glm::vec2(1, aspectRatio) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
+				aspectRatioHolder = glm::vec2(1.0f, aspectRatio) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
 		else
 		{
 			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
-				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1);
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1.0f) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1.0f);
 			else
-				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
+				aspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1.0f) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
+
+		aspectRatioHolder.x *= static_cast<float>(heightMapTexData.getRes().x) / heightMapTexData.getRes().y; // Consider image aspect ratio and apply scaling
 
 		frameDrawingPanel.getTransform()->setScale(aspectRatioHolder * normalViewStateUtility.zoomLevel);
 		frameDrawingPanel.getTransform()->update();
