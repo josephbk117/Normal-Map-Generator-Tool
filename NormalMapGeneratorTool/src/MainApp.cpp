@@ -438,7 +438,7 @@ int main(void)
 				}
 			}
 
-			//Copy contant from one frame buffer to another
+			//Copy content from one frame buffer to another
 			FrameBufferSystem::blit(fbs, layersNormalOutputFbs, windowSys.getMaxWindowRes());
 
 			normalmapShader.applyShaderInt(useNormalInputUniform, 2);
@@ -1700,80 +1700,82 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 		//viewport previous mouse coords
 		const glm::vec2 vpPrevMouse(wnPrevMouse.x * 2.0f - 1.0f, wnPrevMouse.y * 2.0f - 1.0f);
 
-		const float minDistThresholdForDraw = brushData.brushRate;
 		const float distOfPrevAndCurrentMouseCoord = glm::distance(wnCurMouse, wnPrevMouse);
 
 		if (currentMouseCoord != prevMouseCoord)
 		{
 			const glm::vec2 midPointWorldPos = frameDrawingPanel.getTransform()->getPosition();
-			glm::vec2 topRightCorner;
-			glm::vec2 bottomLeftCorner;
-			topRightCorner.x = midPointWorldPos.x + frameDrawingPanel.getTransform()->getScale().x;
-			topRightCorner.y = midPointWorldPos.y + frameDrawingPanel.getTransform()->getScale().y;
-			bottomLeftCorner.x = midPointWorldPos.x - frameDrawingPanel.getTransform()->getScale().x;
-			bottomLeftCorner.y = midPointWorldPos.y - frameDrawingPanel.getTransform()->getScale().y;
+			const glm::vec2 topRightCorner(midPointWorldPos.x + frameDrawingPanel.getTransform()->getScale().x,
+				midPointWorldPos.y + frameDrawingPanel.getTransform()->getScale().y);
+			const glm::vec2 bottomLeftCorner(midPointWorldPos.x - frameDrawingPanel.getTransform()->getScale().x,
+				midPointWorldPos.y - frameDrawingPanel.getTransform()->getScale().y);
 
 			if (vpCurMouse.x > bottomLeftCorner.x && vpCurMouse.x < topRightCorner.x &&
 				vpCurMouse.y > bottomLeftCorner.y && vpCurMouse.y < topRightCorner.y &&
-				distOfPrevAndCurrentMouseCoord > minDistThresholdForDraw)
+				distOfPrevAndCurrentMouseCoord > brushData.brushRate)
 			{
-				const float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-				const float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
 
-				const float maxWidth = heightMapTexData.getRes().x;
-				const float maxHeight = heightMapTexData.getRes().y;
-				const glm::vec2 convertedBrushScale(brushData.brushScale / maxWidth, brushData.brushScale / maxHeight);
-
-				if (!isBlurOn)
+				if (prevMouseCoord != INVALID)
 				{
-					float density = 0.01f; //*Think density should axis dependant
-					if (distOfPrevAndCurrentMouseCoord > density && prevMouseCoord != INVALID)
+					const float curX = (vpCurMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+					const float curY = (vpCurMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+
+					const float maxWidth = heightMapTexData.getRes().x;
+					const float maxHeight = heightMapTexData.getRes().y;
+					const glm::vec2 convertedBrushScale(brushData.brushScale / maxWidth, brushData.brushScale / maxHeight);
+
+					if (!isBlurOn)
 					{
-						const float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
-						const float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
-
-						const glm::vec2 prevPoint(prevX, prevY);
-						const glm::vec2 toPoint(curX, curY);
-						glm::vec2 iterCurPoint = prevPoint;
-
-						const glm::vec2 diff = (prevPoint - toPoint);
-						const glm::vec2 incValue = glm::normalize(diff) * density;
-						const int numberOfPoints = static_cast<int>(glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f)));
-
-						for (int i = 0; i < numberOfPoints; i++)
+						float density = 0.01f; //*Think density should axis dependant
+						if (distOfPrevAndCurrentMouseCoord > density && prevMouseCoord != INVALID)
 						{
-							const float left = (iterCurPoint.x - convertedBrushScale.x) * maxWidth;
-							const float right = (iterCurPoint.x + convertedBrushScale.x) * maxWidth;
-							const float bottom = (iterCurPoint.y - convertedBrushScale.y) * maxHeight;
-							const float top = (iterCurPoint.y + convertedBrushScale.y) * maxHeight;
-							iterCurPoint += incValue;
+							const float prevX = (vpPrevMouse.x - bottomLeftCorner.x) / glm::abs((topRightCorner.x - bottomLeftCorner.x));
+							const float prevY = (vpPrevMouse.y - bottomLeftCorner.y) / glm::abs((topRightCorner.y - bottomLeftCorner.y));
+
+							const glm::vec2 prevPoint(prevX, prevY);
+							const glm::vec2 toPoint(curX, curY);
+							glm::vec2 iterCurPoint = prevPoint;
+
+							const glm::vec2 diff = (prevPoint - toPoint);
+							const glm::vec2 incValue = glm::normalize(diff) * density;
+							const int numberOfPoints = static_cast<int>(glm::floor(glm::clamp(glm::length(diff) / density, 1.0f, 300.0f)));
+
+							for (int i = 0; i < numberOfPoints; i++)
+							{
+								const float left = (iterCurPoint.x - convertedBrushScale.x) * maxWidth;
+								const float right = (iterCurPoint.x + convertedBrushScale.x) * maxWidth;
+								const float bottom = (iterCurPoint.y - convertedBrushScale.y) * maxHeight;
+								const float top = (iterCurPoint.y + convertedBrushScale.y) * maxHeight;
+								iterCurPoint += incValue;
+								if (brushData.hasBrushTexture())
+									SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+								else
+									SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+							}
+						}
+						else
+						{
+							const float left = (curX - convertedBrushScale.x) * maxWidth;
+							const float right = (curX + convertedBrushScale.x) * maxWidth;
+							const float bottom = (curY - convertedBrushScale.y) * maxHeight;
+							const float top = (curY + convertedBrushScale.y) * maxHeight;
+
 							if (brushData.hasBrushTexture())
-								SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+								SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
 							else
-								SetPixelValues(heightMapTexData, left, right, bottom, top, iterCurPoint.x, iterCurPoint.y);
+								SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 						}
 					}
-					else
+					else if (isBlurOn)
 					{
 						const float left = (curX - convertedBrushScale.x) * maxWidth;
 						const float right = (curX + convertedBrushScale.x) * maxWidth;
 						const float bottom = (curY - convertedBrushScale.y) * maxHeight;
 						const float top = (curY + convertedBrushScale.y) * maxHeight;
-
-						if (brushData.hasBrushTexture())
-							SetPixelValuesWithBrushTexture(heightMapTexData, brushData.textureData, left, right, bottom, top, curX, curY);
-						else
-							SetPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
+						SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
 					}
 				}
-				else if (isBlurOn)
-				{
-					const float left = (curX - convertedBrushScale.x) * maxWidth;
-					const float right = (curX + convertedBrushScale.x) * maxWidth;
-					const float bottom = (curY - convertedBrushScale.y) * maxHeight;
-					const float top = (curY + convertedBrushScale.y) * maxHeight;
-					SetBluredPixelValues(heightMapTexData, left, right, bottom, top, curX, curY);
-				}
+
 				didActuallyDraw = true;
 				heightMapTexData.setTextureDirty();
 				prevMouseCoord = currentMouseCoord;
@@ -1781,6 +1783,7 @@ inline void HandleLeftMouseButtonInput_NormalMapInteraction(int state, DrawingPa
 			else //Is not within the panel bounds
 			{
 				didActuallyDraw = false;
+				prevMouseCoord = INVALID;
 			}
 		}//Check if same mouse position
 	}
