@@ -597,29 +597,26 @@ int main(void)
 		// Set up the default framebuffer
 		FrameBufferSystem::bindDefaultFrameBuffer();
 #pragma region  SETUP & RENDER BRUSH DATA
+		const glm::vec2 heightMapRes = heightMapTexData.getRes();
+		glm::vec2 brushAspectRatioHolder;
 		if (windowSys.getWindowRes().x < windowSys.getWindowRes().y)
 		{
-			const glm::vec2 heightRes = heightMapTexData.getRes();
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x),
-				(brushData.brushScale / heightRes.y) * aspectRatio) * normalViewStateUtility.zoomLevel * 2.0f);
-
-			if (heightRes.x > heightRes.y)
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightRes.x / heightRes.y, 1));
+			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
+				brushAspectRatioHolder = glm::vec2(1.0f, aspectRatio) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1.0f);
 			else
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightRes.y / heightRes.x));
+				brushAspectRatioHolder = glm::vec2(1.0f, aspectRatio) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
 		else
 		{
-			const glm::vec2 heightRes = heightMapTexData.getRes();
-			brushPanel.getTransform()->setScale(glm::vec2((brushData.brushScale / heightRes.x) / aspectRatio,
-				(brushData.brushScale / heightRes.y)) * normalViewStateUtility.zoomLevel * 2.0f);
-
-			if (heightRes.x > heightRes.y)
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1));
+			if (heightMapTexData.getRes().x > heightMapTexData.getRes().y)
+				brushAspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1.0f) * glm::vec2(heightMapTexData.getRes().x / heightMapTexData.getRes().y, 1.0f);
 			else
-				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x));
+				brushAspectRatioHolder = glm::vec2(1.0f / aspectRatio, 1.0f) * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x);
 		}
+		brushPanel.getTransform()->setScale(brushAspectRatioHolder * (brushData.brushScale / heightMapTexData.getRes().y) * normalViewStateUtility.zoomLevel * 2.0f);
+
 		GL::setBlendingMethod(BlendParam::SRC_ALPHA, BlendParam::ONE_MINUS_SRC_ALPHA);
+
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x) * 2.0f) - 1.0f,
 			-(((curMouseCoord.y / windowSys.getWindowRes().y) * 2.0f) - 1.0f));
