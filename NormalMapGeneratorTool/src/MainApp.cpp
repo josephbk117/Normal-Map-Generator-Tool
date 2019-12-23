@@ -450,7 +450,7 @@ int main(void)
 		GL::setClearColour(0.1f, 0.1f, 0.1f);
 		GL::clear(FrameBufferAttachment::COLOUR_AND_DEPTH_BUFFER);
 
-		static char saveLocation[500] = { '\0' };
+		static char saveLocation[1024] = { '\0' };
 		if (saveLocation[0] == '\0')
 			std::memcpy(saveLocation, &preferencesInfo.defaultExportPath[0], preferencesInfo.defaultExportPath.size());
 
@@ -458,7 +458,7 @@ int main(void)
 		{
 			ImageFormat imageFormat = ImageFormat::BMP;
 			//Image validation stage start
-			std::string path(saveLocation);
+			const std::string path(saveLocation);
 			std::string fileExt = fileOpenDialog->getFileExtension(saveLocation);
 			if (fileExt == ".tga")
 				imageFormat = ImageFormat::TGA;
@@ -617,7 +617,7 @@ int main(void)
 			else
 				brushPanel.getTransform()->setScale(brushPanel.getTransform()->getScale() * glm::vec2(1, heightMapTexData.getRes().y / heightMapTexData.getRes().x));
 		}
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		GL::setBlendingMethod(BlendParam::SRC_ALPHA, BlendParam::ONE_MINUS_SRC_ALPHA);
 		brushPreviewShader.use();
 		brushPanel.getTransform()->setPosition(((curMouseCoord.x / windowSys.getWindowRes().x) * 2.0f) - 1.0f,
 			-(((curMouseCoord.y / windowSys.getWindowRes().y) * 2.0f) - 1.0f));
@@ -758,9 +758,9 @@ inline void DisplaySideBar(const ImGuiWindowFlags& window_flags, DrawingPanel& f
 	ImGui::PushItemWidth(ImGui::GetContentRegionAvailWidth() + 4);
 	if (ImGui::Combo("##extCombo", &currentExtensionIndex, extensions, IM_ARRAYSIZE(extensions)))
 	{
-		std::string str(saveLocation);
-		char* dotLoc = &saveLocation[str.find_last_of('.')];
-		char* charEnd = std::find(&saveLocation[0], &saveLocation[499], '\0');
+		const std::string str(saveLocation);
+		char* const dotLoc = &saveLocation[str.find_last_of('.')];
+		const char* const charEnd = std::find(&saveLocation[0], &saveLocation[499], '\0');
 		std::memcpy(dotLoc, extensions[currentExtensionIndex], 4);
 	}
 	ImGui::PopItemWidth();
@@ -1573,7 +1573,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 		static PreferenceInfo info = preferencesInfo;
 		static int res[2] = { info.maxWidthRes, info.maxHeightRes };
 		static int stepNum = info.maxUndoCount;
-		static char defaultPath[500] = { '\0' };
+		static char defaultPath[1024] = { '\0' };
 		if (defaultPath[0] == '\0')
 			std::memcpy(defaultPath, &info.defaultExportPath[0], info.defaultExportPath.size());
 		if (ImGui::BeginPopupModal("Preferences", &openPreferences, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize))
@@ -1590,7 +1590,7 @@ inline void DisplayWindowTopBar(unsigned int minimizeTexture, unsigned int resto
 				ImGui::SetTooltip("RAM is allocated for Undo/Redo operations, To minimize RAM usage set max step count to low value");
 			stepNum = glm::max(stepNum, 10);
 			ImGui::Text("Set default export path :");
-			ImGui::InputText("##Path", defaultPath, 500);
+			ImGui::InputText("##Path", defaultPath, 1024);
 			ImGui::Text("Set default theme :");
 			static int preference_item_current = item_current;
 			ImGui::Combo("##combo", &preference_item_current, themeManager->getRawData(), themeManager->getNumberOfThemes());
@@ -1622,7 +1622,7 @@ void SaveNormalMapToFile(const std::string& locationStr, ImageFormat imageFormat
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 		const int nSize = static_cast<int>(heightMapTexData.getRes().x * heightMapTexData.getRes().y * 3);
-		char* dataBuffer = new char[nSize];
+		char* const dataBuffer = new char[nSize];
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
