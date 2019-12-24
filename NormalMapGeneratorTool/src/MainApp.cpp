@@ -53,7 +53,7 @@ enum class LoadingOption
 };
 
 #pragma region STRING_CONSTANTS
-const std::string VERSION_NAME = "v1.4";
+const std::string VERSION_NAME = "v1.5";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";
@@ -1823,13 +1823,13 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 	const float yMag = static_cast<float>(endY - startY);
 
 	const int clampedStartX = glm::max(startX, 0);
-	const int clampedEndX = glm::min(endX, static_cast<int>(inputTexData.getRes().x));
-	const int clampedStartY = glm::clamp(startY, 0, static_cast<int>(inputTexData.getRes().y));
-	const int clampedEndY = glm::clamp(endY, 0, static_cast<int>(inputTexData.getRes().y));
+	const int clampedEndX = glm::min(endX, inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, inputTexData.getRes().y);
 
-	for (int i = clampedStartX; i < clampedEndX; i++)
+	for (int j = clampedStartY; j < clampedEndY; j++)
 	{
-		for (int j = clampedStartY; j < clampedEndY; j++)
+		for (int i = clampedStartX; i < clampedEndX; i++)
 		{
 			const ColourData colData = inputTexData.getTexelColor(i, j);
 			float rVal = colData.getColour_32_Bit().r;
@@ -1837,7 +1837,7 @@ inline void SetPixelValues(TextureData& inputTexData, int startX, int endX, int 
 			const float x = (i - startX) / xMag;
 			const float y = (j - startY) / yMag;
 
-			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f)) * (1.0 / brushData.brushScale);
+			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f)) * (1.0f / brushData.brushScale);
 			if (distance < distanceRemap)
 			{
 				distance = (1.0f - (distance / distanceRemap)) * offsetRemap;
@@ -1855,13 +1855,13 @@ inline void SetPixelValuesWithBrushTexture(TextureData& inputTexData, const Text
 	const float yMag = static_cast<float>(endY - startY);
 
 	const int clampedStartX = glm::max(startX, 0);
-	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndX = glm::min(endX, inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, inputTexData.getRes().y);
 
-	for (int i = clampedStartX; i < clampedEndX; i++)
+	for (int j = clampedStartY; j < clampedEndY; j++)
 	{
-		for (int j = clampedStartY; j < clampedEndY; j++)
+		for (int i = clampedStartX; i < clampedEndX; i++)
 		{
 			const ColourData colData = inputTexData.getTexelColor(i, j);
 			const float defVal = colData.getColour_32_Bit().r;
@@ -1883,20 +1883,19 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 {
 	//Crashes when drawing with blur at bottom of panel
 
-	const int imageWidth = static_cast<int>(inputTexData.getRes().x);
-	const int imageHeight = static_cast<int>(inputTexData.getRes().y);
+	const int imageWidth = inputTexData.getRes().x;
+	const int imageHeight = inputTexData.getRes().y;
 	//Temp allocation of image section
 
 	const int clampedStartX = glm::max(startX, 0);
-	const int clampedEndX = glm::min(endX, (int)inputTexData.getRes().x);
-	const int clampedStartY = glm::clamp(startY, 0, (int)inputTexData.getRes().y);
-	const int clampedEndY = glm::clamp(endY, 0, (int)inputTexData.getRes().y);
+	const int clampedEndX = glm::min(endX, inputTexData.getRes().x);
+	const int clampedStartY = glm::clamp(startY, 0, inputTexData.getRes().y);
+	const int clampedEndY = glm::clamp(endY, 0, inputTexData.getRes().y);
 
 	const int _width = endX - startX;
 	const int _height = endY - startY;
 	const int totalPixelCount = _width * _height;
 	ColourData** tempPixelData = new ColourData * [_width];
-	//std::memset(tempPixelData, 1.0f, sizeof(float)*totalPixelCount * 4);
 
 	for (int i = startX; i < endX; i++)
 	{
@@ -1911,14 +1910,13 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 	const float xMag = static_cast<float>(endX - startX);
 	const float yMag = static_cast<float>(endY - startY);
 
-	for (int i = clampedStartX; i < clampedEndX; i++)
+	for (int j = clampedStartY; j < clampedEndY; j++)
 	{
-		for (int j = clampedStartY; j < clampedEndY; j++)
+		for (int i = clampedStartX; i < clampedEndX; i++)
 		{
 			const float x = (i - startX) / xMag;
 			const float y = (j - startY) / yMag;
-			float distance = glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f));
-			distance = glm::clamp(distance, 0.0f, 1.0f);
+			const float distance = glm::min(glm::distance(glm::vec2(0), glm::vec2(x * 2.0f - 1.0f, y * 2.0f - 1.0f)), 1.0f);
 			if (distance < 1.0f)
 			{
 				if (i - 1 < startX || i + 1 > endX || j - 1 < startY || j + 1 > endY)
@@ -1946,27 +1944,32 @@ inline void SetBluredPixelValues(TextureData& inputTexData, int startX, int endX
 				finalColor = glm::mix(pixelCol, finalColor, brushData.brushStrength);
 				finalColor = glm::clamp(finalColor, 0.0f, 1.0f);
 				ColourData colData;
-				colData.setColour_32_bit(glm::vec4(finalColor, finalColor, finalColor, 1.0f));
+				colData.setColour_32_bit({ finalColor, finalColor, finalColor, 1.0f });
 				inputTexData.setTexelColor(colData, i, j);
 			}
 		}
 	}
-	for (int i = 0; i < _width; i++)
-		delete[] tempPixelData[i];
+
+	if (tempPixelData)
+	{
+		for (int i = 0; i < _width; i++)
+			delete[] tempPixelData[i];
+	}
 
 	delete[] tempPixelData;
 	tempPixelData = nullptr;
 }
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-	width = glm::clamp(width, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().x);
-	height = glm::clamp(height, windowSys.getMinWindowSize(), (int)windowSys.getMaxWindowRes().y);
+	width = glm::clamp(width, windowSys.getMinWindowSize(), windowSys.getMaxWindowRes().x);
+	height = glm::clamp(height, windowSys.getMinWindowSize(), windowSys.getMaxWindowRes().y);
 
 	windowSys.setWindowRes(width, height);
 	fbs.updateTextureDimensions(windowSys.getWindowRes());
 	layerManager.updateFramebufferTextureDimensions(windowSys.getWindowRes());
 	previewFbs.updateTextureDimensions(windowSys.getWindowRes());
 }
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcept
 {
 	if (!canPerformPreviewWindowMouseOperations)
@@ -1974,51 +1977,3 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) noexcep
 	else if (canPerformPreviewWindowMouseOperations)
 		previewStateUtility.modelPreviewZoomLevel += 0.5f * yoffset;
 }
-//struct BoundsAndPos
-//{
-//public:
-//	glm::vec2 mouseCoord;
-//	float left, right, bottom, up;
-//};
-//
-//std::queue<BoundsAndPos> mouseCoordQueue;
-//
-//
-//void ApplyChangesToPanel()
-//{
-//	const float maxWidth = heightMapTexData.getRes().x;
-//	const float convertedBrushScale = (brushData.brushScale / heightMapTexData.getRes().y) * maxWidth * 3.5f;
-//
-//	while (!windowSys.IsWindowClosing())
-//	{
-//		while (mouseCoordQueue.size() > 0)
-//		{
-//			BoundsAndPos boundAndPos = mouseCoordQueue.front();
-//			mouseCoordQueue.pop();
-//			glm::vec2 mousePos = boundAndPos.mouseCoord;
-//			glm::vec2 prevMousePos = mouseCoordQueue.front().mouseCoord;
-//
-//			glm::vec2 curPoint = prevMousePos;
-//			glm::vec2 incValue = (prevMousePos - mousePos) * 0.333f;
-//			curPoint += incValue;
-//
-//			for (int i = 0; i < 3; i++)
-//			{
-//				float left = boundAndPos.left;
-//				float right = boundAndPos.right;
-//				float bottom = boundAndPos.bottom;
-//				float top = boundAndPos.up;
-//
-//				left = glm::clamp(left, 0.0f, maxWidth);
-//				right = glm::clamp(right, 0.0f, maxWidth);
-//				bottom = glm::clamp(bottom, 0.0f, maxWidth);
-//				top = glm::clamp(top, 0.0f, maxWidth);
-//
-//				curPoint += incValue;
-//				SetPixelValues(heightMapTexData, left, right, bottom, top, curPoint.x, curPoint.y);
-//			}
-//			//SetPixelValues(heightMapTexData, boundAndPos.left, boundAndPos.right, boundAndPos.bottom, boundAndPos.up, mousePos.x, mousePos.y, brushData);
-//		}
-//		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-//	}
-//}
