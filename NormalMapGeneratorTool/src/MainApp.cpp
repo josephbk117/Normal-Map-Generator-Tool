@@ -245,8 +245,10 @@ int main(void)
 #pragma endregion
 
 #pragma region SHADER UNIFORM IDS
+	//Frame panel uniforms
+	const int frameModelMatrixUniform = frameShader.getUniformLocation("model");
+
 	//Normal map uniforms
-	const int frameModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	const int normalPanelModelMatrixUniform = normalmapShader.getUniformLocation("model");
 	const int strengthValueUniform = normalmapShader.getUniformLocation("_HeightmapStrength");
 	const int normalMapModeOnUniform = normalmapShader.getUniformLocation("_normalMapModeOn");
