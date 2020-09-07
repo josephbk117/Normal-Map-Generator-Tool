@@ -53,7 +53,7 @@ enum class LoadingOption
 };
 
 #pragma region STRING_CONSTANTS
-const std::string VERSION_NAME = "v1.5";
+const std::string VERSION_NAME = "v1.55";
 const std::string FONTS_PATH = "Resources\\Fonts\\";
 const std::string THEMES_PATH = "Resources\\Themes\\";
 const std::string TEXTURES_PATH = "Resources\\Textures\\";

@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <fstream>
 
 FileOpenDialog* FileOpenDialog::instance = nullptr;
 void FileOpenDialog::init()
@@ -13,7 +14,7 @@ void FileOpenDialog::init()
 	std::string rootPath = "C:\\";
 	for (unsigned int i = 0; i < 5; i++)
 	{
-		if (std::experimental::filesystem::exists(rootPath))
+		if (std::filesystem::exists(rootPath))
 			instance->roots.push_back(rootPath);
 		rootPath[0] = (char)((int)rootPath[0] + 1);
 	}
@@ -59,9 +60,9 @@ void FileOpenDialog::display()
 			break;
 		}
 
-		for (auto& p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::filesystem::directory_iterator(path))
 		{
-			if (std::experimental::filesystem::is_regular_file(p))
+			if (std::filesystem::is_regular_file(p))
 			{
 				bool isCorrectFileType = false;
 				if (fileFilter != FileType::NONE)
@@ -80,7 +81,7 @@ void FileOpenDialog::display()
 				if (isCorrectFileType)
 					paths.push_back(p.path().generic_string());
 			}
-			else if (std::experimental::filesystem::is_directory(p))
+			else if (std::filesystem::is_directory(p))
 				paths.push_back(p.path().generic_string());
 		}
 		isDirty = false;
@@ -132,7 +133,7 @@ void FileOpenDialog::display()
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 		ImGui::Spacing();
-		if (!std::experimental::filesystem::is_empty(path))
+		if (!std::filesystem::is_empty(path))
 		{
 			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight() - 50), true, ImGuiWindowFlags_HorizontalScrollbar);
 			for (int i = 0; i < paths.size(); i++)
@@ -237,13 +238,13 @@ bool FileOpenDialog::pathTypeCheck(std::vector<std::string> endTypes, std::strin
 
 bool FileExplorer::doesPathExist(const std::string& path) const noexcept
 {
-	return std::experimental::filesystem::exists(path);
+	return std::filesystem::exists(path);
 }
 
 std::string FileExplorer::getFileExtension(const std::string& path) const
 {
 	// Create a Path object from given string
-	std::experimental::filesystem::path pathObj(path);
+	std::filesystem::path pathObj(path);
 	// Check if file name in the path object has extension
 	if (pathObj.has_extension())// Fetch the extension from path object and return
 		return pathObj.extension().string();
@@ -256,9 +257,9 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string&
 	std::vector<std::string> paths;
 	if (withEntirePath)
 	{
-		for (auto& p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::filesystem::directory_iterator(path))
 		{
-			if (std::experimental::filesystem::is_regular_file(p))
+			if (std::filesystem::is_regular_file(p))
 			{
 				if (fileExt == "")
 				{
@@ -294,9 +295,9 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string&
 	}
 	else
 	{
-		for (auto& p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::filesystem::directory_iterator(path))
 		{
-			if (std::experimental::filesystem::is_regular_file(p))
+			if (std::filesystem::is_regular_file(p))
 			{
 				if (fileExt == "")
 				{
@@ -335,7 +336,7 @@ std::vector<std::string> FileExplorer::getAllFilesInDirectory(const std::string&
 
 unsigned long FileExplorer::getFileSize(const std::string path) const
 {
-	return std::experimental::filesystem::file_size(std::experimental::filesystem::path(path));
+	return std::filesystem::file_size(std::filesystem::path(path));
 }
 FileSaveDialog* FileSaveDialog::instance = nullptr;
 void FileSaveDialog::init()
@@ -345,7 +346,7 @@ void FileSaveDialog::init()
 	std::string rootPath = "C:\\";
 	for (unsigned int i = 0; i < 5; i++)
 	{
-		if (std::experimental::filesystem::exists(rootPath))
+		if (std::filesystem::exists(rootPath))
 			instance->roots.push_back(rootPath);
 		rootPath[0] = (char)((int)rootPath[0] + 1);
 	}
@@ -390,9 +391,9 @@ void FileSaveDialog::display()
 			break;
 		}
 
-		for (auto& p : std::experimental::filesystem::directory_iterator(path))
+		for (auto& p : std::filesystem::directory_iterator(path))
 		{
-			if (std::experimental::filesystem::is_regular_file(p))
+			if (std::filesystem::is_regular_file(p))
 			{
 				bool isCorrectFileType = false;
 				if (fileFilter != FileType::NONE)
@@ -411,7 +412,7 @@ void FileSaveDialog::display()
 				if (isCorrectFileType)
 					paths.push_back(p.path().generic_string());
 			}
-			else if (std::experimental::filesystem::is_directory(p))
+			else if (std::filesystem::is_directory(p))
 				paths.push_back(p.path().generic_string());
 		}
 		isDirty = false;
@@ -468,7 +469,7 @@ void FileSaveDialog::display()
 		ImGui::PopStyleVar();
 		ImGui::PopItemWidth();
 		ImGui::Spacing();
-		if (!std::experimental::filesystem::is_empty(path))
+		if (!std::filesystem::is_empty(path))
 		{
 			ImGui::BeginChild("directory_files", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetFrameHeight() - 50), true, ImGuiWindowFlags_HorizontalScrollbar);
 			for (int i = 0; i < paths.size(); i++)
