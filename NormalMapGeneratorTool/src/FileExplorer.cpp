@@ -60,9 +60,9 @@ void FileOpenDialog::display()
 			break;
 		}
 
-		for (auto& p : std::filesystem::directory_iterator(path))
+		for (const auto& p : std::filesystem::directory_iterator(path))
 		{
-			if (std::filesystem::is_regular_file(p))
+			if (p.is_regular_file())
 			{
 				bool isCorrectFileType = false;
 				if (fileFilter != FileType::NONE)
