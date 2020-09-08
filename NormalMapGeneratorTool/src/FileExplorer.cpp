@@ -35,54 +35,57 @@ void FileOpenDialog::display()
 	static char pathInput[500];
 	if (isDirty)
 	{
-		paths.clear();
-		for (int i = 0; i < path.length(); i++)
+		if (std::filesystem::is_directory(path))
 		{
-			pathInput[i] = path[i];
-		}
-		std::vector<std::string> filterEnd;
-		switch (fileFilter)
-		{
-		case FileType::IMAGE:
-			filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
-			break;
-		case FileType::TEXT:
-			filterEnd.push_back(".txt");
-			break;
-		case FileType::MODEL:
-			filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
-			break;
-		case FileType::NORA:
-			filterEnd.push_back(".nora");
-			break;
-		case FileType::NONE:
-		default:
-			break;
-		}
-
-		for (const auto& p : std::filesystem::directory_iterator(path))
-		{
-			if (p.is_regular_file())
+			paths.clear();
+			for (int i = 0; i < path.length(); i++)
 			{
-				bool isCorrectFileType = false;
-				if (fileFilter != FileType::NONE)
+				pathInput[i] = path[i];
+			}
+			std::vector<std::string> filterEnd;
+			switch (fileFilter)
+			{
+			case FileType::IMAGE:
+				filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
+				break;
+			case FileType::TEXT:
+				filterEnd.push_back(".txt");
+				break;
+			case FileType::MODEL:
+				filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
+				break;
+			case FileType::NORA:
+				filterEnd.push_back(".nora");
+				break;
+			case FileType::NONE:
+			default:
+				break;
+			}
+
+			for (const auto& p : std::filesystem::directory_iterator(path))
+			{
+				if (p.is_regular_file())
 				{
-					for (int i = 0; i < filterEnd.size(); i++)
+					bool isCorrectFileType = false;
+					if (fileFilter != FileType::NONE)
 					{
-						if (getFileExtension(p.path().generic_string()) == filterEnd[i])
+						for (int i = 0; i < filterEnd.size(); i++)
 						{
-							isCorrectFileType = true;
-							break;
+							if (getFileExtension(p.path().generic_string()) == filterEnd[i])
+							{
+								isCorrectFileType = true;
+								break;
+							}
 						}
 					}
+					else
+						isCorrectFileType = true;
+					if (isCorrectFileType)
+						paths.push_back(p.path().generic_string());
 				}
-				else
-					isCorrectFileType = true;
-				if (isCorrectFileType)
+				else if (std::filesystem::is_directory(p))
 					paths.push_back(p.path().generic_string());
 			}
-			else if (std::filesystem::is_directory(p))
-				paths.push_back(p.path().generic_string());
 		}
 		isDirty = false;
 	}
@@ -367,53 +370,56 @@ void FileSaveDialog::display()
 	static char pathInput[500];
 	if (isDirty)
 	{
-		paths.clear();
-		for (int i = 0; i < path.length(); i++)
-			pathInput[i] = path[i];
-
-		std::vector<std::string> filterEnd;
-		switch (fileFilter)
+		if (std::filesystem::is_directory(path))
 		{
-		case FileType::IMAGE:
-			filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
-			break;
-		case FileType::TEXT:
-			filterEnd.push_back(".txt");
-			break;
-		case FileType::MODEL:
-			filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
-			break;
-		case FileType::NORA:
-			filterEnd.push_back(".nora");
-			break;
-		case FileType::NONE:
-		default:
-			break;
-		}
+			paths.clear();
+			for (int i = 0; i < path.length(); i++)
+				pathInput[i] = path[i];
 
-		for (auto& p : std::filesystem::directory_iterator(path))
-		{
-			if (std::filesystem::is_regular_file(p))
+			std::vector<std::string> filterEnd;
+			switch (fileFilter)
 			{
-				bool isCorrectFileType = false;
-				if (fileFilter != FileType::NONE)
+			case FileType::IMAGE:
+				filterEnd.push_back(".png"); filterEnd.push_back(".jpg"); filterEnd.push_back(".bmp"); filterEnd.push_back(".psd");
+				break;
+			case FileType::TEXT:
+				filterEnd.push_back(".txt");
+				break;
+			case FileType::MODEL:
+				filterEnd.push_back(".obj"); filterEnd.push_back(".fbx");
+				break;
+			case FileType::NORA:
+				filterEnd.push_back(".nora");
+				break;
+			case FileType::NONE:
+			default:
+				break;
+			}
+
+			for (auto& p : std::filesystem::directory_iterator(path))
+			{
+				if (p.is_regular_file())
 				{
-					for (int i = 0; i < filterEnd.size(); i++)
+					bool isCorrectFileType = false;
+					if (fileFilter != FileType::NONE)
 					{
-						if (getFileExtension(p.path().generic_string()) == filterEnd[i])
+						for (int i = 0; i < filterEnd.size(); i++)
 						{
-							isCorrectFileType = true;
-							break;
+							if (getFileExtension(p.path().generic_string()) == filterEnd[i])
+							{
+								isCorrectFileType = true;
+								break;
+							}
 						}
 					}
+					else
+						isCorrectFileType = true;
+					if (isCorrectFileType)
+						paths.push_back(p.path().generic_string());
 				}
-				else
-					isCorrectFileType = true;
-				if (isCorrectFileType)
+				else if (std::filesystem::is_directory(p))
 					paths.push_back(p.path().generic_string());
 			}
-			else if (std::filesystem::is_directory(p))
-				paths.push_back(p.path().generic_string());
 		}
 		isDirty = false;
 	}
